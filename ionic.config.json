@@ -1,0 +1,7 @@
+{
+  "name": "oneapp_partner",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
