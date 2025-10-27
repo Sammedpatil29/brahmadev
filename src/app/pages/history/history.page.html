@@ -8,19 +8,41 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  @for (item of pastVisits; track $index) {
+  @if(!isLoading){
+    @if (pastVisits.length > 0) {
+      @for (item of pastVisits; track $index) {
     <div class="m-2 border p-2" style="border-radius: 10px">
       <SMALL><b>Owner Name</b>: {{item.ownerName | titlecase}}</SMALL><br>
       <SMALL><b>Owner Contact</b>: {{item.ownerContact | titlecase}}</SMALL><br>
       <SMALL><b>Response</b>: {{item.response | titlecase}}</SMALL><br>
       <SMALL><b>Area</b>: {{item.builtUpArea | titlecase}}</SMALL>&nbsp;
       <SMALL><b>Floors</b>: {{item.floors | titlecase}}</SMALL>&nbsp;
-      <button class="btn btn-sm float-end">
+      <button class="btn btn-sm float-end" (click)="openMap(item.lat, item.lng)">
         <img style="width: 25px" src="/assets/icon/wired-lineal-18-location-pin-hover-jump.gif" alt="">
       </button>
-      <button class="btn btn-sm float-end me-1">
+      <button class="btn btn-sm float-end me-1" (click)="openImage(item)">
         <img style="width: 25px" src="/assets/icon/wired-lineal-54-photo-hover-pinch.gif" alt="">
       </button>
+    </div>
+  }
+  @if (showPreview) {
+    <div class="position-fixed border w-100 h-100 p-4" style="top: 0; background-color: rgba(0, 0, 0, 0.075); overflow-y: scroll" (click)="showPreview = false">
+    @for (item of images; track $index) {
+      <img class="mt-2" [src]="item" alt="">
+    }
+  </div>
+  }
+    } @else {
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center flex-column">
+      <div>Nothing to Show!</div>
+      <button class="btn btn-sm btn-dark" (click)="gotoAdd()">Add New Visit</button>
+    </div>
+  }
+  } @else {
+    <div class="h-100 w-100 d-flex align-items-center justify-content-center">
+<div class="spinner-border spinner-border-sm" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
     </div>
   }
 </ion-content>
