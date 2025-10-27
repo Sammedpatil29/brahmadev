@@ -1,0 +1,26 @@
+<ion-header [translucent]="true">
+  <ion-toolbar class="pt-3">
+    <div class="d-flex align-items-center">
+      <svg class="ms-4" (click)="back()" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#434343"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+    <ion-title>Past Visits</ion-title>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @for (item of pastVisits; track $index) {
+    <div class="m-2 border p-2" style="border-radius: 10px">
+      <SMALL><b>Owner Name</b>: {{item.ownerName | titlecase}}</SMALL><br>
+      <SMALL><b>Owner Contact</b>: {{item.ownerContact | titlecase}}</SMALL><br>
+      <SMALL><b>Response</b>: {{item.response | titlecase}}</SMALL><br>
+      <SMALL><b>Area</b>: {{item.builtUpArea | titlecase}}</SMALL>&nbsp;
+      <SMALL><b>Floors</b>: {{item.floors | titlecase}}</SMALL>&nbsp;
+      <button class="btn btn-sm float-end">
+        <img style="width: 25px" src="/assets/icon/wired-lineal-18-location-pin-hover-jump.gif" alt="">
+      </button>
+      <button class="btn btn-sm float-end me-1">
+        <img style="width: 25px" src="/assets/icon/wired-lineal-54-photo-hover-pinch.gif" alt="">
+      </button>
+    </div>
+  }
+</ion-content>

@@ -1,0 +1,140 @@
+<ion-header [translucent]="true">
+  <ion-toolbar class="pt-3">
+    <div class="d-flex align-items-center">
+      <svg class="ms-4" (click)="back()" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#434343"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+    <ion-title>Add New Visit</ion-title>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+ <div class="m-3">
+  <div class="d-flex align-items-center justify-content-center">
+    @if (isGettingLocation) {
+      <div class="spinner-border spinner-border-sm me-1" style="font-size: 2px; height: 13px; width: 13px" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
+<small> Acquiring Location</small>
+    } @else {
+      @if (locationMessage == 'Location Acquired' || locationMessage == '') {
+        <svg class="me-1" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#0dc52b"><path d="m424-296 282-282-56-56-226 226-114-114-56 56 170 170Zm56 216q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+      } @else {
+        <svg class="me-1" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#d71d1d"><path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>
+      }
+  <small>{{locationMessage}}</small>
+    }
+
+    @if (!isGettingLocation) {
+      <small class="text-primary" (click)="getCurrentLocation()">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#4B77D1"><path d="M483.08-232q-103.25 0-175.63-72.34-72.37-72.34-72.37-175.54 0-103.2 72.37-175.66Q379.83-728 483.08-728q67.3 0 122.04 32.38 54.73 32.39 87.8 85.08V-728h32v169.23H555.69v-32h111q-28.23-47.85-76.38-76.54Q542.15-696 483.08-696q-90 0-153 63t-63 153q0 90 63 153t153 63q84 0 144-55.5t69-136.5h32.46q-7.46 95.85-77.54 159.92Q580.92-232 483.08-232Z"/></svg>
+    </small>
+    }
+  
+ </div>
+  <ion-input class="mt-3" [(ngModel)]="ownerName" label="Owner Name*" label-placement="floating" fill="outline" placeholder="Enter Owner Name"></ion-input>
+  <ion-input class="mt-3" [(ngModel)]="ownerContact" label="Owner Contact*" label-placement="floating" fill="outline" placeholder="Enter Owner Contact Number"></ion-input>
+  <div class="row g-2 m-0">
+  <div class="col-6 p-0 mt-0">
+    <ion-input
+      class="mt-3"
+      [(ngModel)]="builtUpArea"
+      label="Approx. Built Up Area (in sqft)*"
+      label-placement="floating"
+      fill="outline"
+      placeholder="Enter Approx Built Up Area">
+    </ion-input>
+  </div>
+  <div class="col-6 pe-0 mt-0">
+    <ion-select
+      class="mt-3"
+      [(ngModel)]="floors"
+      label="No. of Floors"
+      label-placement="floating"
+      fill="outline"
+      interface="popover">
+      <ion-select-option value="1">1</ion-select-option>
+      <ion-select-option value="2">2</ion-select-option>
+      <ion-select-option value="3">3</ion-select-option>
+      <ion-select-option value="4">4</ion-select-option>
+      <ion-select-option value="5">5</ion-select-option>
+      <ion-select-option value="6+">6+</ion-select-option>
+    </ion-select>
+  </div>
+</div>
+   <ion-select
+      class="mt-3"
+      [(ngModel)]="response"
+      label="Approach Response*"
+      label-placement="floating"
+      fill="outline"
+      >
+       <ion-select-option value="interested">Interested</ion-select-option>
+  <ion-select-option value="not_interested">Not Interested</ion-select-option>
+  <ion-select-option value="yet_to_think">Yet to Think</ion-select-option>
+  <ion-select-option value="need_more_info">Needs More Information</ion-select-option>
+  <ion-select-option value="follow_up_later">Follow Up Later</ion-select-option>
+  <ion-select-option value="budget_issue">Budget Constraints</ion-select-option>
+  <ion-select-option value="already_purchased">Already Purchased</ion-select-option>
+  <ion-select-option value="site_visit_planned">Site Visit Planned</ion-select-option>
+  <ion-select-option value="not_reachable">Not Reachable</ion-select-option>
+  <ion-select-option value="call_back_requested">Requested Call Back</ion-select-option>
+  <ion-select-option value="others">Others</ion-select-option>
+    </ion-select>
+  <ion-input class="mt-3" [(ngModel)]="engineerName" label="Engineer Name" label-placement="floating" fill="outline" placeholder="Enter Engineer Name"></ion-input>
+  <ion-input class="mt-3" [(ngModel)]="engineerContact" label="Engineer Contact" label-placement="floating" fill="outline" placeholder="Enter Engineer Contact Number"></ion-input>
+  <ion-input class="mt-3" [(ngModel)]="contractorName" label="Contractor Name" label-placement="floating" fill="outline" placeholder="Enter Contractor Name"></ion-input>
+  <ion-input class="mt-3" [(ngModel)]="contractorContact" label="Contractor Contact" label-placement="floating" fill="outline" placeholder="Enter Contractor Contact Number"></ion-input>
+  <ion-input class="mt-3" [(ngModel)]="comments" label="Comments" label-placement="floating" fill="outline" placeholder="Enter additional comments"></ion-input>
+  <div class="mt-2">
+    <small class="ms-2"><b>Add Location Images</b><span class="text-danger">*</span> (add atleast 1 image)</small>
+  </div>
+    <div class="row gap-1 m-0" style="height: 150px">
+      @if (capturedImage.length > 0) {
+        @for (item of capturedImage; track $index) {
+      <div class="col d-flex align-items-center justify-content-center image position-relative" style="border-radius: 5px;" (click)="deleteLocationImage($index)">
+        <img [src]="item" style="max-height: 150px" alt="Captured Image" />
+      </div>
+    }
+    @if(capturedImage.length < 4){
+      <div class="col d-flex align-items-center justify-content-center image position-relative" style="border-radius: 5px;" (click)="openCamera('location')">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35px" fill="#B7B7B7"><path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"/></svg>
+      </div>
+      
+    }
+      } @else {
+        <div class="col d-flex align-items-center justify-content-center image" style="border-radius: 5px;" (click)="openCamera('location')">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35px" fill="#B7B7B7"><path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"/></svg>
+      </div>
+      }
+      
+      
+    </div>
+
+     <div class="mt-2">
+    <small class="ms-2"><b>Add Selfie with Location<span class="text-danger">*</span></b></small>
+  </div>
+    <div class="row m-0 gap-1" style="height: 150px">
+      @if (!capturedSelfie) {
+        <div class="col d-flex align-items-center justify-content-center image" style="border-radius: 5px" (click)="openCamera('selfie')">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35px" fill="#B7B7B7"><path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"/></svg>
+      </div>
+      } @else {
+        <div class="col d-flex align-items-center justify-content-center image" style="border-radius: 5px" (click)="openCamera('selfie')">
+        <img style="height: 150px; width: 50%; border-radius: 10px" [src]="capturedSelfie" alt="">
+      </div>
+      }
+    </div>
+    <div *ngIf="capturedImage" class="image-preview">
+  </div>
+  <button class="btn btn-dark mt-2 w-100" (click)="submit()" [disabled]="!latitude || !ownerName || !ownerContact || !builtUpArea || !floors || capturedImage.length == 0 || !capturedSelfie">Submit</button>
+ </div>
+ @if (isLoading) {
+  <div class="border position-fixed d-flex align-items-center justify-content-center w-100 h-100" style="top: 0; z-index: 9999; background-color: rgba(128, 128, 128, 0.212)">
+  <div class="text-center">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+ </div>
+ }
+</ion-content>
