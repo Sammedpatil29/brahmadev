@@ -126,7 +126,7 @@
     </div>
     <div *ngIf="capturedImage" class="image-preview">
   </div>
-  <button class="btn btn-dark mt-2 w-100" (click)="submit()" [disabled]="!latitude || !ownerName || !ownerContact || !builtUpArea || !floors || capturedImage.length == 0 || !capturedSelfie">Submit</button>
+  <button class="login-button mt-2 w-100" (click)="submit()" [disabled]="!latitude || !ownerName || !ownerContact || !builtUpArea || !floors || capturedImage.length == 0 || !capturedSelfie">Submit</button>
  </div>
  @if (isLoading) {
   <div class="border position-fixed d-flex align-items-center justify-content-center w-100 h-100" style="top: 0; z-index: 9999; background-color: rgba(128, 128, 128, 0.212)">

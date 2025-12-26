@@ -1,48 +1,76 @@
-<ion-header [translucent]="true">
-  <ion-toolbar class="pt-3">
-    <div class="d-flex align-items-center">
-      <svg class="ms-4" (click)="back()" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#434343"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
-    <ion-title>Past Visits</ion-title>
-    </div>
+<ion-header class="ion-no-border pt-4 bg-white">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>My Visits</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  @if(!isLoading){
-    @if (pastVisits.length > 0) {
-      @for (item of pastVisits; track $index) {
-    <div class="m-2 border p-2" style="border-radius: 10px">
-      <SMALL><b>Owner Name</b>: {{item.ownerName | titlecase}}</SMALL><br>
-      <SMALL><b>Owner Contact</b>: {{item.ownerContact | titlecase}}</SMALL><br>
-      <SMALL><b>Response</b>: {{item.response | titlecase}}</SMALL><br>
-      <SMALL><b>Area</b>: {{item.builtUpArea | titlecase}}</SMALL>&nbsp;
-      <SMALL><b>Floors</b>: {{item.floors | titlecase}}</SMALL>&nbsp;
-      <button class="btn btn-sm float-end" (click)="openMap(item.lat, item.lng)">
-        <img style="width: 25px" src="/assets/icon/wired-lineal-18-location-pin-hover-jump.gif" alt="">
-      </button>
-      <button class="btn btn-sm float-end me-1" (click)="openImage(item)">
-        <img style="width: 25px" src="/assets/icon/wired-lineal-54-photo-hover-pinch.gif" alt="">
-      </button>
-    </div>
-  }
-  @if (showPreview) {
-    <div class="position-fixed border w-100 h-100 p-4" style="top: 0; background-color: rgba(0, 0, 0, 0.075); overflow-y: scroll" (click)="showPreview = false">
-    @for (item of images; track $index) {
-      <img class="mt-2" [src]="item" alt="">
+<ion-content class="ion-padding-horizontal">
+ <div class="mb-3">
+   @if(!isLoading){
+    @for (item of pastVisits; track $index) {
+      <div class="visit-card p-0" (click)="item.isExpanded = !item.isExpanded">
+        <div class="card-main">
+          <div class="info-text">
+            <p><strong>Owner Name:</strong> {{item.ownerName | titlecase}}</p>
+            <p>
+              <strong>Owner Contact:</strong> 
+              <a [href]="'tel:' + item.ownerContact" class="tel-link" (click)="$event.stopPropagation()">{{item.ownerContact}}</a>
+            </p>
+            <p><strong>Response:</strong> {{item.response | titlecase}}</p>
+            <p><strong>Visit On:</strong> {{item.createdAt | date: 'd MMM yyyy'}}, {{item.createdAt | date: 'h:mm a'}}</p>
+          </div>
+          
+          <div class="side-actions">
+            <button class="action-btn call" (click)="$event.stopPropagation()">
+              <a [href]="'tel:' + item.ownerContact"><ion-icon name="call"></ion-icon></a>
+            </button>
+            <button class="action-btn map" (click)="openMap(item.lat, item.lng); $event.stopPropagation()">
+              <ion-icon name="navigate-circle-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="specs-container">
+          <div class="spec-item">
+            <span class="spec-label">Aprx. Area</span>
+            <span class="spec-value">{{item.builtUpArea}}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">No. of floors</span>
+            <span class="spec-value">{{item.floors}}</span>
+          </div>
+          <div class="spec-image" (click)="openImage(item); $event.stopPropagation()">
+             <ion-icon name="image"></ion-icon>
+          </div>
+        </div>
+
+        @if (item.isExpanded) {
+          <div class="expanded-details">
+            <div class="detail-row">
+              <p><strong>Engineer Name:</strong> {{item.engineerName || 'Shrikant Badakambhi'}}</p>
+              <p><strong>Engineer Contact:</strong> {{item.engineerContact || '9972407282'}} 
+                <a [href]="'tel:' + item.engineerContact" (click)="$event.stopPropagation()"><ion-icon name="call" class="mini-call"></ion-icon></a>
+              </p>
+            </div>
+            <div class="detail-row">
+              <p><strong>Contractor Name:</strong> {{item.contractorName || 'Sidu Basaragi'}}</p>
+              <p><strong>Contractor Contact:</strong> {{item.contractorContact || '9164469930'}} 
+                <a [href]="'tel:' + item.contractorContact" (click)="$event.stopPropagation()"><ion-icon name="call" class="mini-call"></ion-icon></a>
+              </p>
+            </div>
+          </div>
+        }
+      </div>
     }
-  </div>
-  }
-    } @else {
-    <div class="w-100 h-100 d-flex align-items-center justify-content-center flex-column">
-      <div>Nothing to Show!</div>
-      <button class="btn btn-sm btn-dark" (click)="gotoAdd()">Add New Visit</button>
-    </div>
-  }
   } @else {
-    <div class="h-100 w-100 d-flex align-items-center justify-content-center">
-<div class="spinner-border spinner-border-sm" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>
+    <div class="loader">
+      <ion-spinner color="primary"></ion-spinner>
     </div>
   }
+ </div>
 </ion-content>

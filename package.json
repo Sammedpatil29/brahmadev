@@ -8,7 +8,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "deploy": "ionic build && npx cap run android --target 65PJQ8SCOJRCS8EI",
+    "deploy": "npx ionic build && npx cap run android --target 65PJQ8SCOJRCS8EI",
     "test": "ng test",
     "lint": "ng lint"
   },

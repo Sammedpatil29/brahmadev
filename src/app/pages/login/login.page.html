@@ -1,25 +1,43 @@
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="login-container">
+    
+    @if (showLogin) {
+      <div class="login-card">
+        <div class="header-section">
+          <div class="logo-placeholder">
+            <img style="max-width: none; height: 100px; margin-bottom: 10px" src="assets/Brahmadev Constructions.png" alt="">
+          </div>
+          <h3 ><b>Brahmadev Constructions</b></h3>
+          <p class="subtitle">Enter your credentials to continue</p>
+        </div>
 
-<ion-content [fullscreen]="true">
-@if (showLogin) {
-  <div class="h-75 d-flex align-items-center justify-content-center flex-column m-3">
-  <h3 class="mb-2"><b>Brahmadev Constructions.</b></h3>
-  <input class="w-100 p-2" style="border-radius: 10px; border: 1px solid black" type="text" placeholder="mobile number" [(ngModel)]="phoneNumber">
-  <input class="w-100 p-2 mt-2" style="border-radius: 10px; border: 1px solid black" type="password" placeholder="password" [(ngModel)]="password">
-  <button class="btn btn-dark w-100 mt-2" (click)="login()" [disabled]="phoneNumber.length !== 10 || password.length == 0">
-    @if (!isLoading) {
-      <span>Login</span>
+        <div class="form-section">
+          <div class="input-wrapper">
+            <ion-icon name="call-outline"></ion-icon>
+            <input type="tel" placeholder="Mobile Number" [(ngModel)]="phoneNumber" maxlength="10">
+          </div>
+
+          <div class="input-wrapper">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+            <input type="password" placeholder="Password" [(ngModel)]="password">
+          </div>
+
+          <button class="login-button" (click)="login()" [disabled]="phoneNumber.length !== 10 || password.length === 0 || isLoading">
+            @if (!isLoading) {
+              <span>Sign In</span>
+            } @else {
+              <ion-spinner name="crescent"></ion-spinner>
+            }
+          </button>
+          
+          <!-- <p class="forgot-password">Forgot Password?</p> -->
+        </div>
+      </div>
     } @else {
-      <div class="spinner-border spinner-border-sm" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>
+      <div class="loading-state">
+        <ion-spinner color="primary"></ion-spinner>
+      </div>
     }
-  </button>
-</div>
-} @else {
-  <div class="h-100 w-100 d-flex align-items-center justify-content-center">
-    <div class="spinner-border spinner-border-sm" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>
+
   </div>
-}
 </ion-content>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonSpinner, IonButton, IonIcon, IonItem } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
 import { IonInput } from '@ionic/angular/standalone';
 import { IonSelect, IonSelectOption } from '@ionic/angular/standalone';
@@ -15,7 +15,7 @@ import { Login } from 'src/app/services/login';
   templateUrl: './add-visit.page.html',
   styleUrls: ['./add-visit.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonSelectOption, IonSelect, IonToolbar, CommonModule, FormsModule, IonInput]
+  imports: [IonItem, IonIcon, IonButton, IonSpinner, IonContent, IonHeader, IonTitle, IonSelectOption, IonSelect, IonToolbar, CommonModule, FormsModule, IonInput]
 })
 export class AddVisitPage implements OnInit {
 

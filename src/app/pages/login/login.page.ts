@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonSpinner, IonIcon } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
 import { Login } from 'src/app/services/login';
 import { HttpClient } from '@angular/common/http';
+import { addIcons } from 'ionicons'; // Required for registering icons
+import { callOutline, lockClosedOutline } from 'ionicons/icons';
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonIcon, IonSpinner, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
 })
 export class LoginPage implements OnInit {
 
@@ -18,7 +20,12 @@ export class LoginPage implements OnInit {
   password = ''
   showLogin: boolean = false
   isLoading: boolean = false
-  constructor(private navCtrl: NavController, private loginService: Login) {  }
+  constructor(private navCtrl: NavController, private loginService: Login) {
+    addIcons({ 
+      'call-outline': callOutline, 
+      'lock-closed-outline': lockClosedOutline 
+    });
+    }
 
   ngOnInit() {
     this.verifyToken()

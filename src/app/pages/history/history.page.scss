@@ -1,0 +1,153 @@
+ion-content {
+  --background: #fdfdfd;
+}
+
+.visit-card {
+  background: #fff;
+  border: 1px solid #d1d1d1;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+
+  .card-main {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .info-text {
+    p {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      color: #333;
+      strong { font-weight: 600; color: #000; }
+    }
+    .tel-link { text-decoration: none; color: inherit; }
+  }
+}
+
+.side-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+
+  .action-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 28px;
+    &.call { color: #2e7d32; } // Green call icon
+    &.map { color: #3f51b5; }  // Blue nav icon
+  }
+}
+
+.specs-container {
+  background: #f0f9ff; // Light blue background from image
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  justify-content: space-between;
+
+  .spec-item {
+    text-align: center;
+    flex: 1;
+    .spec-label {
+      display: block;
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 2px;
+    }
+    .spec-value {
+      font-weight: 700;
+      font-size: 15px;
+      color: #000;
+    }
+  }
+
+  .spec-image {
+    font-size: 24px;
+    color: #ef5350; // Reddish icon for images
+    cursor: pointer;
+  }
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+.visit-card {
+  background: #fff;
+  border: 1px solid #d1d1d1;
+  border-radius: 12px;
+  margin-top: 12px;
+  overflow: hidden; // Ensures background color doesn't bleed out of radius
+  transition: all 0.3s ease;
+
+  .card-main {
+    padding: 16px 16px 8px 16px;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.specs-container {
+  background: #f0f9ff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 8px 15px;
+  margin: 0 16px 12px 16px;
+  justify-content: space-between;
+
+  .spec-item {
+    text-align: left;
+    .spec-label { display: block; font-size: 11px; color: #666; }
+    .spec-value { font-weight: 700; font-size: 14px; color: #000; }
+  }
+  .spec-image { font-size: 24px; color: #ef5350; }
+}
+
+.expanded-details {
+  background: #f8fbff; // Slightly different blue for separation
+  border-top: 1px solid #eef2f7;
+  padding: 12px 16px;
+  animation: slideIn 0.2s ease-out;
+
+  .detail-row {
+    margin-bottom: 10px;
+    p {
+      margin: 2px 0;
+      font-size: 13px;
+      color: #444;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  }
+
+  .mini-call {
+    color: #2e7d32;
+    font-size: 16px;
+    margin-left: 5px;
+  }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Side Action Button Tweaks
+.side-actions {
+  .action-btn {
+    font-size: 30px;
+    &.call { color: #2e7d32; }
+    &.map { color: #3b82f6; }
+    a { color: inherit; text-decoration: none; }
+  }
+}

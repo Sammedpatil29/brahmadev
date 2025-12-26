@@ -17,11 +17,13 @@ export class HomePage implements OnInit {
   status: boolean = false
   riderData: any
   rideRequests:any
+greeting: string = '';
 
   constructor(private navCtrl: NavController ) { }
 
   ngOnInit() {
-    this.startTimeCounter();
+    // this.startTimeCounter();
+    this.setGreeting();
   }
 
    ngOnDestroy() {
@@ -51,4 +53,17 @@ export class HomePage implements OnInit {
     this.navCtrl.navigateRoot('/login')
   }
 
+ setGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour >= 5 && hour < 12) {
+    this.greeting = 'Hello, Good Morning ☕';
+  } else if (hour >= 12 && hour < 17) {
+    this.greeting = 'Hello, Good Afternoon ☀️';
+  } else if (hour >= 17 && hour < 21) {
+    this.greeting = 'Hello, Good Evening 🌇';
+  } else {
+    this.greeting = 'Hello, Good Night 🌙';
+  }
+}
 }
