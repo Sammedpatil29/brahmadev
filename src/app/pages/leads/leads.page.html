@@ -1,0 +1,76 @@
+<ion-header class="ion-no-border pt-4 bg-white">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Business Leads</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+
+  <ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+@if (!isLoading) {
+  @for (lead of leads; track $index) {
+    <div class="lead-card-container">
+    <ion-card class="modern-lead-card" (click)="viewLead(lead.id)">
+      <div class="card-gradient-bar"></div>
+      
+      <ion-card-content>
+        <div class="card-header-row">
+          <div class="user-avatar">
+            {{ lead.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="header-info">
+            <h2 class="lead-name">{{ lead.name }}</h2>
+            @if (lead.platform == 'fb') {
+<p class="lead-platform"><ion-icon name="logo-facebook"></ion-icon> {{ lead.platform == 'fb' ? 'Facebook': 'unknown' }}</p>
+            } @else if (lead.platform == 'ig') {
+<p class="lead-platform"><ion-icon name="logo-instagram" class="text-danger"></ion-icon> {{ lead.platform == 'ig' ? 'Instagram': 'unknown' }}</p>
+            } @else {
+<p class="lead-platform"><ion-icon name="globe-outline" class="text-dark"></ion-icon> {{ lead.platform || 'unknown' }}</p>
+            }
+          </div>
+          <ion-badge color="success" class="status-badge">{{lead.response}}</ion-badge>
+        </div>
+
+        <div class="card-body-row">
+          <div class="info-item">
+            <ion-icon name="call-outline"></ion-icon>
+            <span>{{ lead.contact }}</span>
+          </div>
+          <div class="info-item">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>{{ lead.city || 'Location N/A' }}</span>
+          </div>
+        </div>
+
+        <div class="card-footer-row">
+          <span class="visit-time">
+            <ion-icon name="time-outline"></ion-icon>
+            {{ lead.time | date:'mediumDate' }} • {{ lead.time | date:'shortTime' }}
+          </span>
+          <!-- <ion-button fill="clear" size="small" (click)="callLead(lead.contact); $event.stopPropagation()">
+            <ion-icon slot="icon-only" name="call"></ion-icon>
+          </ion-button> -->
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+  }
+
+} @else {
+  <div class="loader" style="
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;">
+      <ion-spinner color="primary"></ion-spinner>
+    </div>
+    }
+    </ion-content>
+

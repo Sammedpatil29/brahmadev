@@ -1,0 +1,81 @@
+<ion-header class="ion-no-border pt-4 bg-white">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>My Visits</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="header-card">
+    <div class="initial-circle">{{ lead?.name?.charAt(0) }}</div>
+    <div class="name-info">
+      <h1>{{ lead?.name }}</h1>
+      <p><ion-icon name="logo-facebook"></ion-icon> Meta Ads Lead</p>
+    </div>
+    <a [href]="'tel:' + lead?.contact" class="call-fab">
+      <ion-icon name="call"></ion-icon>
+    </a>
+  </div>
+
+  <ion-list lines="none" class="edit-list">
+    <h3 class="group-title">Details</h3>
+    
+    <ion-item class="input-item">
+      <ion-label position="stacked">Construction City</ion-label>
+      <ion-input [(ngModel)]="editData.city" placeholder="Enter City"></ion-input>
+      <ion-icon name="location-outline" slot="start"></ion-icon>
+    </ion-item>
+
+    <ion-item class="input-item">
+      <ion-label position="stacked">Current Response</ion-label>
+      <ion-select [(ngModel)]="editData.response" interface="action-sheet">
+        <ion-select-option value="Interested">Interested</ion-select-option>
+        <ion-select-option value="Site Visit Scheduled">Site Visit Scheduled</ion-select-option>
+        <ion-select-option value="Quote Shared">Quote Shared</ion-select-option>
+        <ion-select-option value="Closed">Closed</ion-select-option>
+        <ion-select-option value="Not Interested">Not Interested</ion-select-option>
+      </ion-select>
+      <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
+    </ion-item>
+  </ion-list>
+
+  <div class="timeline-section">
+    <h3 class="group-title">Activity Log</h3>
+    
+    <div class="chat-wrapper">
+      <div *ngFor="let note of lead?.comment" class="chat-bubble admin">
+        <div class="bubble-header">
+          <span class="author">{{ note.author }}</span>
+          <span class="dot">•</span>
+          <span class="time">{{ note.date | date:'short' }}</span>
+        </div>
+        <p class="message">{{ note.text }}</p>
+      </div>
+
+      <div *ngIf="!lead?.comment?.length" class="empty-state">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+        <p>No activity yet. Add your first note below.</p>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar class="footer-toolbar">
+    <ion-item lines="none" class="new-comment-input">
+      <ion-textarea
+        [(ngModel)]="editData.newComment"
+        placeholder="Type a progress note..."
+        autoGrow="true"
+        rows="1">
+      </ion-textarea>
+      <!-- <ion-button slot="end" fill="clear" (click)="saveChanges()" [disabled]="!editData.newComment">
+        <ion-icon name="send"></ion-icon>
+      </ion-button> -->
+    </ion-item>
+  </ion-toolbar>
+</ion-footer>
