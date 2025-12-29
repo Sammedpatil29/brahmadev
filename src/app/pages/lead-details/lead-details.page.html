@@ -5,77 +5,123 @@
         <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>My Visits</ion-title>
+    <ion-title>Business Leads</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="header-card">
+@if (!isLoading) {
+  <ion-content>
+
+ <div class="lead-header-card">
+  <div class="header-top">
     <div class="initial-circle">{{ lead?.name?.charAt(0) }}</div>
+    
     <div class="name-info">
-      <h1>{{ lead?.name }}</h1>
-      <p><ion-icon name="logo-facebook"></ion-icon> Meta Ads Lead</p>
+      <h1 class="name">{{ lead?.name }}</h1>
+      <p class="contact-sub">
+  <ion-icon name="call-outline"></ion-icon> 
+  <span>{{ lead?.contact }}</span>
+  
+  <ion-icon 
+    name="copy-outline" 
+    class="copy-icon" 
+    (click)="copyToClipboard(lead?.contact, $event)">
+  </ion-icon>
+
+  • 
+  <ion-icon name="location-outline"></ion-icon> {{ lead?.city }}
+</p>
     </div>
-    <a [href]="'tel:' + lead?.contact" class="call-fab">
-      <ion-icon name="call"></ion-icon>
-    </a>
+
+    <!-- <a [href]="'tel:' + lead?.contact" class="call-fab-circle">
+      <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="white">
+        <path d="M795-120q-116 0-236.5-56T335-335Q232-438 176-558.5T120-795q0-19 13-32t32-13h140q14 0 24 10t14 25l27 126q2 14-.5 25.5T359-634L259-533q26 44 55 82t64 72q37 38 78 69.5t86 55.5l95-98q10-11 23-15t26-2l119 26q15 4 25 16t10 27v135q0 19-13 32t-32 13Z"/>
+      </svg>
+    </a> -->
   </div>
 
-  <ion-list lines="none" class="edit-list">
-    <h3 class="group-title">Details</h3>
+  <div class="header-status-row">
+    <span id="open-custom-dialog" class="status-badge">{{ lead?.response }}</span>
     
-    <ion-item class="input-item">
-      <ion-label position="stacked">Construction City</ion-label>
-      <ion-input [(ngModel)]="editData.city" placeholder="Enter City"></ion-input>
-      <ion-icon name="location-outline" slot="start"></ion-icon>
-    </ion-item>
+    <div class="platform-date">
+      @if (lead.platform === 'ig') {
+        <ion-icon class="text-danger" [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
+      } @else {
+        <ion-icon [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
+      }
+      <span>{{ lead?.time | date:'dd MMM yy' }} • {{ lead?.time | date:'hh:mm a' }}</span>
+    </div>
+  </div>
+  <button class="login-button mt-3 w-100" (click)="callNow()">Call Lead</button>
+</div>
 
-    <ion-item class="input-item">
-      <ion-label position="stacked">Current Response</ion-label>
-      <ion-select [(ngModel)]="editData.response" interface="action-sheet">
-        <ion-select-option value="Interested">Interested</ion-select-option>
-        <ion-select-option value="Site Visit Scheduled">Site Visit Scheduled</ion-select-option>
-        <ion-select-option value="Quote Shared">Quote Shared</ion-select-option>
-        <ion-select-option value="Closed">Closed</ion-select-option>
-        <ion-select-option value="Not Interested">Not Interested</ion-select-option>
-      </ion-select>
-      <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
-    </ion-item>
-  </ion-list>
+  <div class="chat-card" style="max-height: 60vh;">
+  <div class="chat-header">
+    <ion-icon name="chatbox-ellipses-outline"></ion-icon>
+    <span>Activity Log ({{ lead?.comment?.length || 0 }})</span>
+  </div>
 
-  <div class="timeline-section">
-    <h3 class="group-title">Activity Log</h3>
-    
-    <div class="chat-wrapper">
-      <div *ngFor="let note of lead?.comment" class="chat-bubble admin">
-        <div class="bubble-header">
-          <span class="author">{{ note.author }}</span>
-          <span class="dot">•</span>
-          <span class="time">{{ note.date | date:'short' }}</span>
+  <div class="chat-content">
+    @if (lead.comment.length > 0) {
+      @for (c of lead.comment; track c.date) {
+      <div class="chat-bubble-wrapper" [ngClass]="{'admin-msg': c.author !== 'System'}">
+        <div class="chat-bubble">
+          <div class="bubble-meta">
+            <span class="author">{{ c.author }}</span>
+            <span class="date">{{ c.date | date:'dd MMM yy' }} {{ c.date | date:'hh:mm a' }}</span>
+          </div>
+          <div class="message-text">{{c.text}}</div>
         </div>
-        <p class="message">{{ note.text }}</p>
       </div>
-
-      <div *ngIf="!lead?.comment?.length" class="empty-state">
-        <ion-icon name="chatbubbles-outline"></ion-icon>
-        <p>No activity yet. Add your first note below.</p>
-      </div>
-    </div>
+    }
+    } @else {
+      <small class="w-100 text-center">No Comments Yet</small>
+    }
   </div>
+
+  <div class="chat-input-bar">
+    <ion-textarea
+      [(ngModel)]="newComment"
+      style="border: none"
+      placeholder="Type progress note..."
+      rows="1"
+      class="message-input">
+    </ion-textarea>
+    
+    <ion-button 
+      fill="clear" 
+      (click)="saveChanges()" 
+      >
+      <ion-icon name="send" slot="icon-only" color="primary"></ion-icon>
+    </ion-button>
+  </div>
+</div>
+
 </ion-content>
 
-<ion-footer class="ion-no-border">
-  <ion-toolbar class="footer-toolbar">
-    <ion-item lines="none" class="new-comment-input">
-      <ion-textarea
-        [(ngModel)]="editData.newComment"
-        placeholder="Type a progress note..."
-        autoGrow="true"
-        rows="1">
-      </ion-textarea>
-      <!-- <ion-button slot="end" fill="clear" (click)="saveChanges()" [disabled]="!editData.newComment">
-        <ion-icon name="send"></ion-icon>
-      </ion-button> -->
+<ion-modal id="example-modal" #modal trigger="open-custom-dialog">
+    <ng-template>
+      <div class="wrapper">
+        <ion-list lines="none">
+  @for (name of statusList; track name) {
+    <ion-item button="true" (click)="updateStatus(name); modal.dismiss()">
+      <ion-label>{{ name }}</ion-label>
+      
+      @if (lead?.response === name) {
+        <ion-icon name="checkmark-circle" slot="end" color="success"></ion-icon>
+      }
     </ion-item>
-  </ion-toolbar>
-</ion-footer>
+  }
+</ion-list>
+      </div>
+    </ng-template>
+  </ion-modal>
+} @else {
+  <div class="loader" style="
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;">
+      <ion-spinner color="primary"></ion-spinner>
+    </div>
+}

@@ -8,14 +8,37 @@
     <ion-title>Business Leads</ion-title>
   </ion-toolbar>
 </ion-header>
+<div class="position-sticky bg-white" style="top: 0px; z-index: 999">
+    @if (!isLoading) {
+      <div class="chip-container pt-0">
+  <div class="chip" [class]="searchTerm != ''? '': 'total-count'" (click)="resetSearch()">
+    All ({{ leads?.length }})
+  </div>
 
+  <div *ngFor="let item of response" class="chip" [class]="item == searchTerm ? 'total-count': ''" (click)="filterbyChips(item)">
+    <span>{{ item | titlecase}}</span>
+    @if (item == searchTerm) {
+      <span> ({{ filteredLeads?.length }})</span>
+    }
+  </div>
+</div>
+    }
+<div>
+  <ion-searchbar 
+  [(ngModel)]="searchTerm" 
+  (ionInput)="handleSearch()" 
+  placeholder="Search by name or city">
+</ion-searchbar>
+</div>
+  </div>
 
   <ion-content class="ion-padding">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 @if (!isLoading) {
-  @for (lead of leads; track $index) {
+  
+  @for (lead of filteredLeads; track $index) {
     <div class="lead-card-container">
     <ion-card class="modern-lead-card" (click)="viewLead(lead.id)">
       <div class="card-gradient-bar"></div>
@@ -35,7 +58,7 @@
 <p class="lead-platform"><ion-icon name="globe-outline" class="text-dark"></ion-icon> {{ lead.platform || 'unknown' }}</p>
             }
           </div>
-          <ion-badge color="success" class="status-badge">{{lead.response}}</ion-badge>
+          
         </div>
 
         <div class="card-body-row">
@@ -54,6 +77,11 @@
             <ion-icon name="time-outline"></ion-icon>
             {{ lead.time | date:'mediumDate' }} • {{ lead.time | date:'shortTime' }}
           </span>
+          <ion-badge 
+  color="success" 
+  class="status-badge" >
+  {{lead.response}}
+</ion-badge>
           <!-- <ion-button fill="clear" size="small" (click)="callLead(lead.contact); $event.stopPropagation()">
             <ion-icon slot="icon-only" name="call"></ion-icon>
           </ion-button> -->

@@ -50,6 +50,7 @@ greeting: string = '';
 
   logout(){
     localStorage.removeItem('userToken')
+    localStorage.removeItem('userName')
     this.navCtrl.navigateRoot('/login')
   }
 

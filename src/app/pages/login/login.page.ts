@@ -7,6 +7,8 @@ import { Login } from 'src/app/services/login';
 import { HttpClient } from '@angular/common/http';
 import { addIcons } from 'ionicons'; // Required for registering icons
 import { callOutline, lockClosedOutline } from 'ionicons/icons';
+import { jwtDecode } from 'jwt-decode';
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -40,6 +42,8 @@ export class LoginPage implements OnInit {
     this.loginService.login(params).subscribe((res:any)=>{
       if(res.token){
         localStorage.setItem('userToken', res.token)
+        const decoded: any = jwtDecode(res.token);
+        localStorage.setItem('userName', decoded.username)
         this.isLoading = false
         this.navCtrl.navigateRoot('/layout')
       } else {

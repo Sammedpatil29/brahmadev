@@ -9,6 +9,7 @@
   overflow: hidden;
   position: relative;
   background: white;
+  cursor: pointer;
 
   .card-gradient-bar {
     position: absolute;
@@ -102,4 +103,37 @@
     align-items: center;
     ion-icon { margin-right: 4px; }
   }
+}
+
+.chip-container {
+  display: flex;
+  overflow-x: auto;      /* Enables horizontal scrolling */
+  white-space: nowrap;    /* Keeps chips in one line */
+  gap: 10px;             /* Space between chips */
+  padding: 10px;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+}
+
+/* Optional: Hide the scrollbar for a cleaner look */
+.chip-container::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: 0 0 auto;        /* Prevents chips from shrinking */
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.total-count {
+  background-color: #ecfdf5; /* Very light mint */
+  color: #059669;            /* Emerald green text */
+  font-weight: 600;
+}
+
+::ng-deep .searchbar-input.sc-ion-searchbar-md {
+  border-radius: 12px !important;
 }

@@ -12,7 +12,15 @@ export class Leads {
   return this.http.get(`${this.url}/leads`)
  }
 
+ updateLeads(params:any, id:any){
+  return this.http.patch(`${this.url}/leads/${id}`, params)
+ }
+
 updateLead(id: number, data: any){
     return this.http.patch(`${this.url}/${id}`, data);
+  }
+
+getLeadDetails(id: number){
+    return this.http.get(`${this.url}/leads/${id}`);
   }
 }
