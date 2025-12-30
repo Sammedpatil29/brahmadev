@@ -1,0 +1,66 @@
+<ion-header class="ion-no-border pt-4 bg-white">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Generate Quotation</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="settings-drawer" [class.open]="showSettings">
+    <div class="drawer-inner">
+      <ion-item lines="none">
+        <ion-label>Base Rate (₹/sqft)</ion-label>
+        <ion-input type="number" [(ngModel)]="ratePerSqFt"></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>GST (%)</ion-label>
+        <ion-input type="number" [(ngModel)]="gstPercentage"></ion-input>
+      </ion-item>
+    </div>
+  </div>
+
+  <div class="input-container">
+    <p class="section-title">CUSTOMER INFO</p>
+    <div class="input-group">
+      <ion-input [(ngModel)]="customerName" placeholder="Customer Name" class="custom-input"></ion-input>
+      <ion-input [(ngModel)]="siteAddress" placeholder="Site Address/City" class="custom-input"></ion-input>
+      <ion-input [(ngModel)]="contact" placeholder="Customer Contact Number" class="custom-input"></ion-input>
+      <ion-input [(ngModel)]="ratePerSqFt" placeholder="Committed Price per sqft" class="custom-input"></ion-input>
+    </div>
+
+    <p class="section-title">MEASUREMENT</p>
+    <div class="area-card">
+      <ion-input type="number" [(ngModel)]="areaSqFt" placeholder="0" class="massive-input"></ion-input>
+      <span class="sqft-label">SQ.FT</span>
+    </div>
+  </div>
+
+  <div class="result-card" *ngIf="areaSqFt">
+    <div class="row">
+      <span>Base Amount</span>
+      <span>₹{{ subTotal | number }}</span>
+    </div>
+    <div class="row">
+      <span>GST ({{gstPercentage}}%)</span>
+      <span>₹{{ gstAmount | number }}</span>
+    </div>
+    <div class="divider"></div>
+    <div class="row grand-total">
+      <span>TOTAL QUOTE</span>
+      <span>₹{{ grandTotal | number }}</span>
+    </div>
+  </div>
+
+  <div class="button-stack">
+    <!-- <ion-button expand="block" mode="ios" (click)="generatePDF(false)" class="preview-btn">
+      <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
+    </ion-button> -->
+    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF(true)" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || !ratePerSqFt || !areaSqFt">
+      <ion-icon name="logo-whatsapp" slot="start"></ion-icon> Share Quotation
+    </ion-button>
+  </div>
+</ion-content>

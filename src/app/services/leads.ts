@@ -23,4 +23,8 @@ updateLead(id: number, data: any){
 getLeadDetails(id: number){
     return this.http.get(`${this.url}/leads/${id}`);
   }
+
+  getLeadCountNew(){
+     return this.http.get(`${this.url}/leads/count/new`);
+  }
 }

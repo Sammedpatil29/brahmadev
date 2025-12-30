@@ -6,7 +6,7 @@ import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, call, callOutline, globeOutline, image, locationOutline, logoFacebook, logoInstagram, navigateCircle, navigateCircleOutline, timeOutline, send, journalOutline, sendSharp, chatboxEllipsesOutline, cloudOfflineOutline, checkmarkCircleOutline, calendarOutline, documentTextOutline, trophyOutline, closeCircleOutline, personCircle, copyOutline } from 'ionicons/icons';
 import { Leads } from 'src/app/services/leads';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 
 @Component({
@@ -32,10 +32,13 @@ statusList = [
   'Busy', 
   'Visit Confirmed', 
   'Visiting Soon', 
-  'Wrong Number'
+  'Wrong Number',
+  'Quotation Sent',
+  'Closed',
+  'new',
 ];
 editData:any;
-  constructor(private navCtrl: NavController, private service: Leads, private route: ActivatedRoute, private toastController: ToastController) {
+  constructor(private navCtrl: NavController, private service: Leads, private route: ActivatedRoute, private toastController: ToastController, private router: Router) {
     addIcons({arrowBackOutline,callOutline,copyOutline,locationOutline,chatboxEllipsesOutline,send,personCircle,checkmarkCircleOutline,calendarOutline,documentTextOutline,trophyOutline,closeCircleOutline,cloudOfflineOutline,journalOutline,sendSharp,logoFacebook,logoInstagram,globeOutline,timeOutline,call,navigateCircleOutline,image,navigateCircle});
    }
 
@@ -138,4 +141,16 @@ async copyToClipboard(text: string, event: Event) {
   }
 }
 
+sendQuote() {
+  const navigationExtras: NavigationExtras = {
+    state: {
+      customerName: this.lead.name,
+      contact: this.lead.contact,
+      city: this.lead.city // assuming siteAddress is the city
+    }
+  };
+  
+  // Navigate to your target route (e.g., 'lead-details')
+  this.router.navigate(['layout/quotation'], navigationExtras);
+}
 }

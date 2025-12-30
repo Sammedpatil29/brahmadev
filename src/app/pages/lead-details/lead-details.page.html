@@ -52,7 +52,19 @@
       <span>{{ lead?.time | date:'dd MMM yy' }} • {{ lead?.time | date:'hh:mm a' }}</span>
     </div>
   </div>
-  <button class="login-button mt-3 w-100" (click)="callNow()">Call Lead</button>
+  <div class="d-flex gap-2">
+  <button class="login-button mt-3 w-100 d-flex align-items-center justify-content-center" (click)="callNow()">
+    <ion-icon name="call-outline" class="me-2"></ion-icon>
+    Call Lead
+  </button>
+
+  @if (lead.response !== 'new') {
+    <button class="login-button mt-3 w-100 d-flex align-items-center justify-content-center" (click)="sendQuote()">
+    <ion-icon name="document-text-outline" class="me-2"></ion-icon>
+    Send Quote
+  </button>
+  }
+</div>
 </div>
 
   <div class="chat-card" style="max-height: 60vh;">

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonToggle } from '@ionic/angular/standalone';
 // import { SocketService } from 'src/app/services/socket';
 import { NavController } from '@ionic/angular';
+import { Leads } from 'src/app/services/leads';
 
 @Component({
   selector: 'app-home',
@@ -15,15 +16,22 @@ import { NavController } from '@ionic/angular';
 export class HomePage implements OnInit {
 
   status: boolean = false
+  isLoading: boolean = false
   riderData: any
   rideRequests:any
+  newLeads:any = 0
 greeting: string = '';
 
-  constructor(private navCtrl: NavController ) { }
+  constructor(private navCtrl: NavController, private service: Leads ) { }
 
   ngOnInit() {
     // this.startTimeCounter();
     this.setGreeting();
+    this.newLeadsCount()
+  }
+
+  ionViewDidEnter() {
+    this.newLeadsCount()
   }
 
    ngOnDestroy() {
@@ -66,5 +74,13 @@ greeting: string = '';
   } else {
     this.greeting = 'Hello, Good Night 🌙';
   }
+}
+
+newLeadsCount(){
+  this.isLoading = true
+  this.service.getLeadCountNew().subscribe((res:any)=>{
+    this.newLeads = res.count;
+    this.isLoading = false;
+  })
 }
 }

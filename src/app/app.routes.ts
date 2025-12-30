@@ -29,6 +29,10 @@ export const routes: Routes = [
     path: 'lead-details',
     loadComponent: () => import('./pages/lead-details/lead-details.page').then( m => m.LeadDetailsPage)
   },
+   {
+    path: 'quotation',
+    loadComponent: () => import('./pages/quotation/quotation.page').then( m => m.QuotationPage)
+  },
   {
     path: '',
     redirectTo: 'home',
@@ -40,7 +44,9 @@ export const routes: Routes = [
     path: '',
     redirectTo: 'login',
     pathMatch: 'full',
-  }
+  },
+ 
+
   
 
   
