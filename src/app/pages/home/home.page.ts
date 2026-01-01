@@ -1,19 +1,26 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonToggle } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonToggle, IonBadge, IonIcon, IonCard, IonCardContent } from '@ionic/angular/standalone';
 // import { SocketService } from 'src/app/services/socket';
 import { NavController } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
+import { Fcm } from 'src/app/services/fcm';
+import { register } from 'swiper/element/bundle';
+import { Capacitor } from '@capacitor/core';
+import { LeadCardComponent } from "src/app/components/lead-card/lead-card.component";
+register();
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   standalone: true,
-  imports: [IonToggle, IonLabel, IonItem, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [IonCardContent, IonCard, IonIcon, IonBadge, IonToggle, IonLabel, IonItem, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, LeadCardComponent]
 })
 export class HomePage implements OnInit {
+
 
   status: boolean = false
   isLoading: boolean = false
@@ -22,13 +29,30 @@ export class HomePage implements OnInit {
   newLeads:any = 0
 greeting: string = '';
 
-  constructor(private navCtrl: NavController, private service: Leads ) { }
+lead: any;
+
+  constructor(private navCtrl: NavController, private service: Leads, private fcmService: Fcm ) { }
 
   ngOnInit() {
     // this.startTimeCounter();
     this.setGreeting();
     this.newLeadsCount()
+    // if (Capacitor.isNativePlatform()) {
+    //   this.fcmService.initPush()
+    // }
+    
   }
+
+  scroll(direction: 'left' | 'right') {
+  const container = document.querySelector('.swipe-container');
+  if (container) {
+    const scrollAmount = container.clientWidth * 0.9; // Match your card width
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  }
+}
 
   ionViewDidEnter() {
     this.newLeadsCount()
@@ -79,8 +103,10 @@ greeting: string = '';
 newLeadsCount(){
   this.isLoading = true
   this.service.getLeadCountNew().subscribe((res:any)=>{
-    this.newLeads = res.count;
+    this.lead = res;
     this.isLoading = false;
   })
 }
+
+
 }

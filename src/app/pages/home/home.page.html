@@ -25,6 +25,13 @@
 <div class="px-3 pt-5 w-100 d-flex align-items-center justify-content-center">
   <img style="    height: 140px; margin-top: 39px; margin-right: -13px;" src="assets/Brahmadev Constructions.png" alt="">
 </div>
+<div class="swipe-container">
+  @for (todayLead of lead?.todayLeads; track todayLead?.id) {
+    <div class="swipe-item">
+      <app-lead-card [lead]="todayLead"></app-lead-card>
+    </div>
+  }
+</div>
 <div class="m-3">
   <div class="row g-2"> 
     <div class="col-6">
@@ -47,7 +54,7 @@
         <div class="mt-2 small font-weight-bold">Leads</div>
         <div class="position-absolute" style="top: -7px; right: -5px">
           @if (!isLoading) {
-            <div class="badge rounded-pill bg-danger">{{newLeads}}</div>
+            <div class="badge rounded-pill bg-danger">{{lead.count}}</div>
           } @else {
             <div class="badge rounded-pill bg-danger">
               <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">

@@ -41,7 +41,43 @@
   </div>
 
   <div class="header-status-row">
-    <span id="open-custom-dialog" class="status-badge">{{ lead?.response }}</span>
+    <div class="d-flex gap-2">
+  <span id="open-custom-dialog" class="status-badge">{{ lead?.response }}
+    <span>
+      @if (isUpdatingResponse) {
+        <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
+      }
+    </span>
+  </span>
+
+ 
+    <div class="platform-date" [hidden]="lead.response == 'new' || lead.response == 'Not Interested' || lead.response == 'Closed' || lead.response == 'Wrong Number'" (click)="dateTimePicker.showPicker()" style="cursor: pointer;">
+  
+      <span class="status-badge">
+       @if (!isUpdatingDate) {
+         @if (lead.visit_schedule == '' || lead.visit_schedule == null ) {
+        <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="24px" fill="#5985E1">
+          <path d="M680-80v-120H560v-80h120v-120h80v120h120v80H760v120h-80Zm-480-80q-33 0-56.5-23.5T120-240v-480q0-33 23.5-56.5T200-800h40v-80h80v80h240v-80h80v80h40q33 0 56.5 23.5T760-720v244q-20-3-40-3t-40 3v-84H200v320h280q0 20 3 40t11 40H200Zm0-480h480v-80H200v80Zm0 0v-80 80Z"/>
+        </svg>
+    } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="20px" fill="#439400"><path d="M216-96q-29 0-50.5-21.5T144-168v-528q0-29.7 21.5-50.85Q187-768 216-768h72v-96h72v96h240v-96h72v96h72q29 0 50.5 21.15T816-696v244l-72 72v-148H216v360h226l72 72H216Zm424 24L504-208l51-51 85 85 170-170 51 51L640-72Z"/></svg>
+        <!-- <small style="margin-left: 5px;">{{ scheduledDate | date:'short' }}</small> -->
+    }
+       } @else {
+        <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
+       }
+ </span>
+    <input 
+      type="datetime-local" 
+      #dateTimePicker 
+      style="display: none;" 
+      (change)="onDateTimeSelected(dateTimePicker.value)">
+  </div>
+</div>
     
     <div class="platform-date">
       @if (lead.platform === 'ig') {
@@ -49,7 +85,7 @@
       } @else {
         <ion-icon [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
       }
-      <span>{{ lead?.time | date:'dd MMM yy' }} • {{ lead?.time | date:'hh:mm a' }}</span>
+      <span>{{ lead?.time | date:'dd MMM yy' }} • {{ lead?.time | date:'HH:mm ' }}</span>
     </div>
   </div>
   <div class="d-flex gap-2">
@@ -100,12 +136,21 @@
       class="message-input">
     </ion-textarea>
     
-    <ion-button 
+    @if (!isSending) {
+      <ion-button 
       fill="clear" 
       (click)="saveChanges()" 
+      [disabled]="isSending || !newComment"
       >
       <ion-icon name="send" slot="icon-only" color="primary"></ion-icon>
     </ion-button>
+    } @else {
+      <div class="mb-2 text-primary" style="font-size: 10px;">
+        <div class="spinner-border spinner-border-sm" role="">
+  <span class="visually-hidden">Loading...</span>
+</div>
+      </div>
+    }
   </div>
 </div>
 

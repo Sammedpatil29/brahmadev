@@ -18,8 +18,11 @@ import { ToastController } from '@ionic/angular';
 })
 export class LeadDetailsPage implements OnInit {
 
+
 newComment: any;
+isSending:boolean = false
 id: any;
+scheduledDate = '';
 lead:any = {
   "comment": []
 }
@@ -39,7 +42,7 @@ statusList = [
 ];
 editData:any;
   constructor(private navCtrl: NavController, private service: Leads, private route: ActivatedRoute, private toastController: ToastController, private router: Router) {
-    addIcons({arrowBackOutline,callOutline,copyOutline,locationOutline,chatboxEllipsesOutline,send,personCircle,checkmarkCircleOutline,calendarOutline,documentTextOutline,trophyOutline,closeCircleOutline,cloudOfflineOutline,journalOutline,sendSharp,logoFacebook,logoInstagram,globeOutline,timeOutline,call,navigateCircleOutline,image,navigateCircle});
+    addIcons({arrowBackOutline,callOutline,copyOutline,locationOutline,documentTextOutline,chatboxEllipsesOutline,send,personCircle,checkmarkCircleOutline,calendarOutline,trophyOutline,closeCircleOutline,cloudOfflineOutline,journalOutline,sendSharp,logoFacebook,logoInstagram,globeOutline,timeOutline,call,navigateCircleOutline,image,navigateCircle});
    }
 
   ngOnInit() {
@@ -83,21 +86,34 @@ this.service.updateLeads(params, this.lead.id).subscribe((res:any)=>{
   "city": "",
   "user": localStorage.getItem('userName')
 }
+this.isSending = true
 this.service.updateLeads(params, this.lead.id).subscribe((res:any)=>{
     this.lead = res
     this.newComment = ''
+    this.isSending = false
+  }, error =>{
+    this.isSending = false
   })
   }
 }
 
+isUpdatingResponse = false
 updateStatus(arg0: string) {
+  this.isUpdatingResponse = true
   let params = {
     "response": arg0
   }
 this.service.updateLeads(params, this.lead.id).subscribe((res:any)=>{
     this.lead = res
+    this.isUpdatingResponse = false
+  }, error => {
+    this.isUpdatingResponse = false
   })
 }
+
+
+
+
 isLoading: boolean = false
 getLeadDetails(){
   this.isLoading = true
@@ -152,5 +168,36 @@ sendQuote() {
   
   // Navigate to your target route (e.g., 'lead-details')
   this.router.navigate(['layout/quotation'], navigationExtras);
+}
+
+// onDateSelected(arg0: string) {
+// this.scheduledDate = arg0
+// }
+// scheduledDate: string = '';
+isUpdatingDate = false
+onDateTimeSelected(value: string) {
+  if (!value) return;
+
+  // 1. Update the local UI state
+  this.scheduledDate = value;
+
+  // 2. Prepare parameters for the API
+  // We assume 'visit confirmed' is the status when a date/time is picked
+  const params = {
+    "visit_schedule": value 
+  };
+this.isUpdatingDate = true
+  // 3. Call your service
+  this.service.updateLeads(params, this.lead.id).subscribe({
+    next: (res: any) => {
+      this.lead = res;
+      this.isUpdatingDate = false
+      console.log('Date and Time updated successfully');
+    },
+    error: (err) => {
+      console.error('Update failed', err);
+      this.isUpdatingDate = false
+    }
+  });
 }
 }

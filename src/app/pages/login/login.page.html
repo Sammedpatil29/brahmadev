@@ -1,4 +1,4 @@
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="">
   <div class="login-container">
     
     @if (showLogin) {
@@ -34,8 +34,9 @@
         </div>
       </div>
     } @else {
-      <div class="loading-state">
-        <ion-spinner color="primary"></ion-spinner>
+      <div class="loading-state w-100">
+        <img style="width: 100px" src="assets/Untitled design.gif" alt="">
+        <!-- <ion-spinner color="primary"></ion-spinner> -->
       </div>
     }
 

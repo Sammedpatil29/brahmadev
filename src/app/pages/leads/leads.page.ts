@@ -7,6 +7,7 @@ import { addIcons } from 'ionicons';
 import { arrowBackOutline, call, image, navigateCircle, navigateCircleOutline, logoFacebook, callOutline, locationOutline, timeOutline, logoInstagram, globeOutline } from 'ionicons/icons';
 import { Leads } from 'src/app/services/leads';
 import { ActionSheetController } from '@ionic/angular';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-leads',
@@ -19,16 +20,23 @@ export class LeadsPage implements OnInit {
 
 
   leads: any
-  searchTerm: string = '';     // Your master data from the API
+  searchTerm: string = 'new';     // Your master data from the API
   filteredLeads: any[] = [];
-  response : any[] = ['new', 'interested', 'not interested', 'yet to think', 'call back requested', 'busy', 'visit confirmed', 'visiting soon', 'wrong number', 'conversion started'];
+  response : any = []
   newLeads: any
   isLoading:boolean = false
-  constructor(private navCtrl: NavController, private service: Leads, private actionSheetCtrl: ActionSheetController) {
+  constructor(private navCtrl: NavController, private service: Leads, private actionSheetCtrl: ActionSheetController, private route: ActivatedRoute) {
     addIcons({arrowBackOutline,logoFacebook,logoInstagram,globeOutline,callOutline,locationOutline,timeOutline,call,navigateCircleOutline,image,navigateCircle}); 
    }
 
   ngOnInit() {
+    this.route.queryParams.subscribe((item:any)=>{
+      if (item['filter'] === 'scheduled') {
+      this.searchTerm = 'scheduled';
+      // Ensure leads are loaded before searching
+      this.handleSearch(); 
+    }
+    })
     this.getLeads()
   }
 
@@ -38,7 +46,7 @@ export class LeadsPage implements OnInit {
 
   ionViewWillEnter() {
     this.getLeads();
-    this.searchTerm = ''
+    // this.handleSearch()
   }
 
   getLeads(event?: any) {
@@ -48,6 +56,8 @@ export class LeadsPage implements OnInit {
       this.leads = res;
       this.filteredLeads = this.leads
       this.newLeads = this.leads.filter((item:any)=>item.response === 'new')
+      this.handleSearch()
+      this.getResponseList()
       this.isLoading = false;
 
       // This tells the UI to stop rotating and close the refresher
@@ -65,6 +75,19 @@ export class LeadsPage implements OnInit {
   });
   }
 
+  getResponseList(){
+    this.response = []
+    this.leads.forEach((item:any)=>{
+      if(!this.response.includes(item.response)){
+        if(item.response == 'new'){
+          this.response.unshift(item.response)
+        } else {
+           this.response.push(item.response)
+        }
+      }
+    })
+  }
+
   viewLead(arg0: any) {
 this.navCtrl.navigateForward(['/layout/lead-details'], {
     queryParams: { id: arg0 }
@@ -80,24 +103,38 @@ resetSearch(){
   this.searchTerm = ''
   this.handleSearch()
 }
+scheduledSearch(){
+  this.searchTerm = 'scheduled'
+  this.handleSearch()
+}
 
 handleSearch() {
-    const query = this.searchTerm.toLowerCase().trim();
+  const query = this.searchTerm.toLowerCase().trim();
 
-    if (!query) {
-      // If search is empty, show everything
-      this.filteredLeads = [...this.leads];
-      return;
-    }
-
-    // Filter based on multiple fields (name or city)
-    this.filteredLeads = this.leads.filter((lead:any) => {
-      return lead.name.toLowerCase().includes(query) || 
-             lead.city.toLowerCase().includes(query) ||
-             lead.contact.toLowerCase().includes(query) ||
-             lead.response.toLowerCase().includes(query)
-    });
+  if (!query) {
+    // If search is empty, show everything
+    this.filteredLeads = [...this.leads];
+    return;
   }
+
+  // --- NEW FUNCTIONALITY START ---
+  if (query === 'scheduled') {
+    this.filteredLeads = this.leads.filter((lead: any) => {
+      // Check for both null and empty string to be safe
+      return lead.visit_schedule !== null && lead.visit_schedule !== '';
+    });
+    return; // Exit here so the old functionality below doesn't overwrite this
+  }
+  // --- NEW FUNCTIONALITY END ---
+
+  // Old Functionality (untouched logic, just executes if not 'scheduled')
+  this.filteredLeads = this.leads.filter((lead: any) => {
+    return lead.name.toLowerCase().includes(query) || 
+           lead.city.toLowerCase().includes(query) ||
+           lead.contact.toLowerCase().includes(query) ||
+           lead.response.toLowerCase().includes(query);
+  });
+}
 
   filterbyChips(chips:any){
     this.searchTerm = chips

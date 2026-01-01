@@ -5,3 +5,31 @@
 .card:hover {
         background-color: rgba(128, 128, 128, 0.096);
     }
+
+    .swipe-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory; /* Forces the swipe to lock onto a card */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling for iOS */
+  gap: 15px;
+//   padding: 10px 0;
+  scrollbar-width: none; /* Hides scrollbar for Firefox */
+}
+
+.swipe-container::-webkit-scrollbar {
+  display: none; /* Hides scrollbar for Chrome/Safari */
+}
+
+.swipe-item {
+  flex: 0 0 90%; /* Each card takes up 90% of the width */
+  scroll-snap-align: center; /* Centers the card in the viewport after swipe */
+}
+
+/* Optional: Add a "peek" effect so user knows there's more */
+.swipe-item:first-child {
+  margin-left: 5%;
+}
+.swipe-item:last-child {
+  margin-right: 5%;
+}

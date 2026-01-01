@@ -24,4 +24,5 @@ export class Login {
   getVisits(params:any){
     return this.http.post(`${this.url}/visits-by-token`, params)
   }
+
 }

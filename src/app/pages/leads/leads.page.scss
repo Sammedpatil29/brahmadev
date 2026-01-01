@@ -4,7 +4,7 @@
 
 .modern-lead-card {
   margin: 0;
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   position: relative;
@@ -17,7 +17,8 @@
     top: 0;
     bottom: 0;
     width: 6px;
-    background: linear-gradient(to bottom, #3880ff, #2dd36f);
+    // background: linear-gradient(to bottom, #ffdb38, #db1b1b);
+    background: rgb(53, 126, 235)
   }
 
   ion-card-content {
@@ -136,4 +137,19 @@
 
 ::ng-deep .searchbar-input.sc-ion-searchbar-md {
   border-radius: 12px !important;
+}
+
+/* Add this to your component's CSS */
+.no-data-container {
+  // background: #f9fafb;
+  // border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  min-height: 200px;
+}
+
+.icon-wrapper {
+  background: #f3f4f6;
+  border-radius: 50%;
+  padding: 15px;
+  display: inline-flex;
 }

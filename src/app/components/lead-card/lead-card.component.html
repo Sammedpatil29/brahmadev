@@ -1,0 +1,58 @@
+<div class="">
+  <div class="lead-card-container">
+    <ion-card class="modern-lead-card" (click)="viewLead()">
+      <div class="card-gradient-bar"></div>
+      
+      <ion-card-content>
+        <div class="card-header-row">
+          <div class="user-avatar">
+            {{ lead.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="header-info">
+            <h2 class="lead-name">{{ lead.name }}</h2>
+            <div class="d-flex gap-3">
+              @if (lead.platform == 'fb') {
+<p class="lead-platform"><ion-icon name="logo-facebook"></ion-icon> {{ lead.platform == 'fb' ? 'Facebook': 'unknown' }}</p>
+            } @else if (lead.platform == 'ig') {
+<p class="lead-platform"><ion-icon name="logo-instagram" class="text-danger"></ion-icon> {{ lead.platform == 'ig' ? 'Instagram': 'unknown' }}</p>
+            } @else {
+<p class="lead-platform"><ion-icon name="globe-outline" class="text-dark"></ion-icon> {{ lead.platform || 'unknown' }}</p>
+            }
+
+            
+              <p [hidden]="lead.visit_schedule == null" class="lead-platform"><svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="#439400"><path d="M216-96q-29 0-50.5-21.5T144-168v-528q0-29.7 21.5-50.85Q187-768 216-768h72v-96h72v96h240v-96h72v96h72q29 0 50.5 21.15T816-696v244l-72 72v-148H216v360h226l72 72H216Zm424 24L504-208l51-51 85 85 170-170 51 51L640-72Z"/></svg> 
+                 &nbsp;{{ lead.visit_schedule | date: 'dd MMM yy' : '+0000' }} - {{ lead.visit_schedule | date: 'hh:mm a' : '+0000' }}</p>
+          
+
+            </div>
+          </div>
+          
+        </div>
+
+        <div class="card-body-row">
+          <div class="info-item">
+            <ion-icon name="call-outline"></ion-icon>
+            <span>{{ lead.contact }}</span>
+          </div>
+          <div class="info-item">
+            <ion-icon name="location-outline"></ion-icon>
+            <span class="text-truncate">{{ lead.city || 'Location N/A' | titlecase }}</span>
+          </div>
+        </div>
+
+        <!-- <div class="card-footer-row">
+          <span class="visit-time">
+            <ion-icon name="time-outline"></ion-icon>
+            {{ lead.time | date:'mediumDate' }} • {{ lead.time | date:'shortTime' }}
+          </span>
+          <ion-badge 
+  [color]="lead.response == 'Closed' || lead.response == 'Wrong Number' ? 'danger': 'success'" 
+  class="status-badge text-white">
+  {{lead.response | titlecase}}
+</ion-badge>
+          
+        </div> -->
+      </ion-card-content>
+    </ion-card>
+  </div>
+</div>
