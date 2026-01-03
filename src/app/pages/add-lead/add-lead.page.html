@@ -1,0 +1,52 @@
+<ion-header class="ion-no-border pt-4 bg-white">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Add New Lead</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="input-container">
+    <p class="section-title">LEAD DETAILS</p>
+    <div class="input-group">
+      <ion-input [(ngModel)]="leadName" placeholder="Full Name" class="custom-input"></ion-input>
+      <ion-input [(ngModel)]="village" placeholder="Village / Area" class="custom-input"></ion-input>
+      <ion-input [(ngModel)]="contact" type="tel" placeholder="Contact Number" class="custom-input"></ion-input>
+      
+      <div class="custom-input date-trigger" (click)="dateTimePicker.showPicker()">
+        <div class="date-content">
+          <span [class.placeholder]="!visitDate">
+            {{ visitDate ? (visitDate | date: 'dd MMM yyyy, hh:mm a') : 'Select Visit Date' }}
+          </span>
+          <ion-icon name="calendar-outline"></ion-icon>
+        </div>
+        
+        <input 
+          type="datetime-local" 
+          #dateTimePicker 
+          style="position: absolute; opacity: 0; width: 0; height: 0;" 
+          (change)="onDateTimeSelected(dateTimePicker.value)">
+      </div>
+    </div>
+  </div>
+
+  <div class="button-stack">
+    <ion-button 
+      expand="block" 
+      mode="ios" 
+      color="dark" 
+      (click)="saveLead()" 
+      [disabled]="!leadName || !village || contact.length < 10 || !visitDate">
+      @if (isLoading) {
+        <span>Saving</span>
+      } @else {
+        <ion-icon name="person-add-outline" slot="start"></ion-icon> 
+        Save Lead Details
+      }
+    </ion-button>
+  </div>
+</ion-content>

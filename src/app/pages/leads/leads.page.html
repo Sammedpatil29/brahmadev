@@ -5,7 +5,16 @@
         <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Business Leads</ion-title>
+    <ion-title>
+     <div class="d-flex justify-content-between align-items-center">
+       <div>
+        Business Leads
+      </div> 
+      <div (click)="addLead()">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+      </div>
+     </div>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 <div class="position-sticky bg-white" style="top: 0px; z-index: 999">
@@ -56,7 +65,7 @@
             {{ lead.name.charAt(0).toUpperCase() }}
           </div>
           <div class="header-info">
-            <h2 class="lead-name">{{ lead.name }}</h2>
+            <h2 class="lead-name">{{ lead.name | titlecase}}</h2>
             <div class="d-flex gap-3">
               @if (lead.platform == 'fb') {
 <p class="lead-platform"><ion-icon name="logo-facebook"></ion-icon> {{ lead.platform == 'fb' ? 'Facebook': 'unknown' }}</p>

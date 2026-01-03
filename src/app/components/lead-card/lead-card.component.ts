@@ -23,11 +23,9 @@ export class LeadCardComponent  implements OnInit {
   ngOnInit() {}
 
  viewLead() {
-this.navCtrl.navigateForward('/layout/leads', {
-  queryParams: {
-    filter: 'scheduled'
-  }
-})
+this.navCtrl.navigateForward(['/layout/lead-details'], {
+    queryParams: { id: this.lead.id }
+  });
 }
 
 }

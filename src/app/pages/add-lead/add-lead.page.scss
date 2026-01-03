@@ -1,0 +1,83 @@
+ion-content {
+  --background: #f8f9fc;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #a0aec0;
+  letter-spacing: 1px;
+  margin: 25px 0 10px 5px;
+}
+
+.input-group {
+  background: white;
+  border-radius: 15px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  .custom-input { 
+    border-bottom: 1px solid #f0f0f0; 
+    --padding-start: 10px;
+    height: 55px;
+  }
+  .custom-input:last-child { border-bottom: none; }
+}
+
+.date-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  border: 2px solid #e2e8f0;
+  
+  ion-label {
+    font-weight: 700;
+    color: #4a5568;
+    font-size: 0.9rem;
+  }
+}
+
+.button-stack {
+  margin-top: 40px;
+  ion-button {
+    height: 60px;
+    --border-radius: 16px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+}
+
+.date-trigger {
+  display: flex;
+  align-items: center;
+  height: 55px;
+  padding: 0 10px;
+  cursor: pointer;
+  position: relative;
+
+  .date-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 0.95rem;
+    color: #2d3748;
+
+    .placeholder {
+      color: #a0aec0;
+    }
+
+    ion-icon {
+      color: #a0aec0;
+      font-size: 1.2rem;
+    }
+  }
+}
+
+/* Ensure the date input doesn't have a border if it's the last item */
+.input-group div:last-child {
+  border-bottom: none;
+}

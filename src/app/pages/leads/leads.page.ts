@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton, IonIcon, IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonBadge, IonSpinner, IonSearchbar } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton, IonIcon, IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonBadge, IonSpinner, IonSearchbar, IonDatetimeButton } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, call, image, navigateCircle, navigateCircleOutline, logoFacebook, callOutline, locationOutline, timeOutline, logoInstagram, globeOutline } from 'ionicons/icons';
+import { arrowBackOutline, call, image, navigateCircle, navigateCircleOutline, logoFacebook, callOutline, locationOutline, timeOutline, logoInstagram, globeOutline, personAddOutline } from 'ionicons/icons';
 import { Leads } from 'src/app/services/leads';
 import { ActionSheetController } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
@@ -14,7 +14,7 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './leads.page.html',
   styleUrls: ['./leads.page.scss'],
   standalone: true,
-  imports: [IonSearchbar, IonSpinner, IonBadge, IonCardContent, IonCard, IonRefresherContent, IonRefresher, IonIcon, IonButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonDatetimeButton, IonSearchbar, IonSpinner, IonBadge, IonCardContent, IonCard, IonRefresherContent, IonRefresher, IonIcon, IonButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
 })
 export class LeadsPage implements OnInit {
 
@@ -26,7 +26,7 @@ export class LeadsPage implements OnInit {
   newLeads: any
   isLoading:boolean = false
   constructor(private navCtrl: NavController, private service: Leads, private actionSheetCtrl: ActionSheetController, private route: ActivatedRoute) {
-    addIcons({arrowBackOutline,logoFacebook,logoInstagram,globeOutline,callOutline,locationOutline,timeOutline,call,navigateCircleOutline,image,navigateCircle}); 
+    addIcons({arrowBackOutline,personAddOutline,logoFacebook,logoInstagram,globeOutline,callOutline,locationOutline,timeOutline,call,navigateCircleOutline,image,navigateCircle}); 
    }
 
   ngOnInit() {
@@ -139,6 +139,10 @@ handleSearch() {
   filterbyChips(chips:any){
     this.searchTerm = chips
     this.handleSearch()
+  }
+
+  addLead(){
+    this.navCtrl.navigateForward('/layout/add-lead')
   }
 
 //   updateLeadData() {

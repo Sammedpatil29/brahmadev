@@ -27,4 +27,8 @@ getLeadDetails(id: number){
   getLeadCountNew(){
      return this.http.get(`${this.url}/leads/count/new`);
   }
+
+  saveLead(params:any){
+    return this.http.post(`${this.url}/meta-leads`, params)
+  }
 }
