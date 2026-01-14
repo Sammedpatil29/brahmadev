@@ -1,53 +1,59 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { PushNotifications, Token, PushNotification } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
+import { Route, Router } from '@angular/router';
+import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
+import { Platform } from '@ionic/angular';
+import { jwtDecode } from 'jwt-decode';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class Fcm {
+@Injectable({ providedIn: 'root' })
+export class FcmService {
+  constructor(private platform: Platform, private http: HttpClient, private route: Router) {}
 
-  initPush() {
-    console.log('initiated')
-    // Request permission
-    PushNotifications.requestPermissions().then(result => {
-      if (result.receive === 'granted') {
-        PushNotifications.register();
-        console.log('eiifef')
-      } else {
-        console.warn('Push permission not granted');
-      }
-    });
+  async initPush() {
+    if (this.platform.is('capacitor')) {
+      this.registerPush();
+    }
+  }
 
-    // Get FCM token
+  private async registerPush() {
+    let permStatus = await PushNotifications.checkPermissions();
+
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions();
+    }
+
+    if (permStatus.receive !== 'granted') {
+      throw new Error('User denied permissions!');
+    }
+
+    await PushNotifications.register();
+
+    // On success, we get a token to identify this device
     PushNotifications.addListener('registration', (token: Token) => {
-      console.log('FCM Token:', token.value);
-      localStorage.setItem('FcmToken', token.value)
-      // 👉 Send token to your server
-      // this.http.post('https://your-api.com/api/save-token', {
-      //   userId: 'user-123', // or get it dynamically
-      //   fcmToken: token.value,
-      // }).subscribe(() => {
-      //   console.log('Token saved to backend');
-      // });
+      console.log('My FCM Token: ', token.value);
+      // SEND THIS TOKEN TO YOUR BACKEND SERVER VIA API
+      let userToken: any = localStorage.getItem('userToken')
+      console.log('user token:', userToken)
+      let decoded:any = jwtDecode(userToken)
+      console.log('user id:', decoded)
+      this.http.patch('https://brahmadev-backend.onrender.com/users/fcm-token', {
+    id: decoded.id, // Get this from your Auth state
+    fcm_token: token.value
+  }).subscribe({
+    next: () => console.log('Token saved to server'),
+    error: (err) => console.error('Failed to save token', err)
+  });
     });
 
-    // Handle registration error
-    PushNotifications.addListener('registrationError', error => {
-      console.error('Registration error:', error);
+    // Handle what happens when a notification arrives
+    PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+      console.log('Notification received: ', notification);
     });
 
-    // Notification received in foreground
-    PushNotifications.addListener('pushNotificationReceived', (notification: PushNotification) => {
-      console.log('Notification received:', notification);
-       alert(`${notification.title}\n${notification.body}`);
-    });
-
-    // Notification tapped
-    PushNotifications.addListener('pushNotificationActionPerformed', action => {
-      console.log('Notification action performed:', action.notification);
+    // Handle what happens when the user taps the notification
+    PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
+      console.log('Action performed: ', notification.notification);
+      this.route.navigate(['/layout/leads'])
     });
   }
-  
 }
-

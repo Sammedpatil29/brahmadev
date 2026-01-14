@@ -86,3 +86,12 @@
   align-items: center;
   height: 100%;
 }
+
+.small-spinner {
+  /* Adjust size here */
+  width: 18px;
+  height: 18px;
+
+  /* Force white color if color="light" is not used */
+  --color: #ffffff;
+}

@@ -16,3 +16,11 @@
     opacity: 0.5;
   }
 }
+
+.ion-valid.sc-ion-input-md-h {
+    --highlight-color: black !important;
+}
+
+.ion-valid {
+    --highlight-color: black !important;
+}

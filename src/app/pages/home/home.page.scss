@@ -1,35 +1,106 @@
-.card {
-    box-shadow: 0px 0px 1px black;
+/* Card & Menu Styling */
+.menu-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
 }
 
-.card:hover {
-        background-color: rgba(128, 128, 128, 0.096);
-    }
+.menu-card:active {
+  transform: scale(0.95);
+  background-color: #f8f9fa;
+}
 
-    .swipe-container {
+.icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.menu-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Specific Icon Backgrounds */
+.bg-soft-blue { background: #e7f1ff; }
+.bg-soft-purple { background: #f3e8ff; }
+.bg-soft-orange { background: #fff3e0; }
+.bg-soft-green { background: #e8f5e9; }
+
+/* Swipe Container Fixes */
+.swipe-container {
   display: flex;
   overflow-x: auto;
-  scroll-snap-type: x mandatory; /* Forces the swipe to lock onto a card */
+  scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling for iOS */
-  gap: 15px;
-//   padding: 10px 0;
-  scrollbar-width: none; /* Hides scrollbar for Firefox */
+  gap: 12px;
+  padding: 10px 20px;
+  scrollbar-width: none;
+}
+.swipe-container::-webkit-scrollbar { display: none; }
+.swipe-item { flex: 0 0 85%; scroll-snap-align: center; }
+
+/* Badges & Status */
+.custom-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #dc3545;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
 }
 
-.swipe-container::-webkit-scrollbar {
-  display: none; /* Hides scrollbar for Chrome/Safari */
+.date-badge {
+  display: inline-block;
+  background: #f1f3f5;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: #666;
 }
 
-.swipe-item {
-  flex: 0 0 90%; /* Each card takes up 90% of the width */
-  scroll-snap-align: center; /* Centers the card in the viewport after swipe */
+.progress-text {
+  font-size: 1.1rem;
+  color: #444;
+  font-weight: 500;
 }
 
-/* Optional: Add a "peek" effect so user knows there's more */
-.swipe-item:first-child {
-  margin-left: 5%;
+.progress-text .highlight {
+  color: #0d6efd;
+  font-weight: 800;
+  font-size: 1.4rem;
 }
-.swipe-item:last-child {
-  margin-right: 5%;
+
+/* Misc */
+.main-logo {
+  height: 150px;
+  object-fit: contain;
+}
+
+.disabled-card {
+  opacity: 0.7;
+  background: #fdfdfd;
+}
+
+.lock-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }

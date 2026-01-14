@@ -5,7 +5,6 @@ import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonTogg
 // import { SocketService } from 'src/app/services/socket';
 import { NavController } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
-import { Fcm } from 'src/app/services/fcm';
 import { register } from 'swiper/element/bundle';
 import { Capacitor } from '@capacitor/core';
 import { LeadCardComponent } from "src/app/components/lead-card/lead-card.component";
@@ -30,8 +29,8 @@ export class HomePage implements OnInit {
 greeting: string = '';
 
 lead: any;
-
-  constructor(private navCtrl: NavController, private service: Leads, private fcmService: Fcm ) { }
+today = new Date()
+  constructor(private navCtrl: NavController, private service: Leads ) { }
 
   ngOnInit() {
     // this.startTimeCounter();

@@ -34,7 +34,7 @@
   <ion-input class="mt-3" [(ngModel)]="ownerName" label="Owner Name*" label-placement="floating" fill="outline" placeholder="Enter Owner Name"></ion-input>
   <ion-input class="mt-3" [(ngModel)]="ownerContact" label="Owner Contact*" label-placement="floating" fill="outline" placeholder="Enter Owner Contact Number"></ion-input>
   <div class="row g-2 m-0">
-  <div class="col-6 p-0 mt-0">
+  <div class="p-0 mt-0">
     <ion-input
       class="mt-3"
       [(ngModel)]="builtUpArea"
@@ -44,25 +44,11 @@
       placeholder="Enter Approx Built Up Area">
     </ion-input>
   </div>
-  <div class="col-6 pe-0 mt-0">
-    <ion-select
-      class="mt-3"
-      [(ngModel)]="floors"
-      label="No. of Floors"
-      label-placement="floating"
-      fill="outline"
-      interface="popover">
-      <ion-select-option value="1">1</ion-select-option>
-      <ion-select-option value="2">2</ion-select-option>
-      <ion-select-option value="3">3</ion-select-option>
-      <ion-select-option value="4">4</ion-select-option>
-      <ion-select-option value="5">5</ion-select-option>
-      <ion-select-option value="6+">6+</ion-select-option>
-    </ion-select>
-  </div>
+  
 </div>
-   <ion-select
-      class="mt-3"
+   <div class="row g-2 m-0">
+    <ion-select
+      class="mt-3 col-7 p-0"
       [(ngModel)]="response"
       label="Approach Response*"
       label-placement="floating"
@@ -80,6 +66,23 @@
   <ion-select-option value="call_back_requested">Requested Call Back</ion-select-option>
   <ion-select-option value="others">Others</ion-select-option>
     </ion-select>
+    <div class="col-5 pe-0 mt-0">
+    <ion-select
+      class="mt-3"
+      [(ngModel)]="floors"
+      label="No. of Floors"
+      label-placement="floating"
+      fill="outline"
+      interface="popover">
+      <ion-select-option value="1">1</ion-select-option>
+      <ion-select-option value="2">2</ion-select-option>
+      <ion-select-option value="3">3</ion-select-option>
+      <ion-select-option value="4">4</ion-select-option>
+      <ion-select-option value="5">5</ion-select-option>
+      <ion-select-option value="6+">6+</ion-select-option>
+    </ion-select>
+  </div>
+   </div>
   <ion-input class="mt-3" [(ngModel)]="engineerName" label="Engineer Name" label-placement="floating" fill="outline" placeholder="Enter Engineer Name"></ion-input>
   <ion-input class="mt-3" [(ngModel)]="engineerContact" label="Engineer Contact" label-placement="floating" fill="outline" placeholder="Enter Engineer Contact Number"></ion-input>
   <ion-input class="mt-3" [(ngModel)]="contractorName" label="Contractor Name" label-placement="floating" fill="outline" placeholder="Enter Contractor Name"></ion-input>
