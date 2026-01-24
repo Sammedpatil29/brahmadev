@@ -1,4 +1,4 @@
-<ion-header class="ion-no-border pt-4 bg-white">
+<ion-header class="ion-no-border bg-white">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="back()">
@@ -52,16 +52,24 @@
         @if (item.isExpanded) {
           <div class="expanded-details">
             <div class="detail-row">
-              <p><strong>Engineer Name:</strong> {{item.engineerName || 'Shrikant Badakambhi'}}</p>
-              <p><strong>Engineer Contact:</strong> {{item.engineerContact || '9972407282'}} 
-                <a [href]="'tel:' + item.engineerContact" (click)="$event.stopPropagation()"><ion-icon name="call" class="mini-call"></ion-icon></a>
-              </p>
+              @if (item.engineerName) {
+                <p><strong>Engineer Name:</strong> {{item.engineerName}}</p>
+              }
+              @if (item.engineerContact) {
+                <p><strong>Engineer Contact:</strong> {{item.engineerContact}} 
+                  <a [href]="'tel:' + item.engineerContact" (click)="$event.stopPropagation()"><ion-icon name="call" class="mini-call"></ion-icon></a>
+                </p>
+              }
             </div>
             <div class="detail-row">
-              <p><strong>Contractor Name:</strong> {{item.contractorName || 'Sidu Basaragi'}}</p>
-              <p><strong>Contractor Contact:</strong> {{item.contractorContact || '9164469930'}} 
-                <a [href]="'tel:' + item.contractorContact" (click)="$event.stopPropagation()"><ion-icon name="call" class="mini-call"></ion-icon></a>
-              </p>
+              @if (item.contractorName) {
+                <p><strong>Contractor Name:</strong> {{item.contractorName}}</p>
+              }
+              @if (item.contractorContact) {
+                <p><strong>Contractor Contact:</strong> {{item.contractorContact}} 
+                  <a [href]="'tel:' + item.contractorContact" (click)="$event.stopPropagation()"><ion-icon name="call" class="mini-call"></ion-icon></a>
+                </p>
+              }
             </div>
           </div>
         }

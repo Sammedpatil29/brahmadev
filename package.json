@@ -33,6 +33,7 @@
     "@capacitor/push-notifications": "^8.0.0",
     "@capacitor/share": "^8.0.0",
     "@capacitor/status-bar": "7.0.3",
+    "@capawesome/capacitor-app-update": "^8.0.1",
     "@ionic/angular": "^8.0.0",
     "bootstrap": "^5.3.8",
     "firebase": "^12.7.0",
