@@ -156,16 +156,21 @@
 
 </ion-content>
 
-<ion-modal id="example-modal" #modal trigger="open-custom-dialog">
+<ion-modal id="example-modal" #modal trigger="open-custom-dialog" style="--height: auto; --width: 90%; --max-height: 80%; --border-radius: 16px; --overflow: auto;">
     <ng-template>
-      <div class="wrapper">
+      <div class="ion-padding">
+        <div class="ion-text-center ion-margin-bottom ion-margin-top">
+          <h5 class="m-0 fw-bold text-dark">Update Status</h5>
+        </div>
         <ion-list lines="none">
   @for (name of statusList; track name) {
-    <ion-item button="true" (click)="updateStatus(name); modal.dismiss()">
-      <ion-label>{{ name }}</ion-label>
+    <ion-item button="true" (click)="updateStatus(name); modal.dismiss()"
+      style="--background: #f8f9fa; margin-bottom: 8px; border-radius: 12px; --border-radius: 12px;">
+      <ion-label [style.font-weight]="lead?.response === name ? '600' : '400'"
+                 [color]="lead?.response === name ? 'dark' : 'medium'">{{ name | titlecase }}</ion-label>
       
       @if (lead?.response === name) {
-        <ion-icon name="checkmark-circle" slot="end" color="success"></ion-icon>
+        <ion-icon name="checkmark-circle" slot="end" color="success" style="font-size: 22px;"></ion-icon>
       }
     </ion-item>
   }

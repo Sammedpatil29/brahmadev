@@ -119,6 +119,7 @@ getLeadDetails(){
   this.isLoading = true
   this.service.getLeadDetails(this.id).subscribe((res:any)=>{
     this.lead = res
+    this.statusList = res.status
     this.isLoading = false
   }, error => {
     this.isLoading = false
