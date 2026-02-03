@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 @Injectable({
@@ -9,7 +9,13 @@ export class Leads {
  constructor(private http: HttpClient){}
 
  getLeads(){
-  return this.http.get(`${this.url}/leads`)
+  let token = localStorage.getItem('userToken')
+  console.log(token)
+  let headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  })
+  return this.http.get(`${this.url}/leads`, {headers: headers})
  }
 
  updateLeads(params:any, id:any){
@@ -25,7 +31,13 @@ getLeadDetails(id: number){
   }
 
   getLeadCountNew(){
-     return this.http.get(`${this.url}/leads/count/new`);
+    let token = localStorage.getItem('userToken')
+  console.log(token)
+  let headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  })
+     return this.http.get(`${this.url}/leads/count/new`, {headers: headers});
   }
 
   saveLead(params:any){

@@ -103,8 +103,14 @@ resetSearch(){
   this.searchTerm = ''
   this.handleSearch()
 }
+
 scheduledSearch(){
   this.searchTerm = 'scheduled'
+  this.handleSearch()
+}
+
+externalSearch(){
+  this.searchTerm = 'external'
   this.handleSearch()
 }
 
@@ -122,6 +128,14 @@ handleSearch() {
     this.filteredLeads = this.leads.filter((lead: any) => {
       // Check for both null and empty string to be safe
       return lead.visit_schedule !== null && lead.visit_schedule !== '';
+    });
+    return; // Exit here so the old functionality below doesn't overwrite this
+  }
+
+  if (query === 'external') {
+    this.filteredLeads = this.leads.filter((lead: any) => {
+      // Check for both null and empty string to be safe
+      return lead.access.length > 0;
     });
     return; // Exit here so the old functionality below doesn't overwrite this
   }

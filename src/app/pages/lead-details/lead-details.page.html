@@ -12,178 +12,221 @@
 @if (!isLoading) {
   <ion-content>
 
- <div class="lead-header-card">
-  <div class="header-top">
-    <div class="initial-circle">{{ lead?.name?.charAt(0) }}</div>
-    
-    <div class="name-info">
-      <h1 class="name">{{ lead?.name }}</h1>
-      <p class="contact-sub">
-  <ion-icon name="call-outline"></ion-icon> 
-  <span>{{ lead?.contact }}</span>
-  
-  <ion-icon 
-    name="copy-outline" 
-    class="copy-icon" 
-    (click)="copyToClipboard(lead?.contact, $event)">
-  </ion-icon>
+    <div class="lead-header-card">
+      <div class="header-top">
+        <div class="initial-circle">{{ lead?.name?.charAt(0) }}</div>
+        
+        <div class="name-info">
+          <h1 class="name">{{ lead?.name }}</h1>
+          <p class="contact-sub">
+            <ion-icon name="call-outline"></ion-icon> 
+            <span>{{ lead?.contact }}</span>
+            
+            <ion-icon 
+              name="copy-outline" 
+              class="copy-icon" 
+              (click)="copyToClipboard(lead?.contact, $event)">
+            </ion-icon>
 
-  • 
-  <ion-icon name="location-outline"></ion-icon> {{ lead?.city }}
-</p>
-    </div>
-
-    <!-- <a [href]="'tel:' + lead?.contact" class="call-fab-circle">
-      <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="white">
-        <path d="M795-120q-116 0-236.5-56T335-335Q232-438 176-558.5T120-795q0-19 13-32t32-13h140q14 0 24 10t14 25l27 126q2 14-.5 25.5T359-634L259-533q26 44 55 82t64 72q37 38 78 69.5t86 55.5l95-98q10-11 23-15t26-2l119 26q15 4 25 16t10 27v135q0 19-13 32t-32 13Z"/>
-      </svg>
-    </a> -->
-  </div>
-
-  <div class="header-status-row">
-    <div class="d-flex gap-2">
-  <span id="open-custom-dialog" class="status-badge">{{ lead?.response }}
-    <span>
-      @if (isUpdatingResponse) {
-        <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>
-      }
-    </span>
-  </span>
-
- 
-    <div class="platform-date" [hidden]="lead.response == 'new' || lead.response == 'Not Interested' || lead.response == 'Closed' || lead.response == 'Wrong Number'" (click)="dateTimePicker.showPicker()" style="cursor: pointer;">
-  
-      <span class="status-badge">
-       @if (!isUpdatingDate) {
-         @if (lead.visit_schedule == '' || lead.visit_schedule == null ) {
-        <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="24px" fill="#5985E1">
-          <path d="M680-80v-120H560v-80h120v-120h80v120h120v80H760v120h-80Zm-480-80q-33 0-56.5-23.5T120-240v-480q0-33 23.5-56.5T200-800h40v-80h80v80h240v-80h80v80h40q33 0 56.5 23.5T760-720v244q-20-3-40-3t-40 3v-84H200v320h280q0 20 3 40t11 40H200Zm0-480h480v-80H200v80Zm0 0v-80 80Z"/>
-        </svg>
-    } @else {
-        <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="20px" fill="#439400"><path d="M216-96q-29 0-50.5-21.5T144-168v-528q0-29.7 21.5-50.85Q187-768 216-768h72v-96h72v96h240v-96h72v96h72q29 0 50.5 21.15T816-696v244l-72 72v-148H216v360h226l72 72H216Zm424 24L504-208l51-51 85 85 170-170 51 51L640-72Z"/></svg>
-        <!-- <small style="margin-left: 5px;">{{ scheduledDate | date:'short' }}</small> -->
-    }
-       } @else {
-        <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>
-       }
- </span>
-    <input 
-      type="datetime-local" 
-      #dateTimePicker 
-      style="display: none;" 
-      (change)="onDateTimeSelected(dateTimePicker.value)">
-  </div>
-</div>
-    
-    <div class="platform-date">
-      @if (lead.platform === 'ig') {
-        <ion-icon class="text-danger" [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
-      } @else {
-        <ion-icon [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
-      }
-      <span>{{ lead?.time | date:'dd MMM yy' }} • {{ lead?.time | date:'HH:mm ' }}</span>
-    </div>
-  </div>
-  <div class="d-flex gap-2">
-  <button class="login-button mt-3 w-100 d-flex align-items-center justify-content-center" (click)="callNow()">
-    <ion-icon name="call-outline" class="me-2"></ion-icon>
-    Call Lead
-  </button>
-
-  @if (lead.response !== 'new') {
-    <button class="login-button mt-3 w-100 d-flex align-items-center justify-content-center" (click)="sendQuote()">
-    <ion-icon name="document-text-outline" class="me-2"></ion-icon>
-    Send Quote
-  </button>
-  }
-</div>
-</div>
-
-  <div class="chat-card" style="max-height: 60vh;">
-  <div class="chat-header">
-    <ion-icon name="chatbox-ellipses-outline"></ion-icon>
-    <span>Activity Log ({{ lead?.comment?.length || 0 }})</span>
-  </div>
-
-  <div class="chat-content">
-    @if (lead.comment.length > 0) {
-      @for (c of lead.comment; track c.date) {
-      <div class="chat-bubble-wrapper" [ngClass]="{'admin-msg': c.author !== 'System'}">
-        <div class="chat-bubble">
-          <div class="bubble-meta">
-            <span class="author">{{ c.author }}</span>
-            <span class="date">{{ c.date | date:'dd MMM yy' }} {{ c.date | date:'hh:mm a' }}</span>
-          </div>
-          <div class="message-text">{{c.text}}</div>
+            • 
+            <ion-icon name="location-outline"></ion-icon> {{ lead?.city }}
+          </p>
         </div>
       </div>
-    }
-    } @else {
-      <small class="w-100 text-center">No Comments Yet</small>
-    }
-  </div>
 
-  <div class="chat-input-bar">
-    <ion-textarea
-      [(ngModel)]="newComment"
-      style="border: none"
-      placeholder="Type progress note..."
-      rows="1"
-      class="message-input">
-    </ion-textarea>
-    
-    @if (!isSending) {
-      <ion-button 
-      fill="clear" 
-      (click)="saveChanges()" 
-      [disabled]="isSending || !newComment"
-      >
-      <ion-icon name="send" slot="icon-only" color="primary"></ion-icon>
-    </ion-button>
-    } @else {
-      <div class="mb-2 text-primary" style="font-size: 10px;">
-        <div class="spinner-border spinner-border-sm" role="">
-  <span class="visually-hidden">Loading...</span>
-</div>
+      <div class="header-status-row">
+        <div class="d-flex gap-2">
+          
+          <span id="open-custom-dialog" class="status-badge">{{ lead?.response }}
+            <span>
+              @if (isUpdatingResponse) {
+                <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              }
+            </span>
+          </span>
+
+          <div class="platform-date" [hidden]="lead.response == 'new' || lead.response == 'Not Interested' || lead.response == 'Closed' || lead.response == 'Wrong Number'" (click)="dateTimePicker.showPicker()" style="cursor: pointer;">
+            <span class="status-badge">
+              @if (!isUpdatingDate) {
+                @if (lead.visit_schedule == '' || lead.visit_schedule == null ) {
+                  <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="24px" fill="#5985E1">
+                    <path d="M680-80v-120H560v-80h120v-120h80v120h120v80H760v120h-80Zm-480-80q-33 0-56.5-23.5T120-240v-480q0-33 23.5-56.5T200-800h40v-80h80v80h240v-80h80v80h40q33 0 56.5 23.5T760-720v244q-20-3-40-3t-40 3v-84H200v320h280q0 20 3 40t11 40H200Zm0-480h480v-80H200v80Zm0 0v-80 80Z"/>
+                  </svg>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="20px" fill="#439400"><path d="M216-96q-29 0-50.5-21.5T144-168v-528q0-29.7 21.5-50.85Q187-768 216-768h72v-96h72v96h240v-96h72v96h72q29 0 50.5 21.15T816-696v244l-72 72v-148H216v360h226l72 72H216Zm424 24L504-208l51-51 85 85 170-170 51 51L640-72Z"/></svg>
+                }
+              } @else {
+                <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              }
+            </span>
+            <input 
+              type="datetime-local" 
+              #dateTimePicker 
+              style="display: none;" 
+              (change)="onDateTimeSelected(dateTimePicker.value)">
+          </div>
+
+          @if (!hideButton) {
+            <div id="open-access-dialog" class="platform-date" style="cursor: pointer;">
+            <span class="status-badge">
+              @if(!isUpdatingAccess) {
+                @if(lead?.access?.length > 0) {
+                   <span style="font-weight: 600; color: #5985E1; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                     <ion-icon name="person-circle-outline" style="font-size: 16px;"></ion-icon>
+                     {{ getAssignedUserLabel() }}
+                   </span>
+                } @else {
+                   <ion-icon name="person-add-outline" style="font-size: 16px; color: #5985E1;"></ion-icon>
+                }
+              } @else {
+                <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
+                   <span class="visually-hidden">Loading...</span>
+                </div>
+              }
+            </span>
+          </div>
+          }
+
+        </div>
+        
+        <div class="platform-date">
+          @if (lead.platform === 'ig') {
+            <ion-icon class="text-danger" [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
+          } @else {
+            <ion-icon [name]="lead?.platform === 'fb' ? 'logo-facebook' : 'logo-instagram'"></ion-icon>
+          }
+          <span>{{ lead?.time | date:'dd MMM yy' }} • {{ lead?.time | date:'HH:mm ' }}</span>
+        </div>
       </div>
-    }
-  </div>
-</div>
 
-</ion-content>
+      <div class="d-flex gap-2">
+        <button class="login-button mt-3 w-100 d-flex align-items-center justify-content-center" (click)="callNow()">
+          <ion-icon name="call-outline" class="me-2"></ion-icon>
+          Call Lead
+        </button>
 
-<ion-modal id="example-modal" #modal trigger="open-custom-dialog" style="--height: auto; --width: 90%; --max-height: 80%; --border-radius: 16px; --overflow: auto;">
+        @if (lead.response !== 'new') {
+          <button class="login-button mt-3 w-100 d-flex align-items-center justify-content-center" (click)="sendQuote()">
+            <ion-icon name="document-text-outline" class="me-2"></ion-icon>
+            Send Quote
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="chat-card" style="max-height: 60vh;">
+      <div class="chat-header">
+        <ion-icon name="chatbox-ellipses-outline"></ion-icon>
+        <span>Activity Log ({{ lead?.comment?.length || 0 }})</span>
+      </div>
+
+      <div class="chat-content">
+        @if (lead.comment.length > 0) {
+          @for (c of lead.comment; track c.date) {
+            <div class="chat-bubble-wrapper" [ngClass]="{'admin-msg': c.author !== 'System'}">
+              <div class="chat-bubble">
+                <div class="bubble-meta">
+                  <span class="author">{{ c.author }}</span>
+                  <span class="date">{{ c.date | date:'dd MMM yy' }} {{ c.date | date:'hh:mm a' }}</span>
+                </div>
+                <div class="message-text">{{c.text}}</div>
+              </div>
+            </div>
+          }
+        } @else {
+          <small class="w-100 text-center">No Comments Yet</small>
+        }
+      </div>
+
+      <div class="chat-input-bar">
+        <ion-textarea
+          [(ngModel)]="newComment"
+          style="border: none"
+          placeholder="Type progress note..."
+          rows="1"
+          class="message-input">
+        </ion-textarea>
+        
+        @if (!isSending) {
+          <ion-button 
+            fill="clear" 
+            (click)="saveChanges()" 
+            [disabled]="isSending || !newComment">
+            <ion-icon name="send" slot="icon-only" color="primary"></ion-icon>
+          </ion-button>
+        } @else {
+          <div class="mb-2 text-primary" style="font-size: 10px;">
+            <div class="spinner-border spinner-border-sm" role="">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </ion-content>
+
+  <ion-modal id="example-modal" #modal trigger="open-custom-dialog" style="--height: auto; --width: 90%; --max-height: 80%; --border-radius: 16px; --overflow: auto;">
     <ng-template>
       <div class="ion-padding">
         <div class="ion-text-center ion-margin-bottom ion-margin-top">
           <h5 class="m-0 fw-bold text-dark">Update Status</h5>
         </div>
         <ion-list lines="none">
-  @for (name of statusList; track name) {
-    <ion-item button="true" (click)="updateStatus(name); modal.dismiss()"
-      style="--background: #f8f9fa; margin-bottom: 8px; border-radius: 12px; --border-radius: 12px;">
-      <ion-label [style.font-weight]="lead?.response === name ? '600' : '400'"
-                 [color]="lead?.response === name ? 'dark' : 'medium'">{{ name | titlecase }}</ion-label>
-      
-      @if (lead?.response === name) {
-        <ion-icon name="checkmark-circle" slot="end" color="success" style="font-size: 22px;"></ion-icon>
-      }
-    </ion-item>
-  }
-</ion-list>
+          @for (name of statusList; track name) {
+            <ion-item button="true" (click)="updateStatus(name); modal.dismiss()"
+              style="--background: #f8f9fa; margin-bottom: 8px; border-radius: 12px; --border-radius: 12px;">
+              <ion-label [style.font-weight]="lead?.response === name ? '600' : '400'"
+                         [color]="lead?.response === name ? 'dark' : 'medium'">{{ name | titlecase }}</ion-label>
+              @if (lead?.response === name) {
+                <ion-icon name="checkmark-circle" slot="end" color="success" style="font-size: 22px;"></ion-icon>
+              }
+            </ion-item>
+          }
+        </ion-list>
       </div>
     </ng-template>
   </ion-modal>
+
+  <ion-modal id="access-modal" #accessModal trigger="open-access-dialog" style="--height: auto; --width: 90%; --max-height: 80%; --border-radius: 16px; --overflow: auto;">
+    <ng-template>
+      <div class="ion-padding">
+        <div class="ion-text-center ion-margin-bottom ion-margin-top">
+          <h5 class="m-0 fw-bold text-dark">Assign Access</h5>
+        </div>
+        
+        @if(lead?.userList && lead.userList.length > 0) {
+          <ion-list lines="none">
+            @for (user of lead.userList; track user.id) {
+              <ion-item button="true" (click)="updateAccess(user)"
+                style="--background: #f8f9fa; margin-bottom: 8px; border-radius: 12px; --border-radius: 12px;">
+                
+                <ion-label [style.font-weight]="isUserHasAccess(user.id) ? '600' : '400'"
+                           [color]="isUserHasAccess(user.id) ? 'dark' : 'medium'">
+                  {{ user.name }}
+                </ion-label>
+                
+                @if (isUserHasAccess(user.id)) {
+                  <ion-icon name="checkmark-circle" slot="end" color="success" style="font-size: 22px;"></ion-icon>
+                }
+              </ion-item>
+            }
+          </ion-list>
+        } @else {
+          <div class="ion-text-center ion-padding">
+            <p class="text-muted">No users available to assign.</p>
+          </div>
+        }
+      </div>
+    </ng-template>
+  </ion-modal>
+
 } @else {
-  <div class="loader" style="
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;">
-      <ion-spinner color="primary"></ion-spinner>
-    </div>
+  <div class="loader" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
 }

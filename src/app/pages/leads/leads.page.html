@@ -30,6 +30,12 @@
     }
   </div>
 
+  <div class="chip" [class]="searchTerm == 'external'? 'total-count': ''" (click)="externalSearch()">
+    External @if (searchTerm == 'external') {
+      <span> ({{ filteredLeads?.length }})</span>
+    }
+  </div>
+
   <div *ngFor="let item of response" class="chip" [class]="item == searchTerm ? 'total-count': ''" (click)="filterbyChips(item)">
     <span>{{ item | titlecase}}</span>
     @if (item == searchTerm) {
@@ -100,11 +106,19 @@
             <ion-icon name="time-outline"></ion-icon>
             {{ lead.time | date:'mediumDate' }} • {{ lead.time | date:'shortTime' }}
           </span>
-          <ion-badge 
+          <div class="mt-1">
+            <ion-badge 
   [color]="lead.response == 'Closed' || lead.response == 'Wrong Number' ? 'danger': 'success'" 
   class="status-badge text-white">
   {{lead.response | titlecase}}
 </ion-badge>
+          @if (lead.access?.length > 0) {
+            <ion-badge 
+  class="status-badge text-white bg-success">
+  Assigned External
+</ion-badge>
+          }
+          </div>
           <!-- <ion-button fill="clear" size="small" (click)="callLead(lead.contact); $event.stopPropagation()">
             <ion-icon slot="icon-only" name="call"></ion-icon>
           </ion-button> -->
