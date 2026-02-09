@@ -38,11 +38,11 @@ jobs:
           npx cap sync android
           cd android
           chmod +x gradlew
-          ./gradlew bundleRelease --no-daemon
+          ./gradlew clean bundleRelease --no-daemon
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pintu-release-bundle
+          name: brahmadev-release-bundle
           path: android/app/build/outputs/bundle/release/*.aab
           retention-days: 7
