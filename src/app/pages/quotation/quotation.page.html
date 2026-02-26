@@ -25,10 +25,6 @@
         <ion-label>GST (%)</ion-label>
         <ion-input type="number" [(ngModel)]="gstPercentage"></ion-input>
       </ion-item>
-      <ion-item lines="none">
-        <ion-label>Discount (%)</ion-label>
-        <ion-input type="number" [(ngModel)]="discountPercentage"></ion-input>
-      </ion-item>
     </div>
   </div>
 
@@ -54,9 +50,13 @@
           </ion-button>
         </ion-item>
       </ion-list>
-      <ion-button expand="block" fill="outline" (click)="openItemSelectionModal()" class="ion-margin-top">
+      <ion-button expand="block" color="dark" (click)="openItemSelectionModal()" class="share-btn">
         Add Items
       </ion-button>
+      <ion-item lines="none" class="ion-margin-top">
+        <ion-label>Discount (%)</ion-label>
+        <ion-input type="number" [(ngModel)]="discountPercentage" placeholder="0" style="max-width: 80px; text-align: right; border-bottom: 1px solid #ccc;" slot="end"></ion-input>
+      </ion-item>
     </div>
   </div>
 
@@ -84,7 +84,7 @@
     <!-- <ion-button expand="block" mode="ios" (click)="generatePDF(false)" class="preview-btn">
       <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
     </ion-button> -->
-    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF(true)" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0">
+    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF()" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0">
       <ion-icon name="logo-whatsapp" slot="start"></ion-icon> Share Quotation
     </ion-button>
   </div>
@@ -109,9 +109,8 @@
             </ion-label>
           </ion-item>
         </ion-list>
-        <div class="ion-padding">
-          <ion-button expand="block" (click)="addSelectedItems()">Add Selected</ion-button>
-        </div>
+          <ion-button expand="block" color="dark" class="share-btn" (click)="addSelectedItems()">Add Selected</ion-button>
+        
       </ion-content>
     </ng-template>
   </ion-modal>

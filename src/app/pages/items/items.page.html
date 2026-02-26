@@ -73,7 +73,7 @@
       <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
     </ion-button> -->
     <ion-button expand="block" mode="ios" color="dark" (click)="saveItem()" class="share-btn" [disabled]="!editingItem.description || !editingItem.price || !editingItem.unit">
-      <ion-icon name="logo-whatsapp" slot="start"></ion-icon> {{ editingItem?.id ? 'Update' : 'Save' }}
+       {{ editingItem?.id ? 'Update' : 'Save' }}
     </ion-button>
   </div>
       </ion-content>
