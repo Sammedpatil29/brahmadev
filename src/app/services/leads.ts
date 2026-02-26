@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class Leads {
-  url: any = 'http://localhost:3000'
+  url: any = 'https://brahmadev-backend.onrender.com'
  constructor(private http: HttpClient){}
 
  getLeads(){

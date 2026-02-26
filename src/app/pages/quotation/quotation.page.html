@@ -22,12 +22,12 @@
   <div class="settings-drawer" [class.open]="showSettings">
     <div class="drawer-inner">
       <ion-item lines="none">
-        <ion-label>Base Rate (₹/sqft)</ion-label>
-        <ion-input type="number" [(ngModel)]="ratePerSqFt"></ion-input>
-      </ion-item>
-      <ion-item lines="none">
         <ion-label>GST (%)</ion-label>
         <ion-input type="number" [(ngModel)]="gstPercentage"></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Discount (%)</ion-label>
+        <ion-input type="number" [(ngModel)]="discountPercentage"></ion-input>
       </ion-item>
     </div>
   </div>
@@ -38,23 +38,39 @@
       <ion-input [(ngModel)]="customerName" placeholder="Customer Name" class="custom-input"></ion-input>
       <ion-input [(ngModel)]="siteAddress" placeholder="Site Address/City" class="custom-input"></ion-input>
       <ion-input [(ngModel)]="contact" placeholder="Customer Contact Number" class="custom-input"></ion-input>
-      <ion-input [(ngModel)]="ratePerSqFt" placeholder="Committed Price per sqft" class="custom-input"></ion-input>
     </div>
 
-    <p class="section-title">MEASUREMENT</p>
-    <div class="area-card">
-      <ion-input type="number" [(ngModel)]="areaSqFt" placeholder="0" class="massive-input"></ion-input>
-      <span class="sqft-label">SQ.FT</span>
+    <p class="section-title">ITEMS</p>
+    <div class="items-container">
+      <ion-list lines="none">
+        <ion-item *ngFor="let item of selectedItems; let i = index">
+          <ion-label>
+            <h2>{{ item.description }}</h2>
+            <p>₹{{ item.price }} / {{ item.unit }}</p>
+          </ion-label>
+          <ion-input type="number" [(ngModel)]="item.quantity" placeholder="Qty" slot="end" style="max-width: 80px; text-align: right; border-bottom: 1px solid #ccc;"></ion-input>
+          <ion-button slot="end" fill="clear" color="danger" (click)="removeItem(i)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+      <ion-button expand="block" fill="outline" (click)="openItemSelectionModal()" class="ion-margin-top">
+        Add Items
+      </ion-button>
     </div>
   </div>
 
-  <div class="result-card" *ngIf="areaSqFt">
+  <div class="result-card" *ngIf="selectedItems.length > 0">
     <div class="row">
       <span>Base Amount</span>
       <span>₹{{ subTotal | number }}</span>
     </div>
+    <div class="row" *ngIf="discountPercentage > 0">
+      <span>Discount ({{discountPercentage}}%)</span>
+      <span>- ₹{{ discountAmount | number }}</span>
+    </div>
     <div class="row">
-      <span>GST ({{gstPercentage}}%)</span>
+      <span>Total GST</span>
       <span>₹{{ gstAmount | number }}</span>
     </div>
     <div class="divider"></div>
@@ -68,8 +84,35 @@
     <!-- <ion-button expand="block" mode="ios" (click)="generatePDF(false)" class="preview-btn">
       <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
     </ion-button> -->
-    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF(true)" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || !ratePerSqFt || !areaSqFt">
+    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF(true)" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0">
       <ion-icon name="logo-whatsapp" slot="start"></ion-icon> Share Quotation
     </ion-button>
   </div>
+
+  <ion-modal [isOpen]="isItemModalOpen" (didDismiss)="isItemModalOpen = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Select Items</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="isItemModalOpen = false">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item *ngFor="let item of availableItems">
+            <ion-checkbox slot="start" [(ngModel)]="item.selected"></ion-checkbox>
+            <ion-label>
+              <h2>{{ item.description }}</h2>
+              <p>₹{{ item.price }} / {{ item.unit }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+        <div class="ion-padding">
+          <ion-button expand="block" (click)="addSelectedItems()">Add Selected</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

@@ -3,33 +3,38 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { IonHeader, IonLabel, IonToolbar, IonButton, IonInput, IonItem, IonListHeader, IonContent, IonIcon, IonButtons, IonTitle } from "@ionic/angular/standalone";
+import { IonHeader, IonLabel, IonToolbar, IonButton, IonInput, IonItem, IonListHeader, IonContent, IonIcon, IonButtons, IonTitle, IonModal, IonList, IonCheckbox } from "@ionic/angular/standalone";
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, logoWhatsapp } from 'ionicons/icons';
+import { arrowBackOutline, logoWhatsapp, trashOutline } from 'ionicons/icons';
 import { Router } from '@angular/router';
+import { Leads } from '../../services/leads';
 @Component({
   selector: 'app-quotation',
   templateUrl: './quotation.page.html',
   styleUrls: ['./quotation.page.scss'],
-  imports: [IonTitle,FormsModule, CommonModule, IonButtons, IonIcon, IonContent, IonListHeader, IonItem, IonLabel, IonInput, IonToolbar, IonButton, IonHeader],
+  imports: [IonTitle,FormsModule, CommonModule, IonButtons, IonIcon, IonContent, IonListHeader, IonItem, IonLabel, IonInput, IonToolbar, IonButton, IonHeader, IonModal, IonList, IonCheckbox],
 })
 export class QuotationPage implements OnInit{
   // Configurable rates
-  ratePerSqFt: number = 55;
   gstPercentage: number = 18;
+  discountPercentage: number = 0;
   showSettings: boolean = false;
+  isItemModalOpen: boolean = false;
 
   // Form Fields
   customerName: string = '';
   siteAddress: string = '';
   contact: string = '';
-  areaSqFt: number | null = null;
 
-  constructor(private navCtrl: NavController, private router: Router){
-    addIcons({arrowBackOutline, logoWhatsapp}); 
+  // Items
+  availableItems: any[] = [];
+  selectedItems: any[] = [];
+
+  constructor(private navCtrl: NavController, private router: Router, private leads: Leads){
+    addIcons({arrowBackOutline, logoWhatsapp, trashOutline}); 
     const navigation = this.router.getCurrentNavigation();
     if (navigation?.extras.state) {
       this.customerName = navigation.extras.state['customerName'];
@@ -39,12 +44,48 @@ export class QuotationPage implements OnInit{
   }
 
   ngOnInit(): void {
-    
+    this.loadItems();
   }
 
-  get subTotal() { return (this.areaSqFt || 0) * this.ratePerSqFt; }
-  get gstAmount() { return (this.subTotal * this.gstPercentage) / 100; }
-  get grandTotal() { return this.subTotal + this.gstAmount; }
+  loadItems() {
+    this.leads.getItems().subscribe((res: any) => {
+      this.availableItems = res.map((item: any) => ({ ...item, selected: false, quantity: 1 }));
+    });
+  }
+
+  openItemSelectionModal() {
+    this.isItemModalOpen = true;
+  }
+
+  addSelectedItems() {
+    const newItems = this.availableItems.filter(item => item.selected).map(item => ({ ...item }));
+    // Avoid duplicates or handle them as needed. Here we just push.
+    // A better approach might be to check if ID exists and update quantity, or just allow duplicates.
+    // Let's just add them for now.
+    this.selectedItems.push(...newItems);
+    
+    // Reset selection in modal
+    this.availableItems.forEach(item => item.selected = false);
+    this.isItemModalOpen = false;
+  }
+
+  removeItem(index: number) {
+    this.selectedItems.splice(index, 1);
+  }
+
+  get subTotal() { return this.selectedItems.reduce((acc, item) => acc + (item.price * (item.quantity || 0)), 0); }
+  get discountAmount() { return this.subTotal * (this.discountPercentage / 100); }
+  get gstAmount() { 
+    return this.selectedItems.reduce((acc, item) => {
+      const gst = item.gst !== undefined ? item.gst : this.gstPercentage;
+      const amount = item.price * (item.quantity || 0);
+      const discountedAmount = amount * (1 - this.discountPercentage / 100);
+      return acc + (discountedAmount * gst / 100);
+    }, 0); 
+  }
+  get grandTotal() { 
+    return (this.subTotal - this.discountAmount) + this.gstAmount; 
+  }
 
   async generatePDF(share: boolean) {
   const doc = new jsPDF();
@@ -124,19 +165,62 @@ export class QuotationPage implements OnInit{
   // 5. PRICING TABLE (Branded Theme)
   autoTable(doc, {
     startY: 105,
-    head: [['Work Description', 'Area', 'Rate', 'Total']],
+    head: [['Work Description', 'Qty', 'Rate', 'GST', 'Total']],
     body: [
-      [
-        { content: 'Premium Gypro Plast Gypsum Plastering Service\n(Material, Labour, & Transport Included)', styles: { fontStyle: 'bold' } },
-        `${this.areaSqFt} Sq.Ft`,
-        `Rs. ${this.ratePerSqFt}`,
-        `Rs. ${this.subTotal.toLocaleString()}`
-      ],
-      [
-        { content: `GST (${this.gstPercentage}%)`, styles: { halign: 'right', textColor: textMuted } },
-        '', '', `Rs. ${this.gstAmount.toLocaleString()}`
-      ]
-    ],
+  // 1. Item Rows
+  ...this.selectedItems.map(item => {
+    const gst = item.gst !== undefined ? item.gst : this.gstPercentage;
+    const amount = Number(item.price) * Number(item.quantity);
+    const discountedAmount = amount * (1 - this.discountPercentage / 100);
+    const gstValue = discountedAmount * gst / 100;
+    return [
+      { content: item.description, styles: { fontStyle: 'bold' } as any },
+      `${item.quantity} ${item.unit}`,
+      `Rs. ${Number(item.price).toLocaleString()}`,
+      `Rs. ${gstValue.toLocaleString()} (${gst}%)`,
+      `Rs. ${amount.toLocaleString()}`
+    ];
+  }),
+  
+  // Discount Row
+  ...(this.discountPercentage > 0 ? [[
+    { 
+      content: `Discount (${this.discountPercentage}%)`, 
+      colSpan: 4, 
+      styles: { halign: 'right', textColor: [100, 100, 100] } as any 
+    },
+    { 
+      content: `- Rs. ${this.discountAmount.toLocaleString()}`, 
+      styles: { fontStyle: 'bold' } as any 
+    }
+  ]] : []),
+
+  // 2. GST Row
+  [
+    { 
+      content: `Total GST`, 
+      colSpan: 4, 
+      styles: { halign: 'right', textColor: [100, 100, 100] } as any 
+    },
+    { 
+      content: `Rs. ${this.gstAmount.toLocaleString()}`, 
+      styles: { fontStyle: 'bold' } as any 
+    }
+  ],
+
+  // 3. Grand Total Row
+  [
+    { 
+      content: 'Grand Total', 
+      colSpan: 4, 
+      styles: { halign: 'right', fontStyle: 'bold' } as any 
+    },
+    { 
+      content: `Rs. ${this.grandTotal.toLocaleString()}`, 
+      styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } as any 
+    }
+  ]
+] as any[][], // <--- Add this cast to stop the errors,
     foot: [[
       { content: 'GRAND TOTAL AMOUNT', colSpan: 3, styles: { halign: 'right' } },
       { content: `Rs. ${this.grandTotal.toLocaleString()}` }
@@ -163,7 +247,6 @@ export class QuotationPage implements OnInit{
     '1. This quotation is valid for 15 days from the date of issue.',
     '2. Payment: 50% advance along with work order, 50% on completion.',
     '3. Site must have electricity and water supply provided by the client.',
-    '4. Any extra work beyond the mentioned area will be charged extra.'
   ];
   doc.text(terms, margin, finalY + 6);
 
