@@ -122,7 +122,8 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
       'Opp. Durgalakshmi Multiplex, Miraj Road,',
       'Athani, Karnataka - 591304',
       'Ph: +91 88849 50068',
-      'Email: brahmadevaconstructions@gmail.com'
+      'Email: brahmadevaconstructions@gmail.com',
+      'GSTIN: 29FHSPB9789R1ZO, PAN Number: FHSPB9789R'
     ], rightEdge, 28, { align: 'right' });
 
     doc.setDrawColor(brandGold[0], brandGold[1], brandGold[2]);
@@ -167,13 +168,14 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
       const halfRate = rate / 2;
       const halfTax = tax / 2;
       return `CGST (${halfRate}%): Rs. ${halfTax.toLocaleString()}  SGST (${halfRate}%): Rs. ${halfTax.toLocaleString()}`;
-    }).join('  ');
+    }).join('\n');
 
     const breakdownRows = breakdownText ? [[{ content: breakdownText, colSpan: 5, styles: { halign: 'right', textColor: textMuted, fontSize: 8 } as any }]] : [];
 
     // 3. ITEMS TABLE
     autoTable(doc, {
       startY: 100,
+      margin: { bottom: 30 }, // Ensure table doesn't hit the footer
       head: [['Work Description', 'Qty', 'Rate', 'GST', 'Total']],
       body: [
         ...this.selectedItems.map(item => {
@@ -201,8 +203,14 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
     });
 
    // 4. PAYMENT & QR SECTION (Balanced 3-Column Layout)
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    let finalY = (doc as any).lastAutoTable.finalY + 10;
     const boxHeight = 35;
+    
+    // Check if we need a new page for payment section and signature
+    if (finalY + boxHeight + 50 > pageHeight - 15) {
+      doc.addPage();
+      finalY = 20;
+    }
     
     // Background Box
     doc.setFillColor(brandSand[0], brandSand[1], brandSand[2]);
@@ -223,38 +231,11 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
       'IFSC: FDRL0001507'
     ], margin + 5, finalY + 15);
 
-    // --- COLUMN 2: QR CODE (CENTER - SMALL) ---
-const upiId = 'brahmadev6571@fbl';
-const payeeName = 'Brahmadev Constructions';
-const amount = this.grandTotal.toFixed(2); // UPI requires 2 decimal places
-const note = quoteId; // e.g., QFEB2620261234
-
-// 2. Construct the UPI URL
-// We encode Name and Note to handle spaces or special characters
-const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&tn=${encodeURIComponent(note)}&cu=INR`;
-
-// 3. Generate the QR URL
-// Increased size to 200x200 for better scan reliability with long URLs
-const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(upiUrl)}`;    
-    const qrSize = 18; // Slightly smaller to create more white space
-    const qrX = (pageWidth - qrSize) / 2;
-    
-    try { 
-      doc.addImage(qrUrl, 'PNG', qrX, finalY + 5, qrSize, qrSize); 
-      doc.link(qrX, finalY + 5, qrSize, qrSize, { url: upiUrl });
-      
-      doc.setFontSize(7);
-      doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
-      doc.text('Scan to Pay', pageWidth / 2, finalY + 26, { align: 'center' });
-      doc.setFontSize(6);
-      doc.text(upiId, pageWidth / 2, finalY + 29, { align: 'center' });
-    } catch (e) { console.error("QR Error", e); }
-
-    // --- COLUMN 3: TERMS (RIGHT) ---
+    // --- COLUMN 2: TERMS (CENTER) ---
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
     doc.setTextColor(brandGold[0], brandGold[1], brandGold[2]);
-    doc.text('QUOTATION TERMS:', rightEdge - 5, finalY + 8, { align: 'right' });
+    doc.text('QUOTATION TERMS:', pageWidth / 2, finalY + 8, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
@@ -264,7 +245,35 @@ const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${e
       '2. 50% Advance with order.',
       '3. Tax as per Govt. norms.',
       '4. Site water/power by client.'
-    ], rightEdge - 5, finalY + 15, { align: 'right' });
+    ], pageWidth / 2, finalY + 15, { align: 'center' });
+
+    // --- COLUMN 3: QR CODE (RIGHT) ---
+    const upiId = 'brahmadev6571@fbl';
+    const payeeName = 'Brahmadev Constructions';
+    const amount = this.grandTotal.toFixed(2); // UPI requires 2 decimal places
+    const note = quoteId; // e.g., QFEB2620261234
+
+    // 2. Construct the UPI URL
+    // We encode Name and Note to handle spaces or special characters
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&tn=${encodeURIComponent(note)}&cu=INR`;
+
+    // 3. Generate the QR URL
+    // Increased size to 200x200 for better scan reliability with long URLs
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(upiUrl)}`;    
+    const qrSize = 18; // Slightly smaller to create more white space
+    const qrX = rightEdge - qrSize - 5;
+    
+    try { 
+      doc.addImage(qrUrl, 'PNG', qrX, finalY + 5, qrSize, qrSize); 
+      doc.link(qrX, finalY + 5, qrSize, qrSize, { url: upiUrl });
+      
+      doc.setFontSize(7);
+      doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+      const qrCenterX = qrX + (qrSize / 2);
+      doc.text('Scan to Pay', qrCenterX, finalY + 26, { align: 'center' });
+      doc.setFontSize(6);
+      doc.text(upiId, qrCenterX, finalY + 29, { align: 'center' });
+    } catch (e) { console.error("QR Error", e); }
 
     // 5. SIGNATURE SECTION (Adjusted spacing)
     const sigY = finalY + boxHeight + 20;

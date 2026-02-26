@@ -1,4 +1,4 @@
-<ion-header class="ion-no-border pt-4 bg-white">
+<ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="back()">
@@ -50,7 +50,7 @@
           </ion-button>
         </ion-item>
       </ion-list>
-      <ion-button expand="block" color="dark" (click)="openItemSelectionModal()" class="share-btn">
+      <ion-button expand="block" color="dark" mode="ios" (click)="openItemSelectionModal()" class="share-btn">
         Add Items
       </ion-button>
       <ion-item lines="none" class="ion-margin-top">
@@ -102,14 +102,14 @@
       <ion-content>
         <ion-list>
           <ion-item *ngFor="let item of availableItems">
-            <ion-checkbox slot="start" [(ngModel)]="item.selected"></ion-checkbox>
+            <ion-checkbox slot="start" color="dark" [(ngModel)]="item.selected"></ion-checkbox>
             <ion-label>
               <h2>{{ item.description }}</h2>
               <p>₹{{ item.price }} / {{ item.unit }}</p>
             </ion-label>
           </ion-item>
         </ion-list>
-          <ion-button expand="block" color="dark" class="share-btn" (click)="addSelectedItems()">Add Selected</ion-button>
+          <ion-button expand="block" color="dark" mode="ios" class="share-btn" (click)="addSelectedItems()">Add Selected</ion-button>
         
       </ion-content>
     </ng-template>
