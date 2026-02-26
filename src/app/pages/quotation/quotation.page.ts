@@ -188,4 +188,8 @@ export class QuotationPage implements OnInit{
   back(){
     this.navCtrl.back()
   }
+
+  addLead(){
+    this.navCtrl.navigateForward('/layout/items')
+  }
 }

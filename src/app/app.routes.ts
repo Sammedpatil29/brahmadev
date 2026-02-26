@@ -38,6 +38,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/add-lead/add-lead.page').then( m => m.AddLeadPage)
   },
   {
+    path: 'items',
+    loadComponent: () => import('./pages/items/items.page').then( m => m.ItemsPage)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full',

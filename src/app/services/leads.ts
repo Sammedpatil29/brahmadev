@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class Leads {
-  url: any = 'https://brahmadev-backend.onrender.com'
+  url: any = 'http://localhost:3000'
  constructor(private http: HttpClient){}
 
  getLeads(){
@@ -42,5 +42,21 @@ getLeadDetails(id: number){
 
   saveLead(params:any){
     return this.http.post(`${this.url}/meta-leads`, params)
+  }
+
+  getItems(){
+    return this.http.get(`${this.url}/items`);
+  }
+
+  saveItem(params:any){
+    return this.http.post(`${this.url}/items`, params);
+  }
+
+  updateItem(id:any, params:any){
+    return this.http.patch(`${this.url}/items/${id}`, params);
+  }
+
+  deleteItem(id:any){
+    return this.http.delete(`${this.url}/items/${id}`);
   }
 }

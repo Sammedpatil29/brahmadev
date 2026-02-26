@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class Login {
-  url = 'https://brahmadev-backend.onrender.com'
+  url = 'http://localhost:3000'
 
   constructor(private http: HttpClient){}
 
