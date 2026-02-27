@@ -1,7 +1,7 @@
 name: Build Android Bundle
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Allows you to manually trigger the build from the Actions tab
 
 jobs:
   build:
@@ -14,12 +14,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22 # Updated to meet Capacitor CLI requirements
           cache: 'npm'
 
       - name: Install Dependencies
         run: |
           npm install -g @ionic/cli
+          # Using --legacy-peer-deps to resolve the @angular/fire version mismatch
           npm install --legacy-peer-deps
 
       - name: Build Web Assets
@@ -33,21 +34,11 @@ jobs:
           cache: 'gradle'
 
       - name: Build Android App Bundle (.aab)
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           npx cap sync android
           cd android
           chmod +x gradlew
-          # Keystore already exists in android/app/release-key.jks
-          ./gradlew clean bundleRelease \
-            -Pandroid.injected.signing.store.file=$(cd .. && pwd)/android/app/release-key.jks \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
-            --no-daemon
+          ./gradlew bundleRelease --no-daemon
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
