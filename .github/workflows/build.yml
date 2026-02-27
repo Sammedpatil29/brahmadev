@@ -37,6 +37,10 @@ jobs:
           cache: 'gradle'
 
       - name: Build Android App Bundle (.aab)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           npx cap sync android
           cd android
