@@ -5,16 +5,6 @@ android {
     namespace "io.visit.starter"
     compileSdk rootProject.ext.compileSdkVersion
 
-signingConfigs {
-        release {
-            // Put your 'my-release-key.jks' file inside the 'android/app' folder
-            storeFile file('android/app/release-key.jks')
-            storePassword 'your_keystore_password'
-            keyAlias 'your_key_alias'
-            keyPassword 'your_key_password'
-        }
-    }
-
     defaultConfig {
         applicationId "io.visit.starter"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -30,7 +20,6 @@ signingConfigs {
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
