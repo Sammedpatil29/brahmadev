@@ -35,6 +35,22 @@ export class QuotationPage implements OnInit {
   availableItems: any[] = [];
   selectedItems: any[] = [];
 
+  invoiceBundle = {
+      invoiceId: '',
+      customerName: this.customerName,
+      siteAddress: this.siteAddress,
+      contact: this.contact,
+      date: new Date().toISOString(),
+      items: this.selectedItems,
+      gstPercentage: this.gstPercentage,
+      discountPercentage: this.discountPercentage,
+      subTotal: this.subTotal,
+      discountAmount: this.discountAmount,
+      gstString: '',
+      gstAmount: this.gstAmount,
+      grandTotal: this.grandTotal
+    }
+
   constructor(private navCtrl: NavController, private router: Router, private leads: Leads) {
     addIcons({ arrowBackOutline, logoWhatsapp, trashOutline, settingsOutline });
     const navigation = this.router.getCurrentNavigation();
@@ -306,6 +322,7 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
     const savedFile = await Filesystem.writeFile({ path: fileName, data: pdfBase64, directory: Directory.Cache });
     await Share.share({ url: savedFile.uri });
   }
+
 
   back() { this.navCtrl.back(); }
   addLead() { this.navCtrl.navigateForward('/layout/items'); }

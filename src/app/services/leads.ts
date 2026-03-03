@@ -59,4 +59,8 @@ getLeadDetails(id: number){
   deleteItem(id:any){
     return this.http.delete(`${this.url}/items/${id}`);
   }
+
+  saveInvoice(params:any){
+    return this.http.post(`${this.url}/invoices`, params);
+  }
 }
