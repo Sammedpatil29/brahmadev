@@ -326,4 +326,6 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
 
   back() { this.navCtrl.back(); }
   addLead() { this.navCtrl.navigateForward('/layout/items'); }
+
+  viewQuotations() { this.navCtrl.navigateForward('/layout/quotations-list'); }
 }

@@ -46,6 +46,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/invoice/invoice.page').then( m => m.InvoicePage)
   },
   {
+    path: 'quotations-list',
+    loadComponent: () => import('./pages/quotations-list/quotations-list.page').then( m => m.QuotationsListPage)
+  },
+  {
+    path: 'invoice-list',
+    loadComponent: () => import('./pages/invoice-list/invoice-list.page').then( m => m.InvoiceListPage)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full',
@@ -56,7 +64,5 @@ export const routes: Routes = [
     path: '',
     redirectTo: 'login',
     pathMatch: 'full',
-  },
-  
-
+  }
 ];
