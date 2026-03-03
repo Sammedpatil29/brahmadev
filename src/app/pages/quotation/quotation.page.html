@@ -20,10 +20,12 @@
       </div>
      </div>
     </ion-title>
+    
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+  
   <div class="settings-drawer" [class.open]="showSettings">
     <div class="drawer-inner">
       <ion-item lines="none">
@@ -55,9 +57,12 @@
           </ion-button>
         </ion-item>
       </ion-list>
-      <ion-button expand="block" color="dark" mode="ios" (click)="openItemSelectionModal()" class="share-btn">
+      <!-- <ion-button (click)="openItemSelectionModal()" class="share-btn">
         Add Items
-      </ion-button>
+      </ion-button> -->
+      <button (click)="openItemSelectionModal()" class="add-btn">
+        Add Items
+      </button>
       <ion-item lines="none" class="ion-margin-top">
         <ion-label>Discount (%)</ion-label>
         <ion-input type="number" [(ngModel)]="discountPercentage" placeholder="0" style="max-width: 80px; text-align: right; border-bottom: 1px solid #ccc;" slot="end"></ion-input>
@@ -89,8 +94,13 @@
     <!-- <ion-button expand="block" mode="ios" (click)="generatePDF(false)" class="preview-btn">
       <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
     </ion-button> -->
-    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF()" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0">
-      <ion-icon name="logo-whatsapp" slot="start"></ion-icon> Share Quotation
+    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF()" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0 || isLoading">
+      <ion-icon name="logo-whatsapp" slot="start"></ion-icon> 
+      @if (!isLoading) {
+        <span>Share Quotation</span>
+      } @else {
+        <span>Creating Quotation...</span>
+      }
     </ion-button>
   </div>
 

@@ -50,9 +50,9 @@
           </ion-button>
         </ion-item>
       </ion-list>
-      <ion-button expand="block" color="dark" mode="ios" (click)="openItemSelectionModal()" class="share-btn">
+      <button (click)="openItemSelectionModal()" class="add-btn">
         Add Items
-      </ion-button>
+      </button>
       <ion-item lines="none" class="ion-margin-top">
         <ion-label>Discount (%)</ion-label>
         <ion-input type="number" [(ngModel)]="discountPercentage" placeholder="0" style="max-width: 80px; text-align: right; border-bottom: 1px solid #ccc;" slot="end"></ion-input>

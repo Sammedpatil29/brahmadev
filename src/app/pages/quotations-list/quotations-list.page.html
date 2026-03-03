@@ -1,4 +1,4 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="bg-white">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="back()">
@@ -21,19 +21,21 @@
      </div>
     </ion-title>
   </ion-toolbar>
+  <ion-searchbar placeholder="Custom Placeholder" (ionInput)="search($event)"></ion-searchbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding-top">
   
-
+@if(!isLoading){
   <div class="ion-padding-horizontal">
-    <ion-card *ngFor="let item of quotations" mode="ios" class="ion-no-margin ion-margin-bottom">
+    @for (item of quotations(); track $index) {
+      <ion-card mode="ios" class="ion-no-margin ion-margin-bottom">
       <ion-card-header>
         <div class="d-flex justify-content-between align-items-start">
           <div>
             <ion-card-title>{{ item.customerName }}</ion-card-title>
             <ion-card-subtitle>{{ item.siteAddress }}</ion-card-subtitle>
-            <ion-note class="ion-margin-top d-block">{{ item.date | date:'mediumDate' }} &bull; <b>QJAN23268976</b></ion-note>
+            <ion-note class="ion-margin-top d-block">{{ item.date | date:'mediumDate' }} &bull; <b>{{ item.quoteId }}</b></ion-note>
           </div>
           <div class="ion-text-end">
             <h3 class="ion-no-margin">₹{{ item.grandTotal | number }}</h3>
@@ -45,14 +47,25 @@
           <ion-button size="small" fill="outline" mode="ios" (click)="download(item)">
             <ion-icon slot="icon-only" name="download-outline"></ion-icon>
           </ion-button>
-          <ion-button size="small" fill="outline" color="secondary" mode="ios" (click)="mail(item)">
+          <!-- <ion-button size="small" fill="outline" color="secondary" mode="ios" (click)="mail(item)">
             <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
-          </ion-button>
+          </ion-button> -->
           <ion-button size="small" fill="outline" color="danger" mode="ios" (click)="delete(item)">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </div>
       </ion-card-content>
     </ion-card>
+    }
   </div>
+} @else {
+  <div class="loader" style="
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;">
+      <ion-spinner color="primary"></ion-spinner>
+    </div>
+}
+  
 </ion-content>

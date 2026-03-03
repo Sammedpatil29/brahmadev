@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { AlertController, IonicModule } from '@ionic/angular';
 import { Leads } from '../../services/leads';
 import { addIcons } from 'ionicons';
-import { add, trash } from 'ionicons/icons';
+import { add, arrowBackOutline, trash } from 'ionicons/icons';
+import { NavController } from '@ionic/angular';
 
 interface Item {
   id: number;
@@ -29,8 +30,8 @@ export class ItemsPage implements OnInit {
   isModalOpen = false;
   editingItem: any = {};
 
-  constructor(private alertController: AlertController, private leads: Leads) {
-    addIcons({ add, trash });  
+  constructor(private alertController: AlertController, private leads: Leads, private navCtrl: NavController) {
+    addIcons({ add, trash, arrowBackOutline });  
   }
 
   ngOnInit() {
@@ -86,4 +87,9 @@ export class ItemsPage implements OnInit {
       });
     }
   }
+
+  back() {
+    this.navCtrl.back();
+    }
+
 }

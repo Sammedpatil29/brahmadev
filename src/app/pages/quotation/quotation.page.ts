@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { IonHeader, IonLabel, IonToolbar, IonButton, IonInput, IonItem, IonListHeader, IonContent, IonIcon, IonButtons, IonTitle, IonModal, IonList, IonCheckbox } from "@ionic/angular/standalone";
+import { IonHeader, IonLabel, IonToolbar, IonButton, IonInput, IonItem, IonListHeader, IonContent, IonIcon, IonButtons, IonTitle, IonModal, IonList, IonCheckbox, IonSearchbar } from "@ionic/angular/standalone";
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { NavController } from '@ionic/angular';
@@ -17,7 +17,7 @@ import { Leads } from '../../services/leads';
   templateUrl: './quotation.page.html',
   styleUrls: ['./quotation.page.scss'],
   standalone: true,
-  imports: [IonTitle, FormsModule, CommonModule, IonButtons, IonIcon, IonContent, IonListHeader, IonItem, IonLabel, IonInput, IonToolbar, IonButton, IonHeader, IonModal, IonList, IonCheckbox],
+  imports: [IonSearchbar, IonTitle, FormsModule, CommonModule, IonButtons, IonIcon, IonContent, IonListHeader, IonItem, IonLabel, IonInput, IonToolbar, IonButton, IonHeader, IonModal, IonList, IonCheckbox],
 })
 export class QuotationPage implements OnInit {
   // Configurable rates
@@ -25,6 +25,7 @@ export class QuotationPage implements OnInit {
   discountPercentage: number = 10;
   showSettings: boolean = false;
   isItemModalOpen: boolean = false;
+  isLoading: boolean = false;
 
   // Form Fields
   customerName: string = '';
@@ -36,19 +37,13 @@ export class QuotationPage implements OnInit {
   selectedItems: any[] = [];
 
   invoiceBundle = {
-      invoiceId: '',
+      quoteId: '',
       customerName: this.customerName,
       siteAddress: this.siteAddress,
       contact: this.contact,
       date: new Date().toISOString(),
-      items: this.selectedItems,
-      gstPercentage: this.gstPercentage,
-      discountPercentage: this.discountPercentage,
-      subTotal: this.subTotal,
-      discountAmount: this.discountAmount,
-      gstString: '',
-      gstAmount: this.gstAmount,
-      grandTotal: this.grandTotal
+      grandTotal: this.grandTotal,
+      base64: ''
     }
 
   constructor(private navCtrl: NavController, private router: Router, private leads: Leads) {
@@ -101,6 +96,8 @@ export class QuotationPage implements OnInit {
   }
 
   async generatePDF() {
+    this.isLoading = true;
+    // console.log('invoice bundle details:', this.invoiceBundle);
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -110,10 +107,11 @@ export class QuotationPage implements OnInit {
     const now = new Date();
 const month = now.toLocaleString('en-IN', { month: 'short' }).toUpperCase();
 const date = now.getDate().toString().padStart(2, '0');
-const year = now.getFullYear();
+const year = now.getFullYear().toString().slice(-2);
 const unixSuffix = Date.now().toString().slice(-4);
 
 const quoteId = `Q${month}${date}${year}${unixSuffix}`;
+this.invoiceBundle.quoteId = quoteId;
 
     // BRAND COLORS
     const brandNavy: [number, number, number] = [20, 33, 61];
@@ -320,7 +318,31 @@ const quoteId = `Q${month}${date}${year}${unixSuffix}`;
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     const fileName = `Quote_${this.customerName || 'Client'}.pdf`;
     const savedFile = await Filesystem.writeFile({ path: fileName, data: pdfBase64, directory: Directory.Cache });
-    await Share.share({ url: savedFile.uri });
+    this.invoiceBundle.customerName = this.customerName;
+    this.invoiceBundle.siteAddress = this.siteAddress;
+    this.invoiceBundle.contact = this.contact;
+    this.invoiceBundle.date = new Date().toISOString();
+    this.invoiceBundle.grandTotal = this.grandTotal;
+    this.invoiceBundle.base64 = pdfBase64;
+    this.invoiceBundle.quoteId = quoteId;
+    console.log("Invoice Bundle:", this.invoiceBundle);
+    this.isLoading = true;
+    this.leads.createQuote(this.invoiceBundle).subscribe(async (res:any)=>{
+      this.isLoading = false;
+      this.customerName = '';
+      this.siteAddress = '';
+      this.contact = '';
+      this.selectedItems = [];
+      this.discountPercentage = 0;
+      this.gstPercentage = 0;
+      alert('Quotation saved successfully!');
+
+      await Share.share({ url: savedFile.uri });
+    }, async error => {
+      alert('failed to save pdf, but you can share it')
+      await Share.share({ url: savedFile.uri });
+        this.isLoading = false;
+    })
   }
 
 
