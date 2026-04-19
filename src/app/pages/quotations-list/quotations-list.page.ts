@@ -6,7 +6,9 @@ import { IonHeader, IonContent, IonToolbar, IonButtons, IonButton, IonIcon, IonT
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Leads } from 'src/app/services/leads';
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Http, HttpDownloadFileResult } from '@capacitor-community/http';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 
 @Component({
   selector: 'app-quotations-list',
@@ -24,7 +26,8 @@ export class QuotationsListPage implements OnInit {
     private navCtrl: NavController,
     private alertController: AlertController,
     private toastController: ToastController,
-    private leads: Leads
+    private leads: Leads,
+    private http: HttpClient
   ) {
     addIcons({ arrowBackOutline, downloadOutline, mailOutline, trashOutline });
   }
@@ -52,38 +55,54 @@ export class QuotationsListPage implements OnInit {
     this.navCtrl.back();
   }
 
-  async download(item: any) {
-    this.isDownloading = true;
-  try {
-    const response = await fetch(item.url);
-    const blob = await response.blob();
-
-    const base64 = await this.convertBlobToBase64(blob) as string;
-
-    const fileName = `${item.quoteId}_${item.customerName}.pdf`;
-
-    await Filesystem.writeFile({
-      path: fileName,
-      data: base64.split(',')[1], // remove data prefix
-      directory: Directory.Documents,
-    });
-    this.isDownloading = false;
-    this.presentToast('PDF downloaded successfully!');
-  } catch (error) {
-    this.isDownloading = false;
-    console.error(error);
-    this.presentToast('Download failed');
+ 
+  async checkPermissions() {
+  const status = await Filesystem.checkPermissions();
+  if (status.publicStorage !== 'granted') {
+    await Filesystem.requestPermissions();
   }
 }
 
-convertBlobToBase64 = (blob: Blob) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-};
+
+
+async download(item: any) {
+  await this.checkPermissions();
+  this.isDownloading = true;
+
+  try {
+    // 1. Define the destination path on the device
+    const fileName = `${item.quoteId}_${item.customerName.replace(/\s+/g, '_')}.pdf`;
+
+    // 2. Use Native HTTP to download directly to the Filesystem
+    // This bypasses CORS and handles the binary data automatically
+    const options = {
+      url: item.url,
+      filePath: fileName, // The name it will be saved as
+      directory: Directory.Documents, // Saves to the device Documents folder
+    };
+
+    const response: HttpDownloadFileResult = await Http.downloadFile(options);
+
+    if (response.path) {
+      this.isDownloading = false;
+      this.presentToast('PDF downloaded successfully to Documents!');
+      
+      // Optional: Log the path to see where it went
+      console.log('File saved at:', response.path);
+    }
+
+  } catch (error:any) {
+    this.isDownloading = false;
+    console.error('Download error:', error);
+    
+    // Check if the error is due to the 403 Forbidden rules we discussed
+    if (error.toString().includes('403')) {
+      this.presentToast('Access Denied: Please check Firebase Security Rules.');
+    } else {
+      this.presentToast('Download failed. Check your connection.');
+    }
+  }
+}
 
   mail(item: any) {
     console.log('Mail:', item);

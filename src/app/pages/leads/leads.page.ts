@@ -37,7 +37,7 @@ export class LeadsPage implements OnInit {
       this.handleSearch(); 
     }
     })
-    this.getLeads()
+    this.getLeads(true)
   }
 
    back(){
@@ -45,12 +45,14 @@ export class LeadsPage implements OnInit {
   }
 
   ionViewWillEnter() {
-    this.getLeads();
+    this.getLeads(false);
     // this.handleSearch()
   }
 
-  getLeads(event?: any) {
+  getLeads(reload: boolean, event?: any) {
+    if (reload) {
   this.isLoading = true;
+    }
   this.service.getLeads().subscribe({
     next: (res: any) => {
       this.leads = res;
@@ -96,7 +98,7 @@ this.navCtrl.navigateForward(['/layout/lead-details'], {
 
 handleRefresh(event: any) {
   // Pass the event to your fetching logic
-  this.getLeads(event);
+  this.getLeads(true, event);
 }
 
 resetSearch(){

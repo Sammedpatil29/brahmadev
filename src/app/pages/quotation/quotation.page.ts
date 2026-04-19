@@ -137,7 +137,7 @@ this.invoiceBundle.quoteId = quoteId;
       'Athani, Karnataka - 591304',
       'Ph: +91 88849 50068',
       'Email: brahmadevaconstructions@gmail.com',
-      'GSTIN: 29FHSPB9789R1ZO, PAN Number: FHSPB9789R'
+      'GSTIN: 29FHSPB9789R1ZO'
     ], rightEdge, 28, { align: 'right' });
 
     doc.setDrawColor(brandGold[0], brandGold[1], brandGold[2]);
@@ -273,7 +273,7 @@ this.invoiceBundle.quoteId = quoteId;
 
     // 3. Generate the QR URL
     // Increased size to 200x200 for better scan reliability with long URLs
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(upiUrl)}`;    
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${upiUrl}`;    
     const qrSize = 18; // Slightly smaller to create more white space
     const qrX = rightEdge - qrSize - 5;
     
