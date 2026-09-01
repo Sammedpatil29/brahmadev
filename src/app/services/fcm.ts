@@ -36,7 +36,7 @@ export class FcmService {
       console.log('user token:', userToken)
       let decoded:any = jwtDecode(userToken)
       console.log('user id:', decoded)
-      this.http.patch('https://brahmadev-backend-228218838131.asia-south1.run.app/users/fcm-token', {
+      this.http.patch('https://brahmadev-api.democompany.in.net/users/fcm-token', {
     id: decoded.id, // Get this from your Auth state
     fcm_token: token.value
   }).subscribe({

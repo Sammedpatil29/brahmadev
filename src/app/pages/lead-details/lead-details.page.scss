@@ -3,6 +3,27 @@ ion-content {
   --background: #f8fafc;
 }
 
+/* === RESPONSIVE LAYOUT === */
+.details-layout {
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
+
+    .lead-header-card {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-card {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
 /* === 1. LEAD HEADER CARD === */
 .lead-header-card {
   background: #ffffff;

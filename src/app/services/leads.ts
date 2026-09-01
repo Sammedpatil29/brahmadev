@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class Leads {
-  url: any = 'https://brahmadev-backend-228218838131.asia-south1.run.app'
+  url: any = 'https://brahmadev-api.democompany.in.net'
  constructor(private http: HttpClient){}
 
  getLeads(){

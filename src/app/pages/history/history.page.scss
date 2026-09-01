@@ -80,13 +80,24 @@ ion-content {
   height: 80vh;
 }
 
+.visit-cards-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .visit-card {
   background: #fff;
   border: 1px solid #d1d1d1;
   border-radius: 12px;
-  margin-top: 12px;
-  overflow: hidden; // Ensures background color doesn't bleed out of radius
+  margin-top: 0;
+  overflow: hidden;
   transition: all 0.3s ease;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: calc(50% - 6px);
+  }
 
   .card-main {
     padding: 16px 16px 8px 16px;

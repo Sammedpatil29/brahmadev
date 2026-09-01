@@ -1,5 +1,15 @@
+.leads-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 .lead-card-container {
-  margin-bottom: 16px;
+  width: 100%;
+
+  @media (min-width: 992px) {
+    width: calc(33% - 12px);
+  }
 }
 
 .modern-lead-card {

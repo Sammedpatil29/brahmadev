@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content class="ion-padding-horizontal">
- <div class="mb-3">
+ <div class="mb-3 visit-cards-wrapper">
    @if(!isLoading){
     @for (item of pastVisits; track $index) {
       <div class="visit-card p-0" (click)="item.isExpanded = !item.isExpanded">
@@ -75,10 +75,12 @@
         }
       </div>
     }
-  } @else {
+  }
+  
+ </div>
+ @if(isLoading){
     <div class="loader">
       <ion-spinner color="primary"></ion-spinner>
     </div>
   }
- </div>
 </ion-content>

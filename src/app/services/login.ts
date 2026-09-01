@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class Login {
-  url = 'https://brahmadev-backend-228218838131.asia-south1.run.app'
+  url = 'https://brahmadev-api.democompany.in.net'
 
   constructor(private http: HttpClient){}
 

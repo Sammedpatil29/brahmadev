@@ -60,6 +60,7 @@
 @if (!isLoading) {
   
   @if (filteredLeads.length > 0) {
+  <div class="leads-grid">
     @for (lead of filteredLeads; track $index) {
     <div class="lead-card-container">
     <ion-card class="modern-lead-card" (click)="viewLead(lead.id)">
@@ -127,6 +128,7 @@
     </ion-card>
   </div>
   }
+  </div>
   } @else {
     <div class="no-data-container d-flex flex-column align-items-center justify-content-center p-5 text-center">
   <div class="icon-wrapper mb-3">
