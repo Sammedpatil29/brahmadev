@@ -5,16 +5,21 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-# Copy dependency files first for better layer caching
-COPY package.json package-lock.json* ./
+# Prevent Node heap out-of-memory errors during production bundling
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Disable Angular CLI analytics prompt in CI/CD
+ENV NG_CLI_ANALYTICS=false
 
-# Install dependencies
+# Copy dependency files first for layer caching
+COPY package*.json ./
+
+# Install dependencies (reproducible build)
 RUN npm ci --legacy-peer-deps
 
-# Copy the rest of the source code
+# Copy the rest of the application code
 COPY . .
 
-# Build the production app (output goes to /app/www)
+# Build for production
 RUN npm run build -- --configuration production
 
 # ============================================
@@ -22,18 +27,24 @@ RUN npm run build -- --configuration production
 # ============================================
 FROM nginx:alpine AS production
 
-# Remove default nginx static content
-RUN rm -rf /usr/share/nginx/html/*
+# Set working directory
+WORKDIR /usr/share/nginx/html
 
-# Copy built assets from build stage
-COPY --from=build /app/www /usr/share/nginx/html
+# Clean default assets and copy build output
+RUN rm -rf ./*
+# NOTE: Modern Angular/Ionic builds may output to /app/dist/<project-name>/browser or /app/www
+# Adjust '/app/www' below if your angular.json specifies a different outputPath
+COPY --from=build /app/www ./
 
-# Copy custom nginx config
+# Copy custom Nginx configuration for SPA routing & caching
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
+# Expose standard HTTP port
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Health check to ensure Nginx is actively responding
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1/ || exit 1
 
+# Start Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
