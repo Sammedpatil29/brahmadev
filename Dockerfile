@@ -2,7 +2,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY . .
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build --configuration=production
 
 # Stage 2: Serve with Nginx
