@@ -1,29 +1,21 @@
 # Stage 1: Build
-FROM node:22-alpine AS build
-
+FROM node:18-alpine AS build
 WORKDIR /app
-
-# Prevent Node heap out-of-memory errors on small VPS instances
-ENV NODE_OPTIONS="--max-old-space-size=1536"
-
-# Cache dependencies
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
-
-# Copy application code
 COPY . .
-
-# Build for production
-RUN npm run build -- --configuration production
+RUN npm install
+RUN npm run build --configuration=production
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Remove default Nginx config and copy custom one
+# 1. Remove the default Nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf
+
+# 2. Copy your custom configuration file
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy build output (verify if your project outputs to dist/ngo/browser, dist/ngo, or www)
+# 3. Copy the Angular build files
+# Double check if your path is /app/dist/ngo/browser or just /app/dist/ngo
 COPY --from=build /app/dist/ngo/browser /usr/share/nginx/html
 
 EXPOSE 80
