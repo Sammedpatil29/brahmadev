@@ -61,7 +61,7 @@
   
   @if (filteredLeads.length > 0) {
   <div class="leads-grid">
-    @for (lead of filteredLeads; track $index) {
+    @for (lead of displayedLeads; track lead.id) {
     <div class="lead-card-container">
     <ion-card class="modern-lead-card" (click)="viewLead(lead.id)">
       <div class="card-gradient-bar"></div>
@@ -103,9 +103,9 @@
         </div>
 
         <div class="card-footer-row">
-          <span class="visit-time">
-            <ion-icon name="time-outline"></ion-icon>
-            {{ lead.time | date:'mediumDate' }} • {{ lead.time | date:'shortTime' }}
+          <span class="visit-time text-nowrap">
+            <ion-icon name="time-outline" color="primary"></ion-icon>
+            {{ lead.time | date:'dd/MM/yy' }} • {{ lead.time | date:'HH:mm' }}
           </span>
           <div class="mt-1">
             <ion-badge 
@@ -115,20 +115,23 @@
 </ion-badge>
           @if (lead.access?.length > 0) {
             <ion-badge 
-  class="status-badge text-white bg-success">
+  class="status-badge text-white bg-success ms-1">
   Assigned External
 </ion-badge>
           }
           </div>
-          <!-- <ion-button fill="clear" size="small" (click)="callLead(lead.contact); $event.stopPropagation()">
-            <ion-icon slot="icon-only" name="call"></ion-icon>
-          </ion-button> -->
         </div>
       </ion-card-content>
     </ion-card>
   </div>
   }
   </div>
+
+  <ion-infinite-scroll (ionInfinite)="loadMore($event)" [disabled]="displayedLeads.length >= filteredLeads.length">
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more leads...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+
   } @else {
     <div class="no-data-container d-flex flex-column align-items-center justify-content-center p-5 text-center">
   <div class="icon-wrapper mb-3">
