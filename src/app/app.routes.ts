@@ -28,6 +28,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/leads/leads.page').then( m => m.LeadsPage)
   },
   {
+    path: 'stats',
+    loadComponent: () => import('./pages/stats/stats.page').then( m => m.StatsPage)
+  },
+  {
     path: 'lead-details',
     loadComponent: () => import('./pages/lead-details/lead-details.page').then( m => m.LeadDetailsPage)
   },
@@ -66,5 +70,5 @@ export const routes: Routes = [
     path: '',
     redirectTo: 'login',
     pathMatch: 'full',
-  }
+  },
 ];

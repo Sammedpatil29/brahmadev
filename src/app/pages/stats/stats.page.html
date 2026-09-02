@@ -1,0 +1,85 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+     <div class="d-flex justify-content-between align-items-center">
+       <div>
+        Lead Statistics
+      </div>
+     </div>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  @if (isLoading) {
+    <div class="loader">
+      <ion-spinner color="primary"></ion-spinner>
+    </div>
+  } @else {
+
+    <!-- Summary Cards -->
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-number">{{ totalLeads }}</div>
+        <div class="summary-label">Total Leads</div>
+      </div>
+      @for (item of platformData; track item.name) {
+        <div class="summary-card">
+          <div class="summary-number">{{ item.count }}</div>
+          <div class="summary-label">{{ item.name }}</div>
+        </div>
+      }
+    </div>
+
+    <!-- Monthly Leads Chart (Full Width) -->
+    <ion-card class="chart-card">
+      <ion-card-header>
+        <ion-card-title class="chart-title">Leads by Month</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div #monthlyChart class="chart-container"></div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Secondary Charts Row (2 in a row on desktop) -->
+    <div class="charts-row">
+      <!-- Platform Pie Chart -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <ion-card-title class="chart-title">Leads by Platform</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div #platformChart class="chart-container"></div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Response Line Chart -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <ion-card-title class="chart-title">Leads by Response Status</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div #responseChart class="chart-container"></div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Monthly Leads by Response Status (Stacked Chart) -->
+    <ion-card class="chart-card">
+      <ion-card-header>
+        <ion-card-title class="chart-title">Monthly Leads by Response Status</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div #monthlyStatusChart class="chart-container"></div>
+      </ion-card-content>
+    </ion-card>
+
+  }
+
+</ion-content>
