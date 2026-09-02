@@ -236,16 +236,33 @@ export class StatsPage implements OnInit {
     chart.draw(data, options);
   }
 
+  getPipelineGroup(response: string): string {
+    const r = (response || '').trim().toLowerCase();
+    if (['interested', 'visiting soon', 'visit confirmed', 'conversion started', 'order completed'].includes(r)) {
+      return 'Active / Hot';
+    }
+    if (['new', 'call back requested', 'yet to think', 'busy'].includes(r)) {
+      return 'Follow-up';
+    }
+    if (['closed', 'not interested', 'wrong number'].includes(r)) {
+      return 'Closed / Lost';
+    }
+    if (['engineer', 'contractor', 'mestri'].includes(r)) {
+      return 'Professionals';
+    }
+    return 'Other';
+  }
+
   drawMonthlyStatusChart() {
     if (!this.monthlyStatusChartRef) return;
 
-    const allStatuses = this.responseData.map(r => r.name);
-    if (allStatuses.length === 0) return;
+    const pipelineGroups = ['Active / Hot', 'Follow-up', 'Closed / Lost', 'Professionals'];
+    const pipelineColors = ['#2dd36f', '#3880ff', '#eb445a', '#7044ff'];
 
-    const headerRow: any[] = ['Month', ...allStatuses];
+    const headerRow: any[] = ['Month', ...pipelineGroups];
     const dataArray: any[] = [headerRow];
 
-    const monthStatusMap = new Map<string, { label: string; statusCounts: Map<string, number> }>();
+    const monthStatusMap = new Map<string, { label: string; groupCounts: Map<string, number> }>();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     this.leads.forEach((lead: any) => {
@@ -258,22 +275,22 @@ export class StatsPage implements OnInit {
       const month = d.getMonth();
       const key = `${year}-${String(month + 1).padStart(2, '0')}`;
       const label = `${monthNames[month]} ${year}`;
-      const response = lead.response || 'Unknown';
+      const group = this.getPipelineGroup(lead.response);
 
       if (!monthStatusMap.has(key)) {
-        monthStatusMap.set(key, { label, statusCounts: new Map<string, number>() });
+        monthStatusMap.set(key, { label, groupCounts: new Map<string, number>() });
       }
 
       const item = monthStatusMap.get(key)!;
-      item.statusCounts.set(response, (item.statusCounts.get(response) || 0) + 1);
+      item.groupCounts.set(group, (item.groupCounts.get(group) || 0) + 1);
     });
 
     const sortedMonths = Array.from(monthStatusMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
     sortedMonths.forEach(([_, value]) => {
       const row: any[] = [value.label];
-      allStatuses.forEach(status => {
-        row.push(value.statusCounts.get(status) || 0);
+      pipelineGroups.forEach(group => {
+        row.push(value.groupCounts.get(group) || 0);
       });
       dataArray.push(row);
     });
@@ -282,13 +299,13 @@ export class StatsPage implements OnInit {
     const options = {
       title: '',
       isStacked: true,
-      legend: { position: 'none' },
-      colors: [
-        '#2dd36f', '#eb445a', '#3880ff', '#ffc409', '#3dc2ff',
-        '#7044ff', '#e040fb', '#ff6d00', '#00bfa5', '#795548',
-        '#607d8b', '#c2185b', '#0097a7', '#8bc34a'
-      ],
-      chartArea: { width: '88%', height: '70%', top: 25 },
+      legend: {
+        position: 'top',
+        alignment: 'center',
+        textStyle: { fontSize: 12, color: '#333', bold: true }
+      },
+      colors: pipelineColors,
+      chartArea: { width: '88%', height: '65%', top: 40 },
       hAxis: {
         slantedText: true,
         slantedTextAngle: 30,
@@ -302,7 +319,7 @@ export class StatsPage implements OnInit {
         textStyle: { fontSize: 11, color: '#555' },
         titleTextStyle: { fontSize: 12, italic: false, color: '#666' }
       },
-      bar: { groupWidth: '55%' },
+      bar: { groupWidth: '50%' },
       backgroundColor: 'transparent',
       fontName: 'inherit'
     };
