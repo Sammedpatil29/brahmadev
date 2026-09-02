@@ -1,16 +1,16 @@
 # Stage 1: Build
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
-# Prevent Node from overrunning VPS memory
+# Prevent Node heap out-of-memory errors on small VPS instances
 ENV NODE_OPTIONS="--max-old-space-size=1536"
 
-# Leverage Docker cache for dependencies
+# Cache dependencies
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
-# Copy application source
+# Copy application code
 COPY . .
 
 # Build for production
@@ -23,7 +23,7 @@ FROM nginx:alpine
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy build artifacts (Ensure this matches outputPath in angular.json)
+# Copy build output (verify if your project outputs to dist/ngo/browser, dist/ngo, or www)
 COPY --from=build /app/dist/ngo/browser /usr/share/nginx/html
 
 EXPOSE 80
