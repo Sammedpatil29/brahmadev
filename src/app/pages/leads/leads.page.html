@@ -63,8 +63,14 @@
   <div class="leads-grid">
     @for (lead of displayedLeads; track lead.id) {
     <div class="lead-card-container">
-    <ion-card class="modern-lead-card" (click)="viewLead(lead.id)">
-      <div class="card-gradient-bar"></div>
+    <ion-card class="modern-lead-card" [ngStyle]="{
+  'border': lead.platform === 'ig' 
+    ? '0.5px double #E1306C33' 
+    : lead.platform === 'fb' 
+      ? '0.5px double #1877F233' 
+      : '0.5px double #ffffff33'
+}" (click)="viewLead(lead.id)">
+      <!-- <div class="card-gradient-bar"></div> -->
       
       <ion-card-content>
         <div class="card-header-row">
