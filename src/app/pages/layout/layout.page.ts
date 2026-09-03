@@ -39,6 +39,10 @@ export class LayoutPage implements OnInit, OnDestroy {
   newLeadsCount = 0;
   private autoCloseTimer: any;
   private socketSubscription?: Subscription;
+  private audioCtx: AudioContext | null = null;
+  private alarmIntervalId: any = null;
+  private audioElement: HTMLAudioElement | null = null;
+  private userInteractionListener: any = null;
 
   constructor(
     private navCtrl: NavController,
@@ -49,6 +53,17 @@ export class LayoutPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Setup HTML5 audio element
+    try {
+      this.audioElement = new Audio('assets/lead-alert.wav');
+      this.audioElement.loop = true;
+    } catch (e) {
+      console.warn('HTMLAudioElement init error:', e);
+    }
+
+    // Pre-unlock audio on first user touch/click to comply with browser autoplay policies
+    this.setupAudioUnlocker();
+
     // Fetch initial new leads count quietly for badge/display without showing alert toast
     this.checkForNewLeads();
 
@@ -59,11 +74,17 @@ export class LayoutPage implements OnInit, OnDestroy {
         this.newLeadsCount = (this.newLeadsCount || 0) + 1;
         this.showNewLeadAlert = true;
 
-        // Reset and start 20 seconds auto-dismiss timer
+        // Clear previous auto-dismiss timer before starting new alert
         this.clearAutoCloseTimer();
+
+        // Play looping alarm sound
+        this.playAlarmSound();
+
+        // Start 30 seconds auto-dismiss timer
         this.autoCloseTimer = setTimeout(() => {
           this.showNewLeadAlert = false;
-        }, 20000);
+          this.stopAlarmSound();
+        }, 30000);
       }
     });
   }
@@ -72,7 +93,42 @@ export class LayoutPage implements OnInit, OnDestroy {
     if (this.socketSubscription) {
       this.socketSubscription.unsubscribe();
     }
+    this.removeAudioUnlocker();
     this.clearAutoCloseTimer();
+    this.stopAlarmSound();
+  }
+
+  private setupAudioUnlocker() {
+    this.userInteractionListener = () => {
+      // Warm up HTMLAudioElement
+      if (this.audioElement) {
+        this.audioElement.load();
+      }
+      // Warm up AudioContext
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass && !this.audioCtx) {
+        try {
+          this.audioCtx = new AudioContextClass();
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+        } catch (_) {}
+      }
+      this.removeAudioUnlocker();
+    };
+
+    window.addEventListener('click', this.userInteractionListener, { once: true, passive: true });
+    window.addEventListener('touchstart', this.userInteractionListener, { once: true, passive: true });
+    window.addEventListener('pointerdown', this.userInteractionListener, { once: true, passive: true });
+  }
+
+  private removeAudioUnlocker() {
+    if (this.userInteractionListener) {
+      window.removeEventListener('click', this.userInteractionListener);
+      window.removeEventListener('touchstart', this.userInteractionListener);
+      window.removeEventListener('pointerdown', this.userInteractionListener);
+      this.userInteractionListener = null;
+    }
   }
 
   dismissAnnouncement() {
@@ -110,13 +166,111 @@ export class LayoutPage implements OnInit, OnDestroy {
       event.stopPropagation();
     }
     this.clearAutoCloseTimer();
+    this.stopAlarmSound();
     this.showNewLeadAlert = false;
   }
 
   viewLeads() {
     this.clearAutoCloseTimer();
+    this.stopAlarmSound();
     this.showNewLeadAlert = false;
     this.navCtrl.navigateForward('/layout/leads');
+  }
+
+  private playAlarmSound() {
+    this.stopAlarmSound();
+
+    let htmlAudioPlayed = false;
+
+    // 1. Try playing via HTMLAudioElement (looping asset)
+    if (this.audioElement) {
+      this.audioElement.currentTime = 0;
+      const playPromise = this.audioElement.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          htmlAudioPlayed = true;
+        }).catch(err => {
+          if (err.name !== 'AbortError') {
+            console.warn('HTMLAudio play failed, falling back to Web Audio synth:', err);
+          }
+        });
+      }
+    }
+
+    // 2. Fallback / supplementary synthesized chime using Web Audio API
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      if (!this.audioCtx || this.audioCtx.state === 'closed') {
+        this.audioCtx = new AudioContextClass();
+      }
+
+      const playTone = () => {
+        if (!this.audioCtx || this.audioCtx.state === 'closed') return;
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+
+        const now = this.audioCtx.currentTime;
+
+        // Tone 1: 880 Hz (A5)
+        const osc1 = this.audioCtx.createOscillator();
+        const gain1 = this.audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, now);
+        gain1.gain.setValueAtTime(0.35, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc1.connect(gain1);
+        gain1.connect(this.audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.2);
+
+        // Tone 2: 1175 Hz (D6)
+        const osc2 = this.audioCtx.createOscillator();
+        const gain2 = this.audioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1175, now + 0.15);
+        gain2.gain.setValueAtTime(0.35, now + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc2.connect(gain2);
+        gain2.connect(this.audioCtx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 0.4);
+      };
+
+      // Play immediately
+      playTone();
+
+      // Loop every 1.2 seconds
+      this.alarmIntervalId = setInterval(() => {
+        playTone();
+      }, 1200);
+    } catch (err) {
+      console.warn('Could not play alert alarm sound:', err);
+    }
+  }
+
+  private stopAlarmSound() {
+    // Stop HTML Audio
+    if (this.audioElement) {
+      try {
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
+      } catch (_) {}
+    }
+
+    // Stop Web Audio intervals and synth
+    if (this.alarmIntervalId) {
+      clearInterval(this.alarmIntervalId);
+      this.alarmIntervalId = null;
+    }
+    if (this.audioCtx) {
+      try {
+        this.audioCtx.close();
+      } catch (_) {}
+      this.audioCtx = null;
+    }
   }
 
 }
