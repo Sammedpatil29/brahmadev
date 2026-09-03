@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { IonRouterOutlet, IonIcon } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
+import { SocketService } from 'src/app/services/socket';
+import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { notificationsOutline, closeOutline, arrowForwardOutline, sparklesOutline, giftOutline } from 'ionicons/icons';
 
@@ -35,29 +37,40 @@ export class LayoutPage implements OnInit, OnDestroy {
   showNewLeadAlert = false;
   latestLead: any = null;
   newLeadsCount = 0;
-  private pollIntervalId: any;
   private autoCloseTimer: any;
-  private previousCount = 0;
+  private socketSubscription?: Subscription;
 
   constructor(
     private navCtrl: NavController,
-    private leadsService: Leads
+    private leadsService: Leads,
+    private socketService: SocketService
   ) {
     addIcons({ notificationsOutline, closeOutline, arrowForwardOutline, sparklesOutline, giftOutline });
   }
 
   ngOnInit() {
+    // Fetch initial new leads count quietly for badge/display without showing alert toast
     this.checkForNewLeads();
 
-    // Poll for new leads every 20 seconds
-    this.pollIntervalId = setInterval(() => {
-      this.checkForNewLeads();
-    }, 20000);
+    // Listen to real-time new lead alerts exclusively via Socket.IO
+    this.socketSubscription = this.socketService.onNewLead().subscribe((leadData: any) => {
+      if (leadData) {
+        this.latestLead = leadData;
+        this.newLeadsCount = (this.newLeadsCount || 0) + 1;
+        this.showNewLeadAlert = true;
+
+        // Reset and start 20 seconds auto-dismiss timer
+        this.clearAutoCloseTimer();
+        this.autoCloseTimer = setTimeout(() => {
+          this.showNewLeadAlert = false;
+        }, 20000);
+      }
+    });
   }
 
   ngOnDestroy() {
-    if (this.pollIntervalId) {
-      clearInterval(this.pollIntervalId);
+    if (this.socketSubscription) {
+      this.socketSubscription.unsubscribe();
     }
     this.clearAutoCloseTimer();
   }
@@ -70,17 +83,6 @@ export class LayoutPage implements OnInit, OnDestroy {
     if (this.announcement.actionRoute) {
       this.navCtrl.navigateForward(this.announcement.actionRoute);
     }
-  }
-
-  triggerNewLeadAlert() {
-    this.fetchLatestLeadDetails();
-    this.showNewLeadAlert = true;
-
-    // Reset and start 20 seconds auto-dismiss timer
-    this.clearAutoCloseTimer();
-    this.autoCloseTimer = setTimeout(() => {
-      this.showNewLeadAlert = false;
-    }, 20000);
   }
 
   clearAutoCloseTimer() {
@@ -98,25 +100,6 @@ export class LayoutPage implements OnInit, OnDestroy {
       next: (res: any) => {
         const currentCount = typeof res === 'number' ? res : (res?.count ?? res?.length ?? 0);
         this.newLeadsCount = currentCount;
-
-        // Trigger alert if new leads arrived
-        if (currentCount > this.previousCount && currentCount > 0) {
-          this.triggerNewLeadAlert();
-        }
-
-        this.previousCount = currentCount;
-      },
-      error: () => {}
-    });
-  }
-
-  fetchLatestLeadDetails() {
-    this.leadsService.getLeads().subscribe({
-      next: (leads: any) => {
-        if (Array.isArray(leads) && leads.length > 0) {
-          const newLead = leads.find((l: any) => l.response === 'new') || leads[0];
-          this.latestLead = newLead;
-        }
       },
       error: () => {}
     });

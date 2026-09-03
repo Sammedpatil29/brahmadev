@@ -1,51 +1,79 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocketService {
   private socket: Socket;
+  private readonly serverUrl: string = 'https://brahmadev-api.democompany.in.net';
+  private newLeadSubject = new Subject<any>();
 
   constructor() {
-    this.socket = io('https://oneapp-express.onrender.com'); // Your backend URL
+    this.socket = io(this.serverUrl, {
+      transports: ['websocket', 'polling'],
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+    });
 
     this.socket.on('connect', () => {
-      console.log('🟢 Connected to Socket.IO server');
+      console.log('🟢 Connected to Socket.IO server:', this.socket.id);
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('🔴 Disconnected from Socket.IO server');
+    this.socket.on('disconnect', (reason) => {
+      console.log('🔴 Disconnected from Socket.IO server:', reason);
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.warn('⚠️ Socket.IO connection error:', error.message);
+    });
+
+    // Listen for new-lead events and pipe to Subject
+    this.socket.on('new-lead', (leadData: any) => {
+      console.log('⚡ Received real-time new-lead via Socket.IO:', leadData);
+      this.newLeadSubject.next(leadData);
     });
   }
 
-  // Example: listen for a message from the server
-  onMessage(callback: (msg: string) => void) {
-    this.socket.on('welcome', callback);
+  /**
+   * Observable stream that emits whenever a new lead arrives
+   */
+  onNewLead(): Observable<any> {
+    return this.newLeadSubject.asObservable();
   }
 
-  riderUpdate(callback: (msg: string) => void) {
-    return this.socket.on('riderUpdate', callback);
+  /**
+   * Listen to any custom socket event
+   */
+  on(eventName: string, callback: (...args: any[]) => void): void {
+    this.socket.on(eventName, callback);
   }
 
-  rideRequest(callback: (msg: string) => void) {
-    return this.socket.on('ride:request', callback);
+  /**
+   * Emit custom socket event
+   */
+  emit(eventName: string, ...args: any[]): void {
+    this.socket.emit(eventName, ...args);
   }
 
-  // Example: send a message to the server
-  syncRider(msg: string) {
-    this.socket.emit('syncRider', msg);
+  /**
+   * Manually reconnect if disconnected
+   */
+  connect(): void {
+    if (!this.socket.connected) {
+      this.socket.connect();
+    }
   }
 
-  changeRiderStatus(msg: string) {
-    this.socket.emit('changeRiderStatus', msg);
-  }
-
-  createRide(msg: string) {
-    this.socket.emit('createRide', msg);
-  }
-
-  cancelRide(msg: string) {
-    this.socket.emit('cancelRide', msg);
+  /**
+   * Disconnect socket
+   */
+  disconnect(): void {
+    if (this.socket.connected) {
+      this.socket.disconnect();
+    }
   }
 }
