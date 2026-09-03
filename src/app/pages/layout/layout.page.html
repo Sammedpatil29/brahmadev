@@ -1,8 +1,32 @@
+<!-- Top Festive & Event Announcement Bar -->
+<!-- @if (showAnnouncement) {
+  <div class="announcement-bar">
+    <div class="announcement-content">
+      <div class="announcement-badge">
+        <ion-icon name="sparkles-outline"></ion-icon>
+        <span>{{ announcement.badge }}</span>
+      </div>
+      <div class="announcement-text">
+        {{ announcement.text }}
+      </div>
+      @if (announcement.actionText) {
+        <button class="announcement-action-btn" (click)="onAnnouncementClick()">
+          <span>{{ announcement.actionText }}</span>
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      }
+    </div>
+    <button class="announcement-close-btn" (click)="dismissAnnouncement()" aria-label="Close Announcement">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+  </div>
+} -->
+
 <ion-router-outlet></ion-router-outlet>
 
 <!-- Floating New Lead Alert Toast in Top-Right Corner -->
 @if (showNewLeadAlert) {
-  <div class="new-lead-toast shadow-lg">
+  <div class="new-lead-toast shadow-lg" [hidden]="true">
     <div class="toast-indicator"></div>
     <div class="toast-body">
       <div class="d-flex align-items-start justify-content-between mb-2">
@@ -38,7 +62,7 @@
 
       <div class="d-flex gap-2 justify-content-end">
         <button class="btn btn-sm btn-outline-primary px-3" (click)="closeAlert($event)">
-          ಹಿಂದಾಗಡೆ ನೋಡ್ತನ
+          Close
         </button>
         <button class="btn btn-sm btn-dark px-3 d-flex align-items-center gap-1" (click)="viewLeads()">
           <span>View Leads</span>

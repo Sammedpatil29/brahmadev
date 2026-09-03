@@ -1,8 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonIcon, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonBadge } from '@ionic/angular/standalone';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import {
+  IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+  IonIcon,
+  IonButton,
+  IonButtons,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonBadge,
+  IonModal,
+  IonSpinner
+} from '@ionic/angular/standalone';
 import { NavController, ToastController } from '@ionic/angular';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
 import { addIcons } from 'ionicons';
 import {
   arrowBackOutline,
@@ -22,7 +43,14 @@ import {
   documentTextOutline,
   cubeOutline,
   sparklesOutline,
-  businessOutline
+  businessOutline,
+  downloadOutline,
+  personOutline,
+  locationOutline,
+  callOutline,
+  calendarOutline,
+  closeOutline,
+  eyeOutline
 } from 'ionicons/icons';
 
 export interface CategoryItem {
@@ -53,7 +81,24 @@ export interface PackageTier {
   templateUrl: './fixed-cost-calculator.page.html',
   styleUrls: ['./fixed-cost-calculator.page.scss'],
   standalone: true,
-  imports: [IonBadge, IonCardTitle, IonCardHeader, IonCardContent, IonCard, IonButtons, IonButton, IonIcon, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [
+    IonSpinner,
+    IonModal,
+    IonBadge,
+    IonCardTitle,
+    IonCardHeader,
+    IonCardContent,
+    IonCard,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonContent,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    CommonModule,
+    FormsModule
+  ]
 })
 export class FixedCostCalculatorPage implements OnInit {
 
@@ -67,17 +112,19 @@ export class FixedCostCalculatorPage implements OnInit {
   plasterType: string = 'gypsum'; // gypsum | cement_plaster
   includeInterior: boolean = true;
 
-  increaseArea() {
-    this.builtUpArea = (this.builtUpArea || 0) + 100;
-    this.recalculate();
-  }
-
-  decreaseArea() {
-    this.builtUpArea = Math.max(100, (this.builtUpArea || 0) - 100);
-    this.recalculate();
-  }
-
   activeTab: 'categories' | 'materials' = 'categories';
+
+  // Modal & Customer Details for PDF Quote
+  isDownloadModalOpen: boolean = false;
+  isPreviewModalOpen: boolean = false;
+  isGeneratingPdf: boolean = false;
+  customerName: string = '';
+  customerPlace: string = '';
+  customerContact: string = '';
+  customerGst: string = '';
+  todayDateFormatted: string = '';
+  pdfPreviewSafeUrl: SafeResourceUrl | null = null;
+  currentGeneratedDoc: jsPDF | null = null;
 
   // Available Packages
   packages: PackageTier[] = [
@@ -139,7 +186,8 @@ export class FixedCostCalculatorPage implements OnInit {
 
   constructor(
     private navCtrl: NavController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private sanitizer: DomSanitizer
   ) {
     addIcons({
       arrowBackOutline,
@@ -159,15 +207,41 @@ export class FixedCostCalculatorPage implements OnInit {
       documentTextOutline,
       cubeOutline,
       sparklesOutline,
-      businessOutline
+      businessOutline,
+      downloadOutline,
+      personOutline,
+      locationOutline,
+      callOutline,
+      calendarOutline,
+      closeOutline,
+      eyeOutline
     });
   }
 
   ngOnInit() {
+    this.updateTodayDate();
     this.recalculate();
   }
 
+  updateTodayDate() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = now.toLocaleString('en-IN', { month: 'short' });
+    const year = now.getFullYear();
+    this.todayDateFormatted = `${day} ${month} ${year}`;
+  }
+
   back() { this.navCtrl.back(); }
+
+  increaseArea() {
+    this.builtUpArea = (this.builtUpArea || 0) + 100;
+    this.recalculate();
+  }
+
+  decreaseArea() {
+    this.builtUpArea = Math.max(100, (this.builtUpArea || 0) - 100);
+    this.recalculate();
+  }
 
   setPresetArea(area: number) {
     this.builtUpArea = area;
@@ -203,13 +277,7 @@ export class FixedCostCalculatorPage implements OnInit {
     // Total area considering floors (each floor adds builtup space)
     this.totalAreaCalculated = Math.max(100, (this.builtUpArea || 0) * (this.selectedFloors || 1));
 
-    // Base percentages of construction cost:
-    // 1. Civil & Structure: 38%
-    // 2. Centring & Shuttering: 12%
-    // 3. Finishing & Plastering: 18%
-    // 4. Plumbing & Sanitary: 10%
-    // 5. Electrification: 9%
-    // 6. Interiors & Woodwork: 13% (if enabled)
+    // Base weights
     let weights = {
       civil: 0.38,
       centring: 0.12,
@@ -345,7 +413,7 @@ export class FixedCostCalculatorPage implements OnInit {
       });
     }
 
-    // Material Estimations (standard thumb rules per sqft)
+    // Material Estimations
     this.estimatedMaterials = {
       cementBags: Math.round(this.totalAreaCalculated * 0.42),
       steelKg: Math.round(this.totalAreaCalculated * 3.8),
@@ -359,6 +427,15 @@ export class FixedCostCalculatorPage implements OnInit {
 
   toggleCategory(cat: CategoryItem) {
     cat.isExpanded = !cat.isExpanded;
+  }
+
+  openDownloadModal() {
+    this.updateTodayDate();
+    this.isDownloadModalOpen = true;
+  }
+
+  closeDownloadModal() {
+    this.isDownloadModalOpen = false;
   }
 
   async copyEstimate() {
@@ -407,6 +484,561 @@ export class FixedCostCalculatorPage implements OnInit {
       case 4: return 'Ground + 3 Floors';
       default: return `${this.selectedFloors} Floors`;
     }
+  }
+
+  getWallLabel(): string {
+    if (this.wallType === 'red_brick') return 'Red Clay Bricks';
+    if (this.wallType === 'aac_block') return 'AAC Lightweight Blocks';
+    return 'Solid Concrete Blocks';
+  }
+
+  getPlasterLabel(): string {
+    if (this.plasterType === 'gypsum') return 'Smooth Gypsum Plaster';
+    return 'Traditional Cement Plaster';
+  }
+
+  // Load logo from assets/Brahmadev Constructions.png into a base64 DataURL
+  async loadLogoDataUrl(): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+            return;
+          }
+        } catch (e) {
+          console.error('Error drawing logo to canvas', e);
+        }
+        resolve('assets/Brahmadev Constructions.png');
+      };
+      img.onerror = () => {
+        resolve('assets/Brahmadev Constructions.png');
+      };
+      img.src = 'assets/Brahmadev Constructions.png';
+    });
+  }
+
+  // --- BUILD PDF DOCUMENT OBJECT ---
+  async buildPDFDocument(): Promise<jsPDF> {
+    const logoBase64 = await this.loadLogoDataUrl();
+
+    const doc = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    const contentWidth = pageWidth - (margin * 2);
+
+    // Brand Color Coding from Brahmadev Constructions Logo
+    const brandNavy: [number, number, number] = [20, 33, 61];     // #14213d Deep Navy
+    const brandGold: [number, number, number] = [184, 146, 74];   // #b8924a Elegant Gold
+    const brandSand: [number, number, number] = [250, 248, 242];  // #faf8f2 Warm Sand
+    const textMain: [number, number, number] = [30, 30, 30];       // #1e1e1e Dark Text
+    const textMuted: [number, number, number] = [100, 100, 100];   // #646464 Muted Text
+
+    const quoteNumber = `BC-FC-EST-${Date.now().toString().slice(-6)}`;
+    const selectedPkg = this.packages.find(p => p.id === this.selectedPackage) || this.packages[1];
+
+    // ==========================================
+    // PAGE 1: FULL-WIDTH ALIGNED HEADER (FIRST PAGE ONLY)
+    // ==========================================
+    let currentY = 10;
+    const rightEdge = pageWidth - margin;
+
+    // 1. Top Decorative Brand Bar (Navy & Gold)
+    doc.setFillColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.rect(0, 0, pageWidth, 3.5, 'F');
+    doc.setFillColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.rect(0, 3.5, pageWidth, 1, 'F');
+
+    // 2. Logo on Left
+    const logoSize = 27;
+    const logoX = margin;
+    try {
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', logoX, currentY, logoSize, logoSize);
+      }
+    } catch (err) {
+      console.warn('Logo load fallback', err);
+    }
+
+    // 3. Full-Width Information Block
+    const textStartX = margin + logoSize + 4;
+
+    // Line 1: BRAHMADEV CONSTRUCTIONS
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('BRAHMADEV CONSTRUCTIONS', textStartX, currentY + 5.5);
+
+    // Line 2: Address
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Opp. Durgalakshmi Multiplex, Miraj Road, Athani, Karnataka - 591304', textStartX, currentY + 11.5);
+
+    // Line 3: Phone (Left) & Email (Right Aligned)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.2);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('Phone: ', textStartX, currentY + 17);
+    const phW = doc.getTextWidth('Phone: ');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text('+91 88849 50068', textStartX + phW, currentY + 17);
+
+    // Email aligned to right edge
+    const emailVal = 'brahmadevaconstructions@gmail.com';
+    const emailLabel = 'Email: ';
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    const emailValW = doc.getTextWidth(emailVal);
+    doc.text(emailVal, rightEdge, currentY + 17, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text(emailLabel, rightEdge - emailValW, currentY + 17, { align: 'right' });
+
+    // Line 4: GSTIN (Left) & PAN Number (Right Aligned)
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('GSTIN: ', textStartX, currentY + 22.5);
+    const gstW = doc.getTextWidth('GSTIN: ');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text('29FHSPB9789R1ZO', textStartX + gstW, currentY + 22.5);
+
+    // PAN Number aligned to right edge
+    const panVal = 'FHSPB9789R';
+    const panLabel = 'PAN Number: ';
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    const panValW = doc.getTextWidth(panVal);
+    doc.text(panVal, rightEdge, currentY + 22.5, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text(panLabel, rightEdge - panValW, currentY + 22.5, { align: 'right' });
+
+    currentY += 27;
+
+    // Divider Line with Gold accent spanning full width
+    doc.setDrawColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.setLineWidth(0.6);
+    doc.line(margin, currentY, rightEdge, currentY);
+
+    currentY += 4;
+
+    // 4. Customer & Estimate Details Box (FIRST PAGE ONLY)
+    const hasCustGst = !!this.customerGst.trim();
+    const custBoxHeight = hasCustGst ? 24 : 19;
+
+    doc.setFillColor(brandSand[0], brandSand[1], brandSand[2]);
+    doc.roundedRect(margin, currentY, contentWidth, custBoxHeight, 2, 2, 'F');
+    doc.setDrawColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(margin, currentY, contentWidth, custBoxHeight, 2, 2, 'S');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text(`CUSTOMER: ${this.customerName.toUpperCase()}`, margin + 4, currentY + 6);
+    doc.text(`SITE LOCATION: ${this.customerPlace.toUpperCase()}`, margin + (contentWidth / 2), currentY + 6);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(textMain[0], textMain[1], textMain[2]);
+    if (this.customerContact) {
+      doc.text(`Contact: ${this.customerContact}`, margin + 4, currentY + 12);
+    } else {
+      doc.text(`Package Tier: ${selectedPkg.name} (${selectedPkg.badge})`, margin + 4, currentY + 12);
+    }
+    doc.text(`Date: ${this.todayDateFormatted}  |  Estimate No: ${quoteNumber}`, margin + (contentWidth / 2), currentY + 12);
+
+    if (hasCustGst) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+      doc.text(`Customer GSTIN: ${this.customerGst.toUpperCase()}`, margin + 4, currentY + 18);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(textMain[0], textMain[1], textMain[2]);
+      doc.text(`Scope: ${this.totalAreaCalculated.toLocaleString('en-IN')} sq.ft (${this.getFloorsLabel()})`, margin + (contentWidth / 2), currentY + 18);
+    }
+
+    currentY += custBoxHeight + 5;
+
+    // ==========================================
+    // 5. EXECUTIVE SUMMARY HIGHLIGHT BOX
+    // ==========================================
+    doc.setFillColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.roundedRect(margin, currentY, contentWidth, 23, 2.5, 2.5, 'F');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.text('TOTAL ESTIMATED CONSTRUCTION COST', margin + 6, currentY + 6);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Rs. ${this.totalCost.toLocaleString('en-IN')}`, margin + 6, currentY + 15);
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 200, 200);
+    doc.text(`(All-inclusive fixed cost estimate)`, margin + 6, currentY + 20);
+
+    // Right Stats inside banner
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.text(`Rs. ${this.ratePerSqft.toLocaleString('en-IN')} / sq.ft`, pageWidth - margin - 6, currentY + 10, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.8);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`${this.builtUpArea} sq.ft Built-up • ${this.getFloorsLabel()}`, pageWidth - margin - 6, currentY + 15, { align: 'right' });
+    doc.text(`Masonry: ${this.getWallLabel()} | Plaster: ${this.getPlasterLabel()}`, pageWidth - margin - 6, currentY + 20, { align: 'right' });
+
+    currentY += 28;
+
+    // ==========================================
+    // 6. CATEGORY SUMMARY TABLE
+    // ==========================================
+    const catTableBody = this.categories.map((cat, idx) => [
+      `${idx + 1}`,
+      cat.name,
+      `${cat.percentage}%`,
+      `Rs. ${cat.ratePerSqft}/sqft`,
+      `Rs. ${cat.totalCost.toLocaleString('en-IN')}`
+    ]);
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      head: [['#', 'Construction Category', 'Share (%)', 'Rate / Sq.Ft', 'Sub Total (INR)']],
+      body: catTableBody,
+      theme: 'grid',
+      headStyles: {
+        fillColor: brandNavy,
+        textColor: [255, 255, 255],
+        fontSize: 8.5,
+        fontStyle: 'bold',
+        halign: 'left'
+      },
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 'auto', fontStyle: 'bold' },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 28, halign: 'right' },
+        4: { cellWidth: 38, halign: 'right', fontStyle: 'bold' }
+      },
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        textColor: textMain
+      },
+      alternateRowStyles: {
+        fillColor: brandSand
+      }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+
+    // ==========================================
+    // 7. DETAILED WORK SCOPE & INCLUSIONS (FULL ACCORDION DATA)
+    // ==========================================
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('DETAILED WORK SCOPE & COMMITTED SPECIFICATIONS', margin, currentY);
+
+    currentY += 4;
+
+    const detailedBody: any[] = [];
+    this.categories.forEach((cat) => {
+      // Category Header Row
+      detailedBody.push([
+        {
+          content: `${cat.name.toUpperCase()}  •  Rs. ${cat.totalCost.toLocaleString('en-IN')} (${cat.percentage}% of Project - Rs. ${cat.ratePerSqft}/sqft)`,
+          colSpan: 2,
+          styles: {
+            fillColor: brandSand,
+            textColor: brandNavy,
+            fontStyle: 'bold',
+            fontSize: 8.2
+          }
+        }
+      ]);
+
+      // Specific Inclusions from Accordion
+      cat.includedItems.forEach((specItem) => {
+        detailedBody.push(['•', specItem]);
+      });
+    });
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      body: detailedBody,
+      theme: 'plain',
+      columnStyles: {
+        0: { cellWidth: 6, halign: 'center', textColor: brandGold, fontStyle: 'bold' },
+        1: { cellWidth: 'auto', fontSize: 7.8, textColor: textMain }
+      },
+      styles: {
+        cellPadding: 1.3
+      }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+
+    // Check if space remaining is sufficient for BOQ table or add page
+    if (currentY > pageHeight - 75) {
+      doc.addPage();
+      currentY = 16;
+    }
+
+    // ==========================================
+    // 8. ESTIMATED RAW MATERIAL REQUIREMENTS (BOQ)
+    // ==========================================
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('ESTIMATED MATERIAL REQUIREMENTS (BOQ THUMB RULES)', margin, currentY);
+
+    currentY += 3;
+
+    const boqBody = [
+      ['1', 'Cement (53/43 Grade)', `${this.estimatedMaterials.cementBags} Bags`, 'Structural concrete, foundation & masonry'],
+      ['2', 'TMT Steel (Fe550 / Fe500D)', `${(this.estimatedMaterials.steelKg / 1000).toFixed(2)} Metric Tons (${this.estimatedMaterials.steelKg} kg)`, 'Primary reinforcement for slabs, beams & columns'],
+      ['3', 'Wall Masonry Units', `${this.estimatedMaterials.bricksCount.toLocaleString()} Units`, this.getWallLabel()],
+      ['4', 'River Sand / M-Sand', `${this.estimatedMaterials.sandCft} cft`, 'Mortar for plastering & masonry'],
+      ['5', 'Coarse Aggregate (20mm/40mm)', `${this.estimatedMaterials.aggregateCft} cft`, 'Concrete casting for foundation & slabs'],
+      ['6', 'Flooring & Wall Tiles', `${this.estimatedMaterials.flooringSqft} sq.ft`, 'Living, bedroom, kitchen & anti-skid bathroom tiles'],
+      ['7', 'Wall Putty & Emulsion Paint', `${this.estimatedMaterials.paintLitres} Litres`, '2-Coat putty, primer & premium emulsion']
+    ];
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      head: [['#', 'Raw Material Item', 'Estimated Quantity', 'Remarks / Usage']],
+      body: boqBody,
+      theme: 'grid',
+      headStyles: {
+        fillColor: brandNavy,
+        textColor: [255, 255, 255],
+        fontSize: 8,
+        fontStyle: 'bold'
+      },
+      styles: {
+        fontSize: 7.5,
+        cellPadding: 1.8,
+        textColor: textMain
+      },
+      alternateRowStyles: {
+        fillColor: brandSand
+      }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+
+    if (currentY > pageHeight - 45) {
+      doc.addPage();
+      currentY = 16;
+    }
+
+    // ==========================================
+    // 9. TERMS & SIGNATURE SECTION
+    // ==========================================
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('TERMS & CONDITIONS:', margin, currentY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+    doc.text([
+      '1. Rates are based on current market material costs and standard soil conditions.',
+      '2. Electricity and water required during the construction period to be supplied by the client.',
+      '3. Stage-wise payment milestones to be followed as per the mutual construction contract.'
+    ], margin, currentY + 4);
+
+    // Signature line (Right Aligned)
+    doc.setDrawColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.setLineWidth(0.4);
+    doc.line(pageWidth - margin - 45, currentY + 18, pageWidth - margin, currentY + 18);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.8);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text('Authorized Signatory', pageWidth - margin, currentY + 22, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('Brahmadev Constructions', pageWidth - margin, currentY + 26, { align: 'right' });
+
+    // ==========================================
+    // 10. WATERMARK ON ALL PAGES & CLEAN FOOTER
+    // ==========================================
+    const totalPages = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+
+      // Center Watermark on ALL Pages
+      if (logoBase64) {
+        try {
+          if ((doc as any).saveGraphicsState && (doc as any).setGState) {
+            (doc as any).saveGraphicsState();
+            (doc as any).setGState(new (doc as any).GState({ opacity: 0.08 }));
+            const wmSize = 90;
+            const wmX = (pageWidth - wmSize) / 2;
+            const wmY = (pageHeight - wmSize) / 2;
+            doc.addImage(logoBase64, 'PNG', wmX, wmY, wmSize, wmSize);
+            (doc as any).restoreGraphicsState();
+          } else {
+            const wmSize = 80;
+            const wmX = (pageWidth - wmSize) / 2;
+            const wmY = (pageHeight - wmSize) / 2;
+            doc.addImage(logoBase64, 'PNG', wmX, wmY, wmSize, wmSize);
+          }
+        } catch (e) {
+          console.log('Watermark note', e);
+        }
+      }
+
+      // Clean Footer: Left: "Brahmadev Constructions", Right: "Page X of Y"
+      doc.setDrawColor(brandGold[0], brandGold[1], brandGold[2]);
+      doc.setLineWidth(0.4);
+      doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+      doc.text('Brahmadev Constructions', margin, pageHeight - 7);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
+    }
+
+    return doc;
+  }
+
+  // --- PREVIEW PDF IN MODAL ---
+  async previewPDF() {
+    if (!this.customerName.trim()) {
+      const toast = await this.toastCtrl.create({
+        message: 'Please enter customer name to generate preview.',
+        duration: 2000,
+        position: 'bottom',
+        color: 'warning'
+      });
+      await toast.present();
+      return;
+    }
+
+    this.isGeneratingPdf = true;
+
+    try {
+      const doc = await this.buildPDFDocument();
+      this.currentGeneratedDoc = doc;
+
+      const blob = doc.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+
+      this.isDownloadModalOpen = false;
+      this.isPreviewModalOpen = true;
+      this.isGeneratingPdf = false;
+    } catch (error) {
+      console.error('Error generating PDF preview:', error);
+      this.isGeneratingPdf = false;
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to generate PDF preview.',
+        duration: 2500,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+  closePreviewModal() {
+    this.isPreviewModalOpen = false;
+  }
+
+  // --- DOWNLOAD OR SHARE FROM PREVIEW / DIRECT ---
+  async downloadCurrentPDF() {
+    this.isGeneratingPdf = true;
+
+    try {
+      let doc = this.currentGeneratedDoc;
+      if (!doc) {
+        doc = await this.buildPDFDocument();
+        this.currentGeneratedDoc = doc;
+      }
+
+      const cleanCustomer = this.customerName.replace(/[^a-zA-Z0-9]/g, '_') || 'Client';
+      const fileName = `Brahmadev_Estimate_${cleanCustomer}.pdf`;
+
+      if (Capacitor.isNativePlatform()) {
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: pdfBase64,
+          directory: Directory.Cache
+        });
+
+        await Share.share({
+          title: `Brahmadev Construction Estimate - ${this.customerName}`,
+          text: `Here is the detailed construction cost estimate for ${this.builtUpArea} sqft building.`,
+          url: savedFile.uri,
+          dialogTitle: 'Share Construction Estimate PDF'
+        });
+      } else {
+        doc.save(fileName);
+      }
+
+      this.isGeneratingPdf = false;
+      this.isDownloadModalOpen = false;
+
+      const toast = await this.toastCtrl.create({
+        message: 'Quotation PDF downloaded successfully!',
+        duration: 2500,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
+
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      this.isGeneratingPdf = false;
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to download PDF. Please try again.',
+        duration: 2500,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+  // Direct download handler
+  async generateAndDownloadPDF() {
+    await this.previewPDF();
   }
 
   resetCalculator() {

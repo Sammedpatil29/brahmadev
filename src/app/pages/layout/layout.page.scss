@@ -1,9 +1,111 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
+// Top Announcement Bar — non-floating, static header at the very top of layout
+.announcement-bar {
+  flex: 0 0 auto;
+  width: 100%;
+  background: linear-gradient(90deg, #ff5722, #e91e63, #8e24aa);
+  color: #ffffff;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.82rem;
+  box-sizing: border-box;
+
+  .announcement-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .announcement-badge {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .announcement-text {
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .announcement-action-btn {
+    background: #ffffff;
+    color: #8e24aa;
+    border: none;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background: #f8fafc;
+    }
+  }
+
+  .announcement-close-btn {
+    background: rgba(0, 0, 0, 0.15);
+    border: none;
+    color: #ffffff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 0.95rem;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+ion-router-outlet {
+  position: relative !important;
+  flex: 1 1 auto;
+  height: 100%;
+  width: 100%;
+  contain: layout size style;
+}
+
+// Floating Toast Notification for New Lead
 .new-lead-toast {
   position: fixed;
   top: 20px;
@@ -116,4 +218,3 @@
     opacity: 0;
   }
 }
-

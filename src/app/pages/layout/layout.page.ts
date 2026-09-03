@@ -5,7 +5,14 @@ import { IonRouterOutlet, IonIcon } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
 import { addIcons } from 'ionicons';
-import { notificationsOutline, closeOutline, arrowForwardOutline } from 'ionicons/icons';
+import { notificationsOutline, closeOutline, arrowForwardOutline, sparklesOutline, giftOutline } from 'ionicons/icons';
+
+export interface AnnouncementItem {
+  badge: string;
+  text: string;
+  actionText?: string;
+  actionRoute?: string;
+}
 
 @Component({
   selector: 'app-layout',
@@ -15,6 +22,15 @@ import { notificationsOutline, closeOutline, arrowForwardOutline } from 'ionicon
   imports: [IonIcon, IonRouterOutlet, CommonModule, FormsModule]
 })
 export class LayoutPage implements OnInit, OnDestroy {
+
+  // Festive & Special Event Announcement
+  showAnnouncement: boolean = true;
+  announcement: AnnouncementItem = {
+    badge: 'Festival Offer',
+    text: '🎉 Special Festive Offers on Turnkey Construction, Gypsum Plastering & Modular Interiors!',
+    actionText: 'Estimate Cost',
+    actionRoute: '/layout/fixed-cost'
+  };
 
   showNewLeadAlert = false;
   latestLead: any = null;
@@ -27,7 +43,7 @@ export class LayoutPage implements OnInit, OnDestroy {
     private navCtrl: NavController,
     private leadsService: Leads
   ) {
-    addIcons({ notificationsOutline, closeOutline, arrowForwardOutline });
+    addIcons({ notificationsOutline, closeOutline, arrowForwardOutline, sparklesOutline, giftOutline });
   }
 
   ngOnInit() {
@@ -44,6 +60,16 @@ export class LayoutPage implements OnInit, OnDestroy {
       clearInterval(this.pollIntervalId);
     }
     this.clearAutoCloseTimer();
+  }
+
+  dismissAnnouncement() {
+    this.showAnnouncement = false;
+  }
+
+  onAnnouncementClick() {
+    if (this.announcement.actionRoute) {
+      this.navCtrl.navigateForward(this.announcement.actionRoute);
+    }
   }
 
   triggerNewLeadAlert() {

@@ -176,7 +176,7 @@
       <ion-card class="summary-hero-card">
         <div class="hero-gradient-bar"></div>
         <ion-card-content class="p-3">
-          <div class="d-flex justify-content-between align-items-start">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
               <span class="hero-sublabel">Total Estimated Construction Cost</span>
               <div class="hero-amount">₹ {{ totalCost.toLocaleString('en-IN') }}</div>
@@ -186,10 +186,18 @@
                 <span class="meta-tag">{{ getFloorsLabel() }}</span>
               </div>
             </div>
-            <button class="btn-share-quote" (click)="copyEstimate()" title="Copy and Share Quote">
-              <ion-icon name="copy-outline"></ion-icon>
-              <span>Copy Quote</span>
-            </button>
+            
+            <!-- Actions: Download Quote & Copy Quote -->
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <button class="btn-share-quote btn-download-quote" (click)="openDownloadModal()" title="Download Detailed PDF Quote">
+                <ion-icon name="download-outline"></ion-icon>
+                <span>Download PDF</span>
+              </button>
+              <button class="btn-share-quote" (click)="copyEstimate()" title="Copy Summary Quote">
+                <ion-icon name="copy-outline"></ion-icon>
+                <span>Copy</span>
+              </button>
+            </div>
           </div>
 
           <!-- Multi-colored Segment Distribution Bar -->
@@ -373,5 +381,167 @@
     </div>
 
   </div>
+
+  <!-- Download Quote Modal -->
+  <ion-modal [isOpen]="isDownloadModalOpen" (didDismiss)="closeDownloadModal()" class="customer-modal">
+    <ng-template>
+      <div class="modal-wrapper-inner">
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>Generate Quotation PDF</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="closeDownloadModal()">
+                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="modal-body-scroll p-3">
+          <div class="pdf-preview-badge mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span>📅 Date: <strong>{{ todayDateFormatted }}</strong></span>
+              <span>📐 Area: <strong>{{ totalAreaCalculated }} sq.ft</strong></span>
+            </div>
+            <div class="text-primary fw-bold">
+              💰 Estimate: ₹ {{ totalCost.toLocaleString('en-IN') }} (₹{{ ratePerSqft }}/sqft)
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label fw-bold mb-1">Customer / Client Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><ion-icon name="person-outline"></ion-icon></span>
+              <input 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="customerName" 
+                placeholder="e.g. Ramesh Patil" 
+                autofocus>
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label fw-bold mb-1">Site Location / Place <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><ion-icon name="location-outline"></ion-icon></span>
+              <input 
+                type="text" 
+                class="form-control" 
+                [(ngModel)]="customerPlace" 
+                placeholder="e.g. Jamkhandi / Bagalkot">
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label fw-bold mb-1">Contact Number (Optional)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><ion-icon name="call-outline"></ion-icon></span>
+              <input 
+                type="tel" 
+                class="form-control" 
+                [(ngModel)]="customerContact" 
+                placeholder="e.g. +91 98765 43210">
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label fw-bold mb-1">Customer GSTIN (Optional)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><ion-icon name="document-text-outline"></ion-icon></span>
+              <input 
+                type="text" 
+                class="form-control text-uppercase" 
+                [(ngModel)]="customerGst" 
+                placeholder="e.g. 29AAAAA0000A1Z5">
+            </div>
+          </div>
+
+          <div class="d-flex flex-column gap-2 mt-2">
+            <button 
+              class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-bold" 
+              [disabled]="isGeneratingPdf || !customerName.trim()"
+              (click)="previewPDF()">
+              @if (isGeneratingPdf) {
+                <ion-spinner name="crescent" style="width: 20px; height: 20px;"></ion-spinner>
+                <span>Preparing Preview...</span>
+              } @else {
+                <ion-icon name="eye-outline" style="font-size: 1.25rem;"></ion-icon>
+                <span>Preview Quote PDF</span>
+              }
+            </button>
+
+            <!-- <button 
+              class="btn btn-outline-secondary w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-semibold" 
+              [disabled]="isGeneratingPdf || !customerName.trim()"
+              (click)="downloadCurrentPDF()">
+              <ion-icon name="download-outline" style="font-size: 1.15rem;"></ion-icon>
+              <span>Download Directly</span>
+            </button> -->
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- PDF Preview Modal -->
+  <ion-modal [isOpen]="isPreviewModalOpen" (didDismiss)="closePreviewModal()" class="pdf-preview-modal">
+    <ng-template>
+      <div class="preview-modal-wrapper">
+        <ion-header>
+          <ion-toolbar color="primary">
+            <ion-title>
+              Estimate Preview &mdash; {{ customerName }}
+            </ion-title>
+            <ion-buttons slot="end">
+              <ion-button 
+                class="btn-download-header"
+                (click)="downloadCurrentPDF()"
+                [disabled]="isGeneratingPdf">
+                <ion-icon slot="start" name="download-outline"></ion-icon>
+                Download PDF
+              </ion-button>
+              <ion-button (click)="closePreviewModal()">
+                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="preview-modal-body">
+          @if (pdfPreviewSafeUrl) {
+            <iframe 
+              [src]="pdfPreviewSafeUrl" 
+              class="pdf-iframe-element" 
+              title="PDF Quotation Preview">
+            </iframe>
+          } @else {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+              <ion-spinner name="crescent"></ion-spinner>
+              <p class="mt-2 text-muted">Rendering PDF Preview...</p>
+            </div>
+          }
+        </div>
+
+        <div class="preview-modal-footer p-2 bg-light border-top d-flex justify-content-between align-items-center">
+          <div class="d-none d-sm-block text-muted small px-2">
+            Brahmadev Constructions &bull; {{ todayDateFormatted }}
+          </div>
+          <div class="d-flex gap-2 ms-auto">
+            <button class="btn btn-outline-secondary btn-sm px-3" (click)="closePreviewModal()">
+              Close
+            </button>
+            <button 
+              class="btn btn-primary btn-sm px-4 fw-bold d-flex align-items-center gap-1" 
+              (click)="downloadCurrentPDF()"
+              [disabled]="isGeneratingPdf">
+              <ion-icon name="download-outline"></ion-icon>
+              <span>Download PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 
 </ion-content>
