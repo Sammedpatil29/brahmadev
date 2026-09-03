@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonToggle, IonBadge, IonIcon, IonCard, IonCardContent } from '@ionic/angular/standalone';
 // import { SocketService } from 'src/app/services/socket';
-import { NavController } from '@ionic/angular';
+import { NavController, Platform } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
 import { register } from 'swiper/element/bundle';
 import { Capacitor } from '@capacitor/core';
@@ -20,17 +20,24 @@ register();
 })
 export class HomePage implements OnInit {
 
-
   status: boolean = false
   isLoading: boolean = false
   riderData: any
-  rideRequests:any
-  newLeads:any = 0
-greeting: string = '';
+  rideRequests: any
+  newLeads: any = 0
+  greeting: string = '';
+  isAndroid: boolean = false;
 
-lead: any;
-today = new Date()
-  constructor(private navCtrl: NavController, private service: Leads ) { }
+  lead: any;
+  today = new Date()
+
+  constructor(
+    private navCtrl: NavController,
+    private service: Leads,
+    private platform: Platform
+  ) {
+    this.isAndroid = this.platform.is('android') || Capacitor.getPlatform() === 'android';
+  }
 
   ngOnInit() {
     // this.startTimeCounter();

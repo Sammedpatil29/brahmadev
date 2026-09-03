@@ -1,3 +1,50 @@
-<ion-app>
-  <ion-router-outlet></ion-router-outlet>
-</ion-app>
+<ion-router-outlet></ion-router-outlet>
+
+<!-- Floating New Lead Alert Toast in Top-Right Corner -->
+@if (showNewLeadAlert) {
+  <div class="new-lead-toast shadow-lg">
+    <div class="toast-indicator"></div>
+    <div class="toast-body">
+      <div class="d-flex align-items-start justify-content-between mb-2">
+        <div class="d-flex align-items-center gap-2">
+          <div class="alert-icon-wrap">
+            <ion-icon name="notifications-outline"></ion-icon>
+            <span class="pulse-ring"></span>
+          </div>
+          <div>
+            <h6 class="toast-title mb-0">New Lead Alert!</h6>
+            <small class="text-muted">You have {{ newLeadsCount }} new lead{{ newLeadsCount > 1 ? 's' : '' }}</small>
+          </div>
+        </div>
+        <button class="btn-close-toast" (click)="closeAlert($event)" aria-label="Close">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      @if (latestLead) {
+        <div class="lead-preview-box mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="lead-name">👤 {{ latestLead.name || 'New Customer' }}</span>
+            <span class="badge bg-primary text-uppercase">{{ latestLead.platform || 'Lead' }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <small class="text-muted">📞 {{ latestLead.contact }}</small>
+            @if (latestLead.city) {
+              <small class="text-muted">📍 {{ latestLead.city }}</small>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="d-flex gap-2 justify-content-end">
+        <button class="btn btn-sm btn-outline-secondary px-3" (click)="closeAlert($event)">
+          Close
+        </button>
+        <button class="btn btn-sm btn-primary px-3 d-flex align-items-center gap-1" (click)="viewLeads()">
+          <span>View Leads</span>
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+}
