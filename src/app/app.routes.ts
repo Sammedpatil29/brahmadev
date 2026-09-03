@@ -56,6 +56,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/quotations-list/quotations-list.page').then( m => m.QuotationsListPage)
   },
   {
+    path: 'fixed-cost-calculator',
+    loadComponent: () => import('./pages/fixed-cost-calculator/fixed-cost-calculator.page').then( m => m.FixedCostCalculatorPage)
+  },
+  {
     path: 'invoice-list',
     loadComponent: () => import('./pages/invoice-list/invoice-list.page').then( m => m.InvoiceListPage)
   },
@@ -71,4 +75,6 @@ export const routes: Routes = [
     redirectTo: 'login',
     pathMatch: 'full',
   },
+  
+
 ];

@@ -1,0 +1,377 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>Construction Cost Estimator</div>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div class="calculator-layout">
+    
+    <!-- Left / Top Column: Configuration & Controls -->
+    <div class="controls-column">
+
+      <!-- Configuration Card -->
+      <ion-card class="calc-card">
+        <ion-card-header>
+          <div class="d-flex justify-content-between align-items-center">
+            <ion-card-title class="card-title">
+              <ion-icon name="calculator-outline" class="title-icon"></ion-icon>
+              Building Dimensions
+            </ion-card-title>
+            <button class="btn-reset" (click)="resetCalculator()" title="Reset to default">
+              <ion-icon name="refresh-outline"></ion-icon>
+            </button>
+          </div>
+        </ion-card-header>
+
+        <ion-card-content>
+          <!-- Builtup Area Input -->
+          <div class="form-group mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label mb-0">Built-up Area (Sq.Ft)</label>
+              <span class="badge bg-light text-primary fw-bold">{{ builtUpArea }} sq.ft</span>
+            </div>
+            <div class="input-stepper-wrap">
+              <button class="btn-step" (click)="decreaseArea()">-</button>
+              <input 
+                type="number" 
+                class="form-control text-center custom-num-input" 
+                [(ngModel)]="builtUpArea" 
+                (ngModelChange)="recalculate()"
+                placeholder="Enter area in sqft"
+                min="100" 
+                step="50">
+              <button class="btn-step" (click)="increaseArea()">+</button>
+            </div>
+
+            <!-- Quick Area Preset Chips -->
+            <div class="preset-chips-scroll mt-2">
+              @for (area of presetAreas; track area) {
+                <div 
+                  class="preset-chip" 
+                  [class.active]="builtUpArea === area" 
+                  (click)="setPresetArea(area)">
+                  {{ area }} sqft
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Floors Selection -->
+          <div class="form-group mb-3">
+            <label class="form-label mb-1">Number of Floors</label>
+            <div class="floor-selector-grid">
+              <div 
+                class="floor-btn" 
+                [class.active]="selectedFloors === 1" 
+                (click)="setFloors(1)">
+                <div class="floor-name">Ground (G)</div>
+                <small class="floor-hint">Single Floor</small>
+              </div>
+              <div 
+                class="floor-btn" 
+                [class.active]="selectedFloors === 2" 
+                (click)="setFloors(2)">
+                <div class="floor-name">G + 1</div>
+                <small class="floor-hint">Duplex / 2 Fl</small>
+              </div>
+              <div 
+                class="floor-btn" 
+                [class.active]="selectedFloors === 3" 
+                (click)="setFloors(3)">
+                <div class="floor-name">G + 2</div>
+                <small class="floor-hint">3 Floors</small>
+              </div>
+              <div 
+                class="floor-btn" 
+                [class.active]="selectedFloors === 4" 
+                (click)="setFloors(4)">
+                <div class="floor-name">G + 3</div>
+                <small class="floor-hint">4 Floors</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Packages Selection -->
+          <div class="form-group mb-3">
+            <label class="form-label mb-1">Quality Package Tier</label>
+            <div class="package-cards-grid">
+              @for (pkg of packages; track pkg.id) {
+                <div 
+                  class="package-card" 
+                  [class.active]="selectedPackage === pkg.id" 
+                  (click)="setPackage(pkg.id)">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="pkg-name">{{ pkg.name }}</span>
+                    <span class="pkg-badge">{{ pkg.badge }}</span>
+                  </div>
+                  <div class="pkg-rate">₹{{ pkg.baseRate }}<span>/sq.ft</span></div>
+                  <div class="pkg-desc">{{ pkg.description }}</div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Custom Material Options -->
+          <div class="form-group mb-3">
+            <label class="form-label mb-1">Raw Material Preferences</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="custom-select-wrap">
+                  <label class="small text-muted d-block mb-1">Wall Masonry</label>
+                  <select class="form-select form-select-sm custom-select" [(ngModel)]="wallType" (ngModelChange)="recalculate()">
+                    <option value="red_brick">🧱 Red Clay Bricks</option>
+                    <option value="aac_block">🧱 AAC Light Blocks</option>
+                    <option value="concrete_block">🧱 Solid Conc. Blocks</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="custom-select-wrap">
+                  <label class="small text-muted d-block mb-1">Internal Plaster</label>
+                  <select class="form-select form-select-sm custom-select" [(ngModel)]="plasterType" (ngModelChange)="recalculate()">
+                    <option value="gypsum">✨ Smooth Gypsum Plaster</option>
+                    <option value="cement_plaster">🏗️ Traditional Cement Plaster</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interiors Toggle -->
+          <div class="interior-toggle-box" (click)="toggleInterior()">
+            <div class="d-flex align-items-center gap-2">
+              <div class="toggle-icon-wrap" [class.active]="includeInterior">
+                <ion-icon name="home-outline"></ion-icon>
+              </div>
+              <div>
+                <div class="toggle-title">Include Modular Interiors & Woodwork</div>
+                <small class="text-muted">Modular kitchen, wardrobes, false ceiling & lights</small>
+              </div>
+            </div>
+            <div class="form-check form-switch m-0">
+              <input class="form-check-input" type="checkbox" [checked]="includeInterior" (click)="$event.stopPropagation()" (change)="toggleInterior()">
+            </div>
+          </div>
+
+        </ion-card-content>
+      </ion-card>
+
+    </div>
+
+    <!-- Right / Result Column: Cost Summary & Breakdown -->
+    <div class="results-column">
+
+      <!-- Grand Total Summary Banner Card -->
+      <ion-card class="summary-hero-card">
+        <div class="hero-gradient-bar"></div>
+        <ion-card-content class="p-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <span class="hero-sublabel">Total Estimated Construction Cost</span>
+              <div class="hero-amount">₹ {{ totalCost.toLocaleString('en-IN') }}</div>
+              <div class="hero-meta-row">
+                <span class="meta-tag">₹ {{ ratePerSqft.toLocaleString('en-IN') }} / sq.ft</span>
+                <span class="meta-tag">{{ totalAreaCalculated.toLocaleString('en-IN') }} sq.ft Total Area</span>
+                <span class="meta-tag">{{ getFloorsLabel() }}</span>
+              </div>
+            </div>
+            <button class="btn-share-quote" (click)="copyEstimate()" title="Copy and Share Quote">
+              <ion-icon name="copy-outline"></ion-icon>
+              <span>Copy Quote</span>
+            </button>
+          </div>
+
+          <!-- Multi-colored Segment Distribution Bar -->
+          <div class="distribution-bar-wrap mt-3">
+            <div class="distribution-bar">
+              @for (cat of categories; track cat.id) {
+                <div 
+                  class="dist-segment" 
+                  [style.width.%]="cat.percentage" 
+                  [style.background-color]="cat.iconColor"
+                  [title]="cat.name + ': ' + cat.percentage + '%'">
+                </div>
+              }
+            </div>
+            <div class="dist-legend-scroll mt-2">
+              @for (cat of categories; track cat.id) {
+                <div class="dist-legend-item">
+                  <span class="legend-dot" [style.background-color]="cat.iconColor"></span>
+                  <span class="legend-name">{{ cat.name }}</span>
+                  <span class="legend-pct">{{ cat.percentage }}%</span>
+                </div>
+              }
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- View Selector Tabs -->
+      <div class="tab-switcher-row my-2">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'categories'" 
+          (click)="activeTab = 'categories'">
+          <ion-icon name="construct-outline"></ion-icon>
+          <span>Category Breakdown ({{ categories.length }})</span>
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'materials'" 
+          (click)="activeTab = 'materials'">
+          <ion-icon name="cube-outline"></ion-icon>
+          <span>Material Quantities (BOQ)</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: Category Breakdown Cards -->
+      @if (activeTab === 'categories') {
+        <div class="categories-list">
+          @for (cat of categories; track cat.id) {
+            <ion-card class="category-breakdown-card" [class.expanded]="cat.isExpanded">
+              <div class="cat-card-header" (click)="toggleCategory(cat)">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="cat-icon-circle" [style.background-color]="cat.iconBg" [style.color]="cat.iconColor">
+                    <ion-icon [name]="cat.icon"></ion-icon>
+                  </div>
+                  <div>
+                    <div class="cat-name-row">
+                      <span class="cat-name">{{ cat.name }}</span>
+                      <span class="cat-pct-badge" [style.color]="cat.iconColor">{{ cat.percentage }}%</span>
+                    </div>
+                    <small class="cat-hint text-muted">{{ cat.materialsHint }}</small>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                  <div class="cat-pricing text-end">
+                    <div class="cat-total">₹ {{ cat.totalCost.toLocaleString('en-IN') }}</div>
+                    <div class="cat-rate">₹{{ cat.ratePerSqft }}/sqft</div>
+                  </div>
+                  <button class="btn-toggle-expand">
+                    <ion-icon [name]="cat.isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Accordion Included Items -->
+              @if (cat.isExpanded) {
+                <div class="cat-expanded-body">
+                  <div class="spec-list-title">What is Included in {{ cat.name }}:</div>
+                  <ul class="spec-ul">
+                    @for (item of cat.includedItems; track item) {
+                      <li>
+                        <ion-icon name="checkmark-circle-outline" class="check-icon"></ion-icon>
+                        <span>{{ item }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </ion-card>
+          }
+        </div>
+      }
+
+      <!-- TAB 2: Material Quantities (BOQ Estimate) -->
+      @if (activeTab === 'materials') {
+        <ion-card class="calc-card">
+          <ion-card-header>
+            <ion-card-title class="card-title">
+              <ion-icon name="cube-outline" class="title-icon"></ion-icon>
+              Estimated Raw Material Requirements
+            </ion-card-title>
+            <small class="text-muted">Calculated using standard structural engineering thumb rules for {{ totalAreaCalculated }} sq.ft built-up area</small>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="boq-grid">
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-blue">
+                  <ion-icon name="construct-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ estimatedMaterials.cementBags }} Bags</div>
+                  <div class="boq-label">Cement (53/43 Grade)</div>
+                </div>
+              </div>
+
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-purple">
+                  <ion-icon name="layers-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ (estimatedMaterials.steelKg / 1000).toFixed(2) }} Tons</div>
+                  <div class="boq-label">TMT Steel ({{ estimatedMaterials.steelKg }} kg)</div>
+                </div>
+              </div>
+
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-orange">
+                  <ion-icon name="business-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ estimatedMaterials.bricksCount.toLocaleString() }} Units</div>
+                  <div class="boq-label">{{ wallType === 'red_brick' ? 'Clay Bricks' : (wallType === 'aac_block' ? 'AAC Blocks' : 'Concrete Blocks') }}</div>
+                </div>
+              </div>
+
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-green">
+                  <ion-icon name="water-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ estimatedMaterials.sandCft }} cft</div>
+                  <div class="boq-label">River / M-Sand</div>
+                </div>
+              </div>
+
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-blue">
+                  <ion-icon name="cube-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ estimatedMaterials.aggregateCft }} cft</div>
+                  <div class="boq-label">Coarse Aggregate (20mm/40mm)</div>
+                </div>
+              </div>
+
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-purple">
+                  <ion-icon name="color-palette-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ estimatedMaterials.flooringSqft }} sq.ft</div>
+                  <div class="boq-label">Flooring & Wall Tiles</div>
+                </div>
+              </div>
+
+              <div class="boq-item">
+                <div class="boq-icon-wrap bg-soft-red">
+                  <ion-icon name="color-palette-outline"></ion-icon>
+                </div>
+                <div class="boq-info">
+                  <div class="boq-val">{{ estimatedMaterials.paintLitres }} Litres</div>
+                  <div class="boq-label">Wall Primer & Emulsion Paint</div>
+                </div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+
+    </div>
+
+  </div>
+
+</ion-content>
