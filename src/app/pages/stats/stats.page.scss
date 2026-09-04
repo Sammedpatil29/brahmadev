@@ -1,11 +1,449 @@
 .loader {
-  height: 100%;
+  height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-// Summary cards row
+// Header & Refresh Button
+.page-header-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.btn-refresh-stats {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+}
+
+// Top Tab Switcher Pill
+.stats-tab-bar-container {
+  padding: 8px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-switcher-pill {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 3px;
+  max-width: 540px;
+  margin: 0 auto;
+
+  .tab-pill-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+
+    ion-icon {
+      font-size: 1.05rem;
+    }
+
+    &.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+// Date Presets & Account Status
+.ads-filter-header {
+  .date-presets-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .date-preset-chip {
+    flex: 0 0 auto;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+
+    &.active {
+      background: #0d6efd;
+      color: #ffffff;
+      border-color: #0d6efd;
+      box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+    }
+  }
+
+  .ad-account-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #166534;
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      &.online { background: #16a34a; }
+      &.offline { background: #94a3b8; }
+    }
+
+    .currency-tag {
+      background: #dcfce7;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+    }
+
+    &.ad-pill-offline {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+      color: #64748b;
+    }
+
+    &.campaign-filter-badge {
+      background: #f0fdf4;
+      border-color: #86efac;
+      color: #15803d;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      ion-icon {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Meta Setup Notice
+.meta-setup-notice {
+  background: #f0f7ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 12px 16px;
+
+  .notice-icon {
+    font-size: 1.5rem;
+    color: #0284c7;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .notice-title {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0369a1;
+  }
+
+  .notice-desc {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #334155;
+    line-height: 1.4;
+
+    code {
+      background: #e0f2fe;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-weight: 700;
+      color: #0284c7;
+    }
+  }
+
+  &.notice-error {
+    background: #fef2f2;
+    border-color: #fecaca;
+
+    .notice-icon {
+      color: #dc2626;
+    }
+
+    .notice-title {
+      color: #991b1b;
+    }
+
+    .notice-desc {
+      color: #7f1d1d;
+    }
+  }
+}
+
+// Meta KPI Grid
+.meta-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (min-width: 680px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.meta-kpi-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .kpi-icon-wrap {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+  }
+
+  &.kpi-spend {
+    border-top: 3px solid #1877f2;
+    .kpi-icon-wrap { background: #eff6ff; color: #1877f2; }
+    .kpi-value { color: #1877f2; }
+  }
+
+  &.kpi-leads {
+    border-top: 3px solid #10b981;
+    .kpi-icon-wrap { background: #ecfdf5; color: #10b981; }
+    .kpi-value { color: #047857; }
+  }
+
+  &.kpi-cpl {
+    border-top: 3px solid #f59e0b;
+    .kpi-icon-wrap { background: #fef3c7; color: #f59e0b; }
+    .kpi-value { color: #b45309; }
+  }
+
+  &.kpi-impressions {
+    border-top: 3px solid #8b5cf6;
+    .kpi-icon-wrap { background: #f5f3ff; color: #8b5cf6; }
+    .kpi-value { color: #6d28d9; }
+  }
+
+  &.kpi-clicks {
+    border-top: 3px solid #06b6d4;
+    .kpi-icon-wrap { background: #ecfeff; color: #06b6d4; }
+    .kpi-value { color: #0e7490; }
+  }
+
+  &.kpi-cpc {
+    border-top: 3px solid #64748b;
+    .kpi-icon-wrap { background: #f1f5f9; color: #64748b; }
+    .kpi-value { color: #334155; }
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .kpi-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 2px 0;
+  }
+
+  .kpi-sub {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    white-space: nowrap;
+  }
+
+  .kpi-tax-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin-top: 3px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+
+    .tax-tag {
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .tax-amount {
+      color: #166534;
+      font-weight: 800;
+    }
+
+    &.kpi-tax-pill-cpl {
+      background: #fefce8;
+      border-color: #fef08a;
+      .tax-tag { color: #854d0e; }
+      .tax-amount { color: #713f12; }
+    }
+  }
+}
+
+// Campaign Cards Breakdown
+.campaign-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.campaign-item-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+
+  .campaign-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .campaign-id-badge {
+    font-size: 0.64rem;
+    font-weight: 700;
+    font-family: monospace;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .campaign-objective {
+    font-size: 0.66rem;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #475569;
+    padding: 1px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .campaign-spend-badge {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid #bfdbfe;
+    white-space: nowrap;
+  }
+
+  .camp-gst-hint {
+    font-size: 0.65rem;
+    color: #16a34a;
+    font-weight: 700;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  .camp-cpl-tax {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .campaign-stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-top: 1px solid #edf2f7;
+    padding-top: 8px;
+    margin-top: 6px;
+
+    .camp-stat {
+      font-size: 0.76rem;
+      .stat-lbl { color: #64748b; margin-right: 4px; }
+      .stat-val { font-weight: 600; color: #1e293b; }
+    }
+  }
+}
+
+.no-data-chart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+  text-align: center;
+
+  ion-icon {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+.chart-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+// Summary cards row (Lead Analytics)
 .summary-row {
   display: flex;
   gap: 10px;
@@ -72,7 +510,7 @@
 }
 
 .chart-title {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
   color: #1a1a1a;
 }
@@ -82,3 +520,73 @@
   height: 350px;
 }
 
+// Meta Logo Icon
+.meta-logo-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+// Google Ads Coming Soon Card
+.coming-soon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 20px;
+}
+
+.coming-soon-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 36px 24px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  .coming-soon-icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 2rem;
+
+    &.google-theme {
+      background: #fef2f2;
+      color: #ea4335;
+      border: 1px solid #fee2e2;
+    }
+  }
+
+  .coming-soon-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px;
+  }
+
+  .badge-coming-soon {
+    display: inline-block;
+    background: #e0f2fe;
+    color: #0284c7;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .coming-soon-desc {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+  }
+}

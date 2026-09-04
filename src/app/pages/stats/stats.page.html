@@ -6,80 +6,374 @@
       </ion-button>
     </ion-buttons>
     <ion-title>
-     <div class="d-flex justify-content-between align-items-center">
-       <div>
-        Lead Statistics
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="page-header-title">
+          {{ selectedTab === 'analytics' ? 'Lead Statistics' : (selectedTab === 'meta_ads' ? 'Meta Ads Spending' : 'Google Ads Report') }}
+        </div>
+        <div class="header-action-wrap">
+          <button class="btn-refresh-stats" (click)="refreshCurrentTab()" title="Refresh Data">
+            <ion-icon name="refresh-outline"></ion-icon>
+          </button>
+        </div>
       </div>
-     </div>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<div class="stats-tab-bar-container bg-white position-sticky" style="top: 0; z-index: 99;">
+  <div class="tab-switcher-pill">
+    <button 
+      class="tab-pill-btn" 
+      [class.active]="selectedTab === 'analytics'" 
+      (click)="switchTab('analytics')">
+      <ion-icon name="analytics-outline"></ion-icon>
+      <span>Lead Analytics</span>
+    </button>
+    <button 
+      class="tab-pill-btn" 
+      [class.active]="selectedTab === 'meta_ads'" 
+      (click)="switchTab('meta_ads')">
+      <svg class="meta-logo-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" xml:space="preserve">
+        <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+          <path d="M 64.592 15.096 c -7.38 0 -13.148 5.558 -18.371 12.619 c -7.176 -9.137 -13.178 -12.619 -20.36 -12.619 C 11.219 15.096 0 34.152 0 54.322 c 0 12.621 6.106 20.582 16.334 20.582 c 7.361 0 12.655 -3.471 22.067 -19.922 c 0 0 3.923 -6.928 6.622 -11.701 c 0.946 1.527 1.942 3.173 2.988 4.936 l 4.413 7.424 c 8.597 14.386 13.387 19.262 22.067 19.262 C 84.455 74.904 90 66.834 90 53.95 C 90 32.832 78.528 15.096 64.592 15.096 z M 31.224 50.527 c -7.63 11.961 -10.27 14.642 -14.519 14.642 c -4.372 0 -6.971 -3.838 -6.971 -10.683 c 0 -14.642 7.301 -29.615 16.004 -29.615 c 4.713 0 8.651 2.722 14.684 11.358 C 34.694 45.016 31.224 50.527 31.224 50.527 z M 74.698 65.169 c -4.346 0 -6.423 -2.87 -14.675 -16.148 l -5.277 -8.801 c -1.428 -2.322 -2.8 -4.46 -4.117 -6.413 c 4.756 -7.34 8.679 -10.998 13.344 -10.998 c 9.693 0 17.447 14.271 17.447 31.801 C 81.421 61.292 79.232 65.169 74.698 65.169 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+        </g>
+      </svg>
+      <span>Meta Ads Report</span>
+    </button>
+    <button 
+      class="tab-pill-btn" 
+      [class.active]="selectedTab === 'google_ads'" 
+      (click)="switchTab('google_ads')">
+      <ion-icon name="logo-google"></ion-icon>
+      <span>Google Ads Report</span>
+    </button>
+  </div>
+</div>
 
-  @if (isLoading) {
-    <div class="loader">
-      <ion-spinner color="primary"></ion-spinner>
-    </div>
-  } @else {
+<ion-content class="ion-padding stats-content-area">
 
-    <!-- Summary Cards -->
-    <div class="summary-row">
-      <div class="summary-card">
-        <div class="summary-number">{{ totalLeads }}</div>
-        <div class="summary-label">Total Leads</div>
+  <!-- ================= TAB 1: LEAD ANALYTICS ================= -->
+  @if (selectedTab === 'analytics') {
+    @if (isLoading) {
+      <div class="loader">
+        <ion-spinner color="primary"></ion-spinner>
       </div>
-      @for (item of platformData; track item.name) {
+    } @else {
+
+      <!-- Summary Cards -->
+      <div class="summary-row">
         <div class="summary-card">
-          <div class="summary-number">{{ item.count }}</div>
-          <div class="summary-label">{{ item.name }}</div>
+          <div class="summary-number">{{ totalLeads }}</div>
+          <div class="summary-label">Total Leads</div>
+        </div>
+        @for (item of platformData; track item.name) {
+          <div class="summary-card">
+            <div class="summary-number">{{ item.count }}</div>
+            <div class="summary-label">{{ item.name }}</div>
+          </div>
+        }
+      </div>
+
+      <!-- Monthly Leads Chart (Full Width) -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <ion-card-title class="chart-title">Leads by Month</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div #monthlyChart class="chart-container"></div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Secondary Charts Row (2 in a row on desktop) -->
+      <div class="charts-row">
+        <!-- Platform Pie Chart -->
+        <ion-card class="chart-card">
+          <ion-card-header>
+            <ion-card-title class="chart-title">Leads by Platform</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div #platformChart class="chart-container"></div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Response Line Chart -->
+        <ion-card class="chart-card">
+          <ion-card-header>
+            <ion-card-title class="chart-title">Leads by Response Status</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div #responseChart class="chart-container"></div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Monthly Leads by Pipeline Stage (Grouped Stacked Chart) -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <ion-card-title class="chart-title">Monthly Leads by Pipeline Stage</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div #monthlyStatusChart class="chart-container"></div>
+        </ion-card-content>
+      </ion-card>
+
+    }
+  }
+
+  <!-- ================= TAB 2: META ADS SPEND ================= -->
+  @if (selectedTab === 'meta_ads') {
+
+    <!-- Ads Filter & Account Status Toolbar -->
+    <div class="ads-filter-header mb-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        
+        <!-- Date Preset Chips -->
+        <div class="date-presets-scroll">
+          @for (preset of adDatePresets; track preset.id) {
+            <button 
+              class="date-preset-chip" 
+              [class.active]="selectedDatePreset === preset.id"
+              (click)="selectDatePreset(preset.id)">
+              {{ preset.label }}
+            </button>
+          }
+        </div>
+
+        <!-- Account & Campaign Filter Badges -->
+        <div class="d-flex align-items-center gap-2">
+          @if (metaAdSpendData?.filterApplied?.campaignIds?.length > 0) {
+            <div class="ad-account-pill campaign-filter-badge" title="Filtered by Campaign IDs">
+              <ion-icon name="funnel-outline"></ion-icon>
+              <span>{{ metaAdSpendData.filterApplied.campaignIds.length }} Campaigns</span>
+            </div>
+          }
+          @if (adAccountStatus?.connected) {
+            <div class="ad-account-pill">
+              <span class="status-dot online"></span>
+              <span class="account-name">{{ adAccountStatus.accountName || 'Meta Ad Account' }}</span>
+              <span class="currency-tag">{{ adAccountStatus.currency || 'INR' }}</span>
+            </div>
+          } @else {
+            <div class="ad-account-pill ad-pill-offline">
+              <span class="status-dot offline"></span>
+              <span class="account-name">Live Meta Graph API</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (isAdsLoading) {
+      <div class="loader">
+        <ion-spinner color="primary"></ion-spinner>
+      </div>
+    } @else {
+
+      <!-- Configuration Warning if not set in backend .env -->
+      @if (metaAdSpendData && !metaAdSpendData.configured) {
+        <div class="meta-setup-notice mb-3" [class.notice-error]="metaAdSpendData.error">
+          <div class="d-flex align-items-start gap-3">
+            <ion-icon [name]="metaAdSpendData.error ? 'alert-circle-outline' : 'information-circle-outline'" class="notice-icon"></ion-icon>
+            <div class="notice-text">
+              <h4 class="notice-title">{{ metaAdSpendData.error ? 'Meta API Authorization Issue' : 'Connect Live Meta Ad Account' }}</h4>
+              <p class="notice-desc">
+                {{ metaAdSpendData.errorMessage || 'To fetch real-time spending directly from Facebook/Instagram Ads, add your META_AD_ACCOUNT_ID and META_ACCESS_TOKEN in backend .env file.' }}
+              </p>
+            </div>
+          </div>
         </div>
       }
-    </div>
 
-    <!-- Monthly Leads Chart (Full Width) -->
-    <ion-card class="chart-card">
-      <ion-card-header>
-        <ion-card-title class="chart-title">Leads by Month</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div #monthlyChart class="chart-container"></div>
-      </ion-card-content>
-    </ion-card>
+      <!-- Top KPI Summary Cards Grid -->
+      <div class="meta-kpi-grid">
+        
+        <!-- 1. Total Spend -->
+        <div class="meta-kpi-card kpi-spend">
+          <div class="kpi-icon-wrap">
+            <ion-icon name="cash-outline"></ion-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Total Ad Spend</div>
+            <div class="kpi-value">₹{{ (metaAdSpendData?.summary?.totalSpend || 0) | number:'1.2-2' }}</div>
+            <div class="kpi-tax-pill">
+              <span class="tax-tag">Incl. 18% GST:</span>
+              <span class="tax-amount">₹{{ (metaAdSpendData?.summary?.totalSpendWithGst || 0) | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
 
-    <!-- Secondary Charts Row (2 in a row on desktop) -->
-    <div class="charts-row">
-      <!-- Platform Pie Chart -->
-      <ion-card class="chart-card">
-        <ion-card-header>
-          <ion-card-title class="chart-title">Leads by Platform</ion-card-title>
+        <!-- 2. Leads Acquired -->
+        <div class="meta-kpi-card kpi-leads">
+          <div class="kpi-icon-wrap">
+            <ion-icon name="people-outline"></ion-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Leads Acquired</div>
+            <div class="kpi-value">{{ (metaAdSpendData?.summary?.totalLeads || 0) | number }}</div>
+            <div class="kpi-sub">Total Form / Message Leads</div>
+          </div>
+        </div>
+
+        <!-- 3. Cost Per Lead (CPL) -->
+        <div class="meta-kpi-card kpi-cpl">
+          <div class="kpi-icon-wrap">
+            <ion-icon name="trending-up-outline"></ion-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg. Cost Per Lead</div>
+            <div class="kpi-value">₹{{ (metaAdSpendData?.summary?.costPerLead || 0) | number:'1.2-2' }}</div>
+            <div class="kpi-tax-pill kpi-tax-pill-cpl">
+              <span class="tax-tag">With GST:</span>
+              <span class="tax-amount">₹{{ (metaAdSpendData?.summary?.costPerLeadWithGst || 0) | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Impressions & Reach -->
+        <div class="meta-kpi-card kpi-impressions">
+          <div class="kpi-icon-wrap">
+            <ion-icon name="eye-outline"></ion-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Impressions / Reach</div>
+            <div class="kpi-value">{{ (metaAdSpendData?.summary?.totalImpressions || 0) | number }}</div>
+            <div class="kpi-sub">Reach: {{ (metaAdSpendData?.summary?.reach || 0) | number }} users</div>
+          </div>
+        </div>
+
+        <!-- 5. Link Clicks & CTR -->
+        <div class="meta-kpi-card kpi-clicks">
+          <div class="kpi-icon-wrap">
+            <ion-icon name="finger-print-outline"></ion-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Link Clicks & CTR</div>
+            <div class="kpi-value">{{ (metaAdSpendData?.summary?.totalClicks || 0) | number }}</div>
+            <div class="kpi-sub">CTR: {{ metaAdSpendData?.summary?.ctr || 0 }}%</div>
+          </div>
+        </div>
+
+        <!-- 6. Cost Per Click (CPC) -->
+        <div class="meta-kpi-card kpi-cpc">
+          <div class="kpi-icon-wrap">
+            <ion-icon name="options-outline"></ion-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg. CPC & CPM</div>
+            <div class="kpi-value">₹{{ (metaAdSpendData?.summary?.cpc || 0) | number:'1.2-2' }}</div>
+            <div class="kpi-sub">CPM: ₹{{ (metaAdSpendData?.summary?.cpm || 0) | number:'1.2-2' }}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Spending vs Leads Daily Trends Chart -->
+      <ion-card class="chart-card mt-3">
+        <ion-card-header class="d-flex justify-content-between align-items-center">
+          <ion-card-title class="chart-title">Daily Ad Spend & Leads Acquisition</ion-card-title>
+          <span class="chart-badge">Daily Breakdown</span>
         </ion-card-header>
         <ion-card-content>
-          <div #platformChart class="chart-container"></div>
+          @if (metaAdSpendData?.dailyTrends?.length > 0) {
+            <div #adDailyChart class="chart-container"></div>
+          } @else {
+            <div class="no-data-chart-placeholder">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <p>No daily spending entries recorded for the selected period.</p>
+            </div>
+          }
         </ion-card-content>
       </ion-card>
 
-      <!-- Response Line Chart -->
-      <ion-card class="chart-card">
+      <!-- Campaign Performance Breakdown -->
+      <ion-card class="chart-card mt-3">
         <ion-card-header>
-          <ion-card-title class="chart-title">Leads by Response Status</ion-card-title>
+          <ion-card-title class="chart-title">Campaign Performance Breakdown</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <div #responseChart class="chart-container"></div>
+          @if (metaAdSpendData?.campaigns?.length > 0) {
+            <div class="campaign-cards-list">
+              @for (camp of metaAdSpendData.campaigns; track camp.campaignId) {
+                <div class="campaign-item-card">
+                  <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div>
+                      <div class="campaign-name">{{ camp.campaignName }}</div>
+                      <div class="d-flex align-items-center gap-1 mt-1">
+                        @if (camp.campaignId) {
+                          <span class="campaign-id-badge" title="Campaign ID">ID: {{ camp.campaignId }}</span>
+                        }
+                        @if (camp.objective) {
+                          <span class="campaign-objective">{{ camp.objective }}</span>
+                        }
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <div class="campaign-spend-badge">
+                        ₹{{ camp.spend | number:'1.2-2' }}
+                      </div>
+                      <div class="camp-gst-hint">
+                        ₹{{ camp.spendWithGst | number:'1.2-2' }} (incl. GST)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="campaign-stats-row">
+                    <div class="camp-stat">
+                      <span class="stat-lbl">Leads:</span>
+                      <span class="stat-val font-bold text-success">{{ camp.leads || 0 }}</span>
+                    </div>
+                    <div class="camp-stat">
+                      <span class="stat-lbl">CPL:</span>
+                      <span class="stat-val font-bold text-primary">₹{{ (camp.cpl || 0) | number:'1.2-2' }}</span>
+                      <span class="camp-cpl-tax"> (₹{{ (camp.cplWithGst || 0) | number:'1.2-2' }} w/ GST)</span>
+                    </div>
+                    <div class="camp-stat">
+                      <span class="stat-lbl">Clicks:</span>
+                      <span class="stat-val">{{ camp.clicks | number }}</span>
+                    </div>
+                    <div class="camp-stat">
+                      <span class="stat-lbl">CTR:</span>
+                      <span class="stat-val">{{ camp.ctr }}%</span>
+                    </div>
+                    <div class="camp-stat">
+                      <span class="stat-lbl">Impressions:</span>
+                      <span class="stat-val">{{ camp.impressions | number }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-data-chart-placeholder">
+              <svg class="meta-logo-icon text-muted" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256" xml:space="preserve">
+                <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                  <path d="M 64.592 15.096 c -7.38 0 -13.148 5.558 -18.371 12.619 c -7.176 -9.137 -13.178 -12.619 -20.36 -12.619 C 11.219 15.096 0 34.152 0 54.322 c 0 12.621 6.106 20.582 16.334 20.582 c 7.361 0 12.655 -3.471 22.067 -19.922 c 0 0 3.923 -6.928 6.622 -11.701 c 0.946 1.527 1.942 3.173 2.988 4.936 l 4.413 7.424 c 8.597 14.386 13.387 19.262 22.067 19.262 C 84.455 74.904 90 66.834 90 53.95 C 90 32.832 78.528 15.096 64.592 15.096 z M 31.224 50.527 c -7.63 11.961 -10.27 14.642 -14.519 14.642 c -4.372 0 -6.971 -3.838 -6.971 -10.683 c 0 -14.642 7.301 -29.615 16.004 -29.615 c 4.713 0 8.651 2.722 14.684 11.358 C 34.694 45.016 31.224 50.527 31.224 50.527 z M 74.698 65.169 c -4.346 0 -6.423 -2.87 -14.675 -16.148 l -5.277 -8.801 c -1.428 -2.322 -2.8 -4.46 -4.117 -6.413 c 4.756 -7.34 8.679 -10.998 13.344 -10.998 c 9.693 0 17.447 14.271 17.447 31.801 C 81.421 61.292 79.232 65.169 74.698 65.169 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                </g>
+              </svg>
+              <p>No individual campaign insights available for this date preset.</p>
+            </div>
+          }
         </ion-card-content>
       </ion-card>
+
+    }
+
+  }
+
+  <!-- ================= TAB 3: GOOGLE ADS (COMING SOON) ================= -->
+  @if (selectedTab === 'google_ads') {
+    <div class="coming-soon-wrapper">
+      <div class="coming-soon-card">
+        <div class="coming-soon-icon-box google-theme">
+          <ion-icon name="logo-google"></ion-icon>
+        </div>
+        <h3 class="coming-soon-title">Google Ads Report</h3>
+        <span class="badge-coming-soon">Coming Soon</span>
+        <p class="coming-soon-desc">
+          Google Ads performance, search keyword spend, and conversion tracking are currently under development.
+        </p>
+      </div>
     </div>
-
-    <!-- Monthly Leads by Pipeline Stage (Grouped Stacked Chart) -->
-    <ion-card class="chart-card">
-      <ion-card-header>
-        <ion-card-title class="chart-title">Monthly Leads by Pipeline Stage</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div #monthlyStatusChart class="chart-container"></div>
-      </ion-card-content>
-    </ion-card>
-
   }
 
 </ion-content>

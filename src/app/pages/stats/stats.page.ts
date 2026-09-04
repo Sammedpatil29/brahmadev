@@ -1,9 +1,38 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton, IonIcon, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonSpinner } from '@ionic/angular/standalone';
+import {
+  IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonSpinner,
+  IonBadge
+} from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
-import { arrowBackOutline } from 'ionicons/icons';
+import {
+  arrowBackOutline,
+  refreshOutline,
+  cashOutline,
+  trendingUpOutline,
+  peopleOutline,
+  eyeOutline,
+  fingerPrintOutline,
+  calendarOutline,
+  analyticsOutline,
+  logoFacebook,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  informationCircleOutline,
+  optionsOutline,
+  funnelOutline, logoGoogle } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Leads } from 'src/app/services/leads';
 
@@ -14,15 +43,39 @@ declare var google: any;
   templateUrl: './stats.page.html',
   styleUrls: ['./stats.page.scss'],
   standalone: true,
-  imports: [IonSpinner, IonCardTitle, IonCardHeader, IonCardContent, IonCard, IonIcon, IonButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [
+    IonSpinner,
+    IonBadge,
+    IonCardTitle,
+    IonCardHeader,
+    IonCardContent,
+    IonCard,
+    IonIcon,
+    IonButton,
+    IonButtons,
+    IonContent,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    CommonModule,
+    FormsModule
+  ]
 })
 export class StatsPage implements OnInit {
 
+  // Lead Analytics Charts
   @ViewChild('monthlyChart', { static: false }) monthlyChartRef!: ElementRef;
   @ViewChild('platformChart', { static: false }) platformChartRef!: ElementRef;
   @ViewChild('responseChart', { static: false }) responseChartRef!: ElementRef;
   @ViewChild('monthlyStatusChart', { static: false }) monthlyStatusChartRef!: ElementRef;
 
+  // Meta Ads Chart
+  @ViewChild('adDailyChart', { static: false }) adDailyChartRef!: ElementRef;
+
+  // Active Tab
+  selectedTab: 'analytics' | 'meta_ads' | 'google_ads' = 'analytics';
+
+  // Lead Analytics State
   leads: any[] = [];
   isLoading = true;
   monthlyData: { key: string; label: string; count: number }[] = [];
@@ -30,22 +83,68 @@ export class StatsPage implements OnInit {
   responseData: { name: string; count: number }[] = [];
   totalLeads = 0;
 
+  // Meta Ads State
+  isAdsLoading = false;
+  metaAdSpendData: any = null;
+  adAccountStatus: any = null;
+  selectedDatePreset = 'this_month';
+  adDatePresets = [
+    { id: 'today', label: 'Today' },
+    { id: 'last_7d', label: 'Last 7 Days' },
+    { id: 'this_month', label: 'This Month' },
+    { id: 'last_month', label: 'Last Month' },
+    { id: 'maximum', label: 'All Time' }
+  ];
+
   constructor(private navCtrl: NavController, private service: Leads) {
-    addIcons({ arrowBackOutline });
+    addIcons({arrowBackOutline,refreshOutline,analyticsOutline,logoGoogle,funnelOutline,informationCircleOutline,cashOutline,peopleOutline,trendingUpOutline,eyeOutline,fingerPrintOutline,optionsOutline,calendarOutline,logoFacebook,checkmarkCircleOutline,alertCircleOutline});
   }
 
   ngOnInit() {
     this.loadData();
+    this.loadAdAccountStatus();
   }
 
   @HostListener('window:resize')
   onResize() {
-    if (!this.isLoading && typeof google !== 'undefined' && google.visualization) {
-      this.drawCharts();
+    if (typeof google !== 'undefined' && google.visualization) {
+      if (this.selectedTab === 'analytics' && !this.isLoading) {
+        this.drawCharts();
+      } else if (this.selectedTab === 'meta_ads' && !this.isAdsLoading && this.metaAdSpendData) {
+        this.drawAdSpendChart();
+      }
     }
   }
 
-  back() { this.navCtrl.back(); }
+  back() {
+    this.navCtrl.back();
+  }
+
+  switchTab(tab: 'analytics' | 'meta_ads' | 'google_ads') {
+    this.selectedTab = tab;
+    if (tab === 'meta_ads') {
+      if (!this.metaAdSpendData) {
+        this.loadMetaAdSpend();
+      } else {
+        setTimeout(() => this.drawAdSpendChart(), 150);
+      }
+    } else if (tab === 'analytics') {
+      setTimeout(() => this.drawCharts(), 150);
+    }
+  }
+
+  refreshCurrentTab() {
+    if (this.selectedTab === 'analytics') {
+      this.loadData();
+    } else if (this.selectedTab === 'meta_ads') {
+      this.loadMetaAdSpend();
+      this.loadAdAccountStatus();
+    }
+  }
+
+  /* ---------------------------------------------------- */
+  /*               LEAD ANALYTICS METHODS                 */
+  /* ---------------------------------------------------- */
 
   loadData() {
     this.isLoading = true;
@@ -58,11 +157,15 @@ export class StatsPage implements OnInit {
         this.processResponseData();
         this.isLoading = false;
 
-        // Wait for Google Charts to load, then draw
-        google.charts.load('current', { packages: ['corechart'] });
-        google.charts.setOnLoadCallback(() => {
-          this.drawCharts();
-        });
+        // Ensure Google Charts loaded
+        if (typeof google !== 'undefined') {
+          google.charts.load('current', { packages: ['corechart'] });
+          google.charts.setOnLoadCallback(() => {
+            if (this.selectedTab === 'analytics') {
+              this.drawCharts();
+            }
+          });
+        }
       },
       error: () => {
         this.isLoading = false;
@@ -325,6 +428,118 @@ export class StatsPage implements OnInit {
     };
 
     const chart = new google.visualization.ColumnChart(this.monthlyStatusChartRef.nativeElement);
+    chart.draw(data, options);
+  }
+
+  /* ---------------------------------------------------- */
+  /*                 META ADS SPEND METHODS               */
+  /* ---------------------------------------------------- */
+
+  selectDatePreset(presetId: string) {
+    this.selectedDatePreset = presetId;
+    this.loadMetaAdSpend();
+  }
+
+  loadAdAccountStatus() {
+    this.service.getMetaAdAccountStatus().subscribe({
+      next: (res: any) => {
+        this.adAccountStatus = res;
+      },
+      error: () => {
+        this.adAccountStatus = { connected: false, configured: false };
+      }
+    });
+  }
+
+  loadMetaAdSpend() {
+    this.isAdsLoading = true;
+    this.service.getMetaAdSpend(this.selectedDatePreset).subscribe({
+      next: (res: any) => {
+        this.metaAdSpendData = res;
+        this.isAdsLoading = false;
+
+        // Ensure google charts package is loaded, then draw
+        if (typeof google !== 'undefined') {
+          google.charts.load('current', { packages: ['corechart'] });
+          google.charts.setOnLoadCallback(() => {
+            setTimeout(() => this.drawAdSpendChart(), 100);
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching Meta Ad Spend:', err);
+        this.isAdsLoading = false;
+      }
+    });
+  }
+
+  drawAdSpendChart() {
+    if (!this.adDailyChartRef || !this.metaAdSpendData) return;
+
+    const trends = this.metaAdSpendData.dailyTrends || [];
+    if (trends.length === 0) return;
+
+    const dataArray: any[] = [
+      [
+        'Date',
+        'Daily Spend (₹)',
+        { role: 'style' },
+        'Leads Acquired'
+      ]
+    ];
+
+    trends.forEach((item: any) => {
+      const d = new Date(item.date);
+      const formattedDate = isNaN(d.getTime())
+        ? item.date
+        : `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`;
+
+      dataArray.push([
+        formattedDate,
+        item.spend || 0,
+        '#1877F2',
+        item.leads || 0
+      ]);
+    });
+
+    const data = google.visualization.arrayToDataTable(dataArray);
+
+    const options = {
+      title: '',
+      legend: { position: 'top', alignment: 'center' },
+      seriesType: 'bars',
+      series: {
+        0: { targetAxisIndex: 0, color: '#1877F2' },
+        1: { type: 'line', targetAxisIndex: 1, color: '#10b981', pointSize: 6, lineWidth: 3 }
+      },
+      vAxes: {
+        0: {
+          title: 'Spend (₹)',
+          textStyle: { color: '#1877F2', fontSize: 11 },
+          titleTextStyle: { color: '#1877F2', fontSize: 12, italic: false, bold: true },
+          minValue: 0,
+          gridlines: { color: '#f1f5f9' }
+        },
+        1: {
+          title: 'Leads Acquired',
+          textStyle: { color: '#10b981', fontSize: 11 },
+          titleTextStyle: { color: '#10b981', fontSize: 12, italic: false, bold: true },
+          minValue: 0,
+          gridlines: { count: 0 }
+        }
+      },
+      hAxis: {
+        slantedText: true,
+        slantedTextAngle: 35,
+        textStyle: { fontSize: 10, color: '#64748b' }
+      },
+      chartArea: { width: '85%', height: '65%', top: 35 },
+      bar: { groupWidth: '60%' },
+      backgroundColor: 'transparent',
+      fontName: 'inherit'
+    };
+
+    const chart = new google.visualization.ComboChart(this.adDailyChartRef.nativeElement);
     chart.draw(data, options);
   }
 

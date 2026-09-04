@@ -7,7 +7,7 @@ import { Observable, Subject } from 'rxjs';
 })
 export class SocketService {
   private socket: Socket;
-  private readonly serverUrl: string = 'https://brahmadev-api.democompany.in.net';
+  private readonly serverUrl: string = 'http://localhost:3000';
   private newLeadSubject = new Subject<any>();
 
   constructor() {

@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class Leads {
-  url: any = 'https://brahmadev-api.democompany.in.net'
+  url: any = 'http://localhost:3000'
  constructor(private http: HttpClient){}
 
  getLeads(){
@@ -75,4 +75,17 @@ getLeadDetails(id: number){
   deleteQuotation(id:any){
     return this.http.delete(`${this.url}/quotations/${id}`)
   }
+
+  getMetaAdSpend(datePreset: string = 'this_month', since?: string, until?: string) {
+    let params: any = { date_preset: datePreset };
+    if (since && until) {
+      params = { since, until };
+    }
+    return this.http.get(`${this.url}/meta/ad-spend`, { params });
+  }
+
+  getMetaAdAccountStatus() {
+    return this.http.get(`${this.url}/meta/ad-account-status`);
+  }
 }
+
