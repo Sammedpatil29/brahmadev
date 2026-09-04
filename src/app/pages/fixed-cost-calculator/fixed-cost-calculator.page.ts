@@ -50,7 +50,11 @@ import {
   callOutline,
   calendarOutline,
   closeOutline,
-  eyeOutline
+  eyeOutline,
+  videocamOutline,
+  cameraOutline,
+  shieldCheckmarkOutline,
+  wifiOutline
 } from 'ionicons/icons';
 
 export interface CategoryItem {
@@ -74,6 +78,33 @@ export interface PackageTier {
   description: string;
   baseRate: number; // ₹ per sqft
   color: string;
+}
+
+export interface ComplementaryService {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: string;
+  iconColor: string;
+  iconBg: string;
+  marketValue: number;
+  badge: string;
+  features: string[];
+}
+
+export interface PaidAddon {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  price: number;
+  unit: string;
+  icon: string;
+  iconColor: string;
+  iconBg: string;
+  selected: boolean;
+  features: string[];
 }
 
 @Component({
@@ -112,7 +143,260 @@ export class FixedCostCalculatorPage implements OnInit {
   plasterType: string = 'gypsum'; // gypsum | cement_plaster
   includeInterior: boolean = true;
 
-  activeTab: 'categories' | 'materials' = 'categories';
+  activeTab: 'categories' | 'materials' | 'complementary' | 'addons' = 'categories';
+
+  // Complementary / Free Turnkey Services
+  complementaryServices: ComplementaryService[] = [
+    {
+      id: 'planning',
+      title: 'Architectural 2D Floor Planning',
+      subtitle: 'Custom Vaastu-compliant floor layouts & space planning',
+      description: 'Comprehensive 2D architectural drawings, room zoning, optimized space circulation, furniture layout, and cross-section elevations.',
+      icon: 'document-text-outline',
+      iconColor: '#0d6efd',
+      iconBg: '#e0f2fe',
+      marketValue: 18000,
+      badge: '100% FREE',
+      features: [
+        'Vaastu Shastra compliant room positioning',
+        'Dimensioned working architectural drawings',
+        'Furniture, door & window schedule layout',
+        'Sectional elevations and vertical zoning'
+      ]
+    },
+    {
+      id: '3d_modelling',
+      title: '3D Exterior Elevation & Modeling',
+      subtitle: 'High-definition photorealistic 3D building visualization',
+      description: 'Ultra-realistic 3D exterior views with daylight & night lighting, modern facade treatments, texture proposals, and color palettes.',
+      icon: 'cube-outline',
+      iconColor: '#9333ea',
+      iconBg: '#f3e8ff',
+      marketValue: 25000,
+      badge: '100% FREE',
+      features: [
+        'Photorealistic 3D exterior rendering angles',
+        'Modern facade cladding & texture proposals',
+        'Exterior color scheme & lighting concepts',
+        'Compound wall & gate customized 3D design'
+      ]
+    },
+    {
+      id: 'structural',
+      title: 'Structural Design & Column Drawings',
+      subtitle: 'Certified engineering blueprints & steel schedules',
+      description: 'Earthquake-resistant structural analysis, column & footing placement, beam schedules, and slab reinforcement layouts vetted by civil structural engineers.',
+      icon: 'construct-outline',
+      iconColor: '#d97706',
+      iconBg: '#fef3c7',
+      marketValue: 28000,
+      badge: '100% FREE',
+      features: [
+        'Footing depth & foundation rebar details',
+        'Plinth beam & column structural schedules',
+        'Roof slab two-way reinforcement layouts',
+        'Safe load bearing & seismic resistance checks'
+      ]
+    },
+    {
+      id: 'mep_drawings',
+      title: 'Concealed MEP & Plumbing Schematics',
+      subtitle: 'Precision conduit & pipe routing line drawings',
+      description: 'Detailed schematic drawings for concealed CPVC/UPVC water lines, SWR drainage lines, electrical conduit routes, and distribution boards.',
+      icon: 'flash-outline',
+      iconColor: '#e11d48',
+      iconBg: '#ffe4e6',
+      marketValue: 14000,
+      badge: '100% FREE',
+      features: [
+        'Concealed electrical conduit & DB circuit points',
+        'Hot & cold water line plumbing layout',
+        'SWR sewage, drainage & chamber connections',
+        'Rainwater harvesting & overhead tank routing'
+      ]
+    },
+    {
+      id: 'sanction_drawings',
+      title: 'Municipal Sanction & Approval Drawings',
+      subtitle: 'Official documentation for building plan approval',
+      description: 'Complete drawing blueprints prepared strictly adhering to local municipal / Gram Panchayat building bylaws for government license sanctioning.',
+      icon: 'business-outline',
+      iconColor: '#0284c7',
+      iconBg: '#e0f2fe',
+      marketValue: 12000,
+      badge: '100% FREE',
+      features: [
+        'Local municipality bylaw compliance check',
+        'Key plan, site plan, floor plans & cross sections',
+        'Setback, coverage & FAR verification',
+        'Ready-to-submit blueprint documentation'
+      ]
+    },
+    {
+      id: 'quality_testing',
+      title: 'Site Soil Survey & Concrete Cube Testing',
+      subtitle: 'Pre-construction verification & compressive strength lab tests',
+      description: 'Site ground leveling survey, soil bearing suitability inspection, and mandatory 7-day & 28-day concrete cube compressive strength quality testing.',
+      icon: 'sparkles-outline',
+      iconColor: '#16a34a',
+      iconBg: '#dcfce7',
+      marketValue: 10000,
+      badge: '100% FREE',
+      features: [
+        'Site boundary & ground level survey',
+        'Soil suitability & excavation depth audit',
+        '7-day & 28-day concrete cube compression tests',
+        'Cement & aggregate quality check certificates'
+      ]
+    },
+    {
+      id: 'supervision',
+      title: 'Dedicated Civil Engineer Site Supervision',
+      subtitle: 'Stage-wise quality inspection & weekly progress reporting',
+      description: 'Continuous on-site supervision by qualified civil engineers for shuttering alignment, steel binding audits, concrete pouring, and milestone tracking.',
+      icon: 'person-outline',
+      iconColor: '#4f46e5',
+      iconBg: '#e0e7ff',
+      marketValue: 30000,
+      badge: 'INCLUDED',
+      features: [
+        'Steel rebar binding & cover block audits',
+        'Concrete mix ratio & slump cone monitoring',
+        'Curing schedule & brickwork alignment check',
+        'Weekly WhatsApp photo & video progress updates'
+      ]
+    },
+    {
+      id: 'underground_sump',
+      title: 'Underground RCC Water Sump (8,000L)',
+      subtitle: 'Heavy-duty waterproof underground reservoir with cover',
+      description: 'Complete reinforced cement concrete (RCC) underground water sump constructed with M25 grade concrete, dual-coat chemical waterproof plastering, and airtight manhole cover.',
+      icon: 'water-outline',
+      iconColor: '#0284c7',
+      iconBg: '#e0f2fe',
+      marketValue: 85000,
+      badge: '100% FREE',
+      features: [
+        'M25 grade structural waterproof RCC construction',
+        'Heavy-duty internal food-grade leakproof coating',
+        'Airtight FRP / cast iron manhole cover',
+        'Inlet/outlet plumbing & pump connection sleeve'
+      ]
+    },
+    {
+      id: 'compound_wall',
+      title: 'Compound Boundary Wall & Main Entrance Gate',
+      subtitle: 'Complete property perimeter wall & designer MS gate',
+      description: 'Solid masonry boundary wall up to 120 Rft with coping, smooth cement plastering, weatherproof exterior paint, and designer MS main entrance gate.',
+      icon: 'business-outline',
+      iconColor: '#d97706',
+      iconBg: '#fef3c7',
+      marketValue: 125000,
+      badge: '100% FREE',
+      features: [
+        '5ft solid masonry boundary wall with coping & plastering',
+        'Weatherproof primer & exterior apex paint finish',
+        'Designer MS main entrance gate (sliding/swing)',
+        'Built-in security wicket pedestrian gate'
+      ]
+    }
+  ];
+
+  totalComplementaryValue: number = 347000;
+
+  // Optional Paid Upgrades & Add-ons
+  paidAddons: PaidAddon[] = [
+    {
+      id: 'solar_power',
+      name: 'Solar Rooftop Power System (3kW)',
+      tagline: 'Generates ~12-15 units/day, reduces 80%+ electricity bills',
+      description: 'Tier-1 high-efficiency Monocrystalline solar panels, on-grid string inverter, elevated galvanized mounting structure, and net-metering synchronization.',
+      price: 175000,
+      unit: '3kW On-Grid',
+      icon: 'flash-outline',
+      iconColor: '#f59e0b',
+      iconBg: '#fef3c7',
+      selected: false,
+      features: [
+        'Monocrystalline high-efficiency solar PV panels',
+        'On-grid string inverter with Wi-Fi monitoring',
+        'Bi-directional net metering approval support',
+        '25-year panel performance warranty'
+      ]
+    },
+    {
+      id: 'smart_home',
+      name: 'Smart Automation & 4-Camera HD CCTV',
+      tagline: 'Remote smartphone app control & 24/7 security',
+      description: 'Smart Wi-Fi touch switch plates, video doorbell with two-way audio, digital biometric door lock, and 4-channel HD CCTV surveillance system.',
+      price: 65000,
+      unit: 'Complete Kit',
+      icon: 'videocam-outline',
+      iconColor: '#9333ea',
+      iconBg: '#f3e8ff',
+      selected: false,
+      features: [
+        '4 Full-HD night vision CCTV cameras + 1TB DVR',
+        'Smart video doorbell with instant mobile notification',
+        'Biometric fingerprint, RFID card & digital PIN lock',
+        'Voice assistant (Alexa/Google) lighting controls'
+      ]
+    },
+    {
+      id: 'rainwater_harvesting',
+      name: 'Rainwater Harvesting & Recharge Pit',
+      tagline: 'Eco-friendly natural groundwater table recharging',
+      description: 'Dedicated rooftop rainwater collection piping, multi-stage silica/gravel filtration chamber, and underground desilting percolation recharge pit.',
+      price: 35000,
+      unit: 'Full System',
+      icon: 'water-outline',
+      iconColor: '#16a34a',
+      iconBg: '#dcfce7',
+      selected: false,
+      features: [
+        'Dual-stage physical gravel & carbon filter chamber',
+        'Percolation recharge pit with gravel bed',
+        'Direct connection from terrace downpipes',
+        'Gravity-fed low-maintenance design'
+      ]
+    },
+    {
+      id: 'borewell_system',
+      name: 'Borewell Drilling & Submersible Pump',
+      tagline: 'Independent uninterrupted freshwater source',
+      description: 'Hydraulic rig borewell drilling (up to 350 ft), heavy-duty PVC casing pipes, 1.5 HP ISI copper-wound submersible pump, cable wiring, and starter panel.',
+      price: 110000,
+      unit: 'Up to 350 Ft',
+      icon: 'construct-outline',
+      iconColor: '#2563eb',
+      iconBg: '#dbeafe',
+      selected: false,
+      features: [
+        'Deep borewell drilling up to 350 feet depth',
+        'Class-V heavy-duty PVC casing pipe insertion',
+        '1.5 HP copper-wound ISI submersible pump',
+        'Automatic water level controller & starter panel'
+      ]
+    },
+    {
+      id: 'terrace_waterproofing',
+      name: 'Terrace Waterproofing & Heat Barrier',
+      tagline: 'Keeps top floor 4-6°C cooler & 100% leakproof',
+      description: '3-layer elastomeric polymer waterproofing membrane topped with high-SRI white solar reflective cooling thermal barrier paint.',
+      price: 45000,
+      unit: 'Full Terrace',
+      icon: 'sparkles-outline',
+      iconColor: '#e11d48',
+      iconBg: '#ffe4e6',
+      selected: false,
+      features: [
+        '3-Coat elastomeric polymer waterproof membrane',
+        'High Solar Reflective Index (SRI) top coating',
+        'Reduces indoor top-floor temperature by 4°C - 6°C',
+        '10-year resistance against terrace hairline leaks'
+      ]
+    }
+  ];
 
   // Modal & Customer Details for PDF Quote
   isDownloadModalOpen: boolean = false;
@@ -132,8 +416,8 @@ export class FixedCostCalculatorPage implements OnInit {
       id: 'basic',
       name: 'Economy',
       badge: 'Budget Friendly',
-      description: 'Standard TMT steel, 53 grade cement, ceramic tiles, standard fittings.',
-      baseRate: 1550,
+      description: 'Standard TMT steel, PPC cement, ceramic tiles, standard fittings.',
+      baseRate: 1650,
       color: '#6c757d'
     },
     {
@@ -164,6 +448,8 @@ export class FixedCostCalculatorPage implements OnInit {
 
   // Calculated Results
   totalCost: number = 0;
+  baseConstructionCost: number = 0;
+  selectedAddonsCost: number = 0;
   ratePerSqft: number = 0;
   totalAreaCalculated: number = 0;
 
@@ -214,7 +500,11 @@ export class FixedCostCalculatorPage implements OnInit {
       callOutline,
       calendarOutline,
       closeOutline,
-      eyeOutline
+      eyeOutline,
+      videocamOutline,
+      cameraOutline,
+      shieldCheckmarkOutline,
+      wifiOutline
     });
   }
 
@@ -289,7 +579,9 @@ export class FixedCostCalculatorPage implements OnInit {
 
     const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
     this.ratePerSqft = Math.round(baseRate * totalWeight);
-    this.totalCost = Math.round(this.totalAreaCalculated * this.ratePerSqft);
+    this.baseConstructionCost = Math.round(this.totalAreaCalculated * this.ratePerSqft);
+    this.selectedAddonsCost = this.paidAddons.filter(a => a.selected).reduce((sum, a) => sum + a.price, 0);
+    this.totalCost = this.baseConstructionCost + this.selectedAddonsCost;
 
     // Build categories
     this.categories = [
@@ -301,7 +593,7 @@ export class FixedCostCalculatorPage implements OnInit {
         iconBg: '#fef3c7',
         percentage: Math.round((weights.civil / totalWeight) * 100),
         ratePerSqft: Math.round(this.ratePerSqft * (weights.civil / totalWeight)),
-        totalCost: Math.round(this.totalCost * (weights.civil / totalWeight)),
+        totalCost: Math.round(this.baseConstructionCost * (weights.civil / totalWeight)),
         isExpanded: false,
         includedItems: [
           'Excavation & foundation concrete (PCC/RCC)',
@@ -320,7 +612,7 @@ export class FixedCostCalculatorPage implements OnInit {
         iconBg: '#e0f2fe',
         percentage: Math.round((weights.centring / totalWeight) * 100),
         ratePerSqft: Math.round(this.ratePerSqft * (weights.centring / totalWeight)),
-        totalCost: Math.round(this.totalCost * (weights.centring / totalWeight)),
+        totalCost: Math.round(this.baseConstructionCost * (weights.centring / totalWeight)),
         isExpanded: false,
         includedItems: [
           'Steel / ply shuttering for floor slabs & beams',
@@ -339,7 +631,7 @@ export class FixedCostCalculatorPage implements OnInit {
         iconBg: '#dcfce7',
         percentage: Math.round((weights.finishing / totalWeight) * 100),
         ratePerSqft: Math.round(this.ratePerSqft * (weights.finishing / totalWeight)),
-        totalCost: Math.round(this.totalCost * (weights.finishing / totalWeight)),
+        totalCost: Math.round(this.baseConstructionCost * (weights.finishing / totalWeight)),
         isExpanded: false,
         includedItems: [
           this.plasterType === 'gypsum' ? 'Smooth gypsum internal plaster (Zero crack / Paint ready)' : '2-Coat cement plaster with sponge finish',
@@ -359,7 +651,7 @@ export class FixedCostCalculatorPage implements OnInit {
         iconBg: '#dbeafe',
         percentage: Math.round((weights.plumbing / totalWeight) * 100),
         ratePerSqft: Math.round(this.ratePerSqft * (weights.plumbing / totalWeight)),
-        totalCost: Math.round(this.totalCost * (weights.plumbing / totalWeight)),
+        totalCost: Math.round(this.baseConstructionCost * (weights.plumbing / totalWeight)),
         isExpanded: false,
         includedItems: [
           'CPVC & UPVC concealed water supply piping (Astral/Ashirvad)',
@@ -378,7 +670,7 @@ export class FixedCostCalculatorPage implements OnInit {
         iconBg: '#ffe4e6',
         percentage: Math.round((weights.electrical / totalWeight) * 100),
         ratePerSqft: Math.round(this.ratePerSqft * (weights.electrical / totalWeight)),
-        totalCost: Math.round(this.totalCost * (weights.electrical / totalWeight)),
+        totalCost: Math.round(this.baseConstructionCost * (weights.electrical / totalWeight)),
         isExpanded: false,
         includedItems: [
           'Concealed fire-resistant (FRLS) copper wiring (Polycab/Finolex)',
@@ -400,7 +692,7 @@ export class FixedCostCalculatorPage implements OnInit {
         iconBg: '#f3e8ff',
         percentage: Math.round((weights.interior / totalWeight) * 100),
         ratePerSqft: Math.round(this.ratePerSqft * (weights.interior / totalWeight)),
-        totalCost: Math.round(this.totalCost * (weights.interior / totalWeight)),
+        totalCost: Math.round(this.baseConstructionCost * (weights.interior / totalWeight)),
         isExpanded: false,
         includedItems: [
           'Modular kitchen with soft-close tandem drawers & granite countertop',
@@ -429,6 +721,19 @@ export class FixedCostCalculatorPage implements OnInit {
     cat.isExpanded = !cat.isExpanded;
   }
 
+  toggleAddon(addon: PaidAddon) {
+    addon.selected = !addon.selected;
+    this.recalculate();
+  }
+
+  getSelectedAddonsCount(): number {
+    return this.paidAddons.filter(a => a.selected).length;
+  }
+
+  getSelectedAddons(): PaidAddon[] {
+    return this.paidAddons.filter(a => a.selected);
+  }
+
   openDownloadModal() {
     this.updateTodayDate();
     this.isDownloadModalOpen = true;
@@ -444,12 +749,29 @@ export class FixedCostCalculatorPage implements OnInit {
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
     text += `📐 *Built-up Area:* ${this.builtUpArea} sq.ft (${this.getFloorsLabel()})\n`;
     text += `📦 *Package:* ${pkg?.name} (${pkg?.badge})\n`;
-    text += `💰 *Rate:* ₹${this.ratePerSqft.toLocaleString('en-IN')}/sq.ft\n`;
-    text += `🏷️ *Total Estimated Cost:* ₹${this.totalCost.toLocaleString('en-IN')}\n\n`;
-    text += `📊 *CATEGORY BREAKDOWN:*\n`;
+    text += `💰 *Construction Rate:* ₹${this.ratePerSqft.toLocaleString('en-IN')}/sq.ft\n`;
+    text += `🏷️ *Base Construction Cost:* ₹${this.baseConstructionCost.toLocaleString('en-IN')}\n`;
 
+    const selectedAddons = this.getSelectedAddons();
+    if (selectedAddons.length > 0) {
+      text += `\n⚡ *OPTIONAL UPGRADES & PAID ADD-ONS (${selectedAddons.length} Selected):*\n`;
+      selectedAddons.forEach((a, idx) => {
+        text += `${idx + 1}. *${a.name}* (${a.unit}) - ₹${a.price.toLocaleString('en-IN')}\n`;
+      });
+      text += `↳ *Add-ons Subtotal:* ₹${this.selectedAddonsCost.toLocaleString('en-IN')}\n`;
+      text += `💰 *GRAND TOTAL COST:* ₹${this.totalCost.toLocaleString('en-IN')}\n`;
+    } else {
+      text += `🏷️ *Total Estimated Cost:* ₹${this.totalCost.toLocaleString('en-IN')}\n`;
+    }
+
+    text += `\n📊 *CATEGORY BREAKDOWN:*\n`;
     this.categories.forEach((c, index) => {
       text += `${index + 1}. *${c.name}* (${c.percentage}%)\n   ↳ ₹${c.totalCost.toLocaleString('en-IN')} (₹${c.ratePerSqft}/sq.ft)\n`;
+    });
+
+    text += `\n🎁 *COMPLEMENTARY SERVICES INCLUDED (100% FREE - Save ₹${this.totalComplementaryValue.toLocaleString('en-IN')}+):*\n`;
+    this.complementaryServices.forEach((s, idx) => {
+      text += `✓ ${s.title} (Worth ₹${s.marketValue.toLocaleString('en-IN')}) -> FREE\n`;
     });
 
     text += `\n📦 *KEY MATERIAL REQUIREMENTS:*\n`;
@@ -699,7 +1021,11 @@ export class FixedCostCalculatorPage implements OnInit {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(200, 200, 200);
-    doc.text(`(All-inclusive fixed cost estimate)`, margin + 6, currentY + 20);
+    if (this.selectedAddonsCost > 0) {
+      doc.text(`(Base: Rs. ${this.baseConstructionCost.toLocaleString('en-IN')} + ${this.getSelectedAddonsCount()} Add-ons: Rs. ${this.selectedAddonsCost.toLocaleString('en-IN')})`, margin + 6, currentY + 20);
+    } else {
+      doc.text(`(All-inclusive fixed cost estimate)`, margin + 6, currentY + 20);
+    }
 
     // Right Stats inside banner
     doc.setFont('helvetica', 'bold');
@@ -856,13 +1182,124 @@ export class FixedCostCalculatorPage implements OnInit {
 
     currentY = (doc as any).lastAutoTable.finalY + 8;
 
+    // ==========================================
+    // 9. SELECTED OPTIONAL UPGRADES & PAID ADD-ONS
+    // ==========================================
+    const selectedAddons = this.getSelectedAddons();
+    if (selectedAddons.length > 0) {
+      if (currentY > pageHeight - 75) {
+        doc.addPage();
+        currentY = 16;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+      doc.text(`SELECTED OPTIONAL UPGRADES & PAID ADD-ONS (TOTAL: RS. ${this.selectedAddonsCost.toLocaleString('en-IN')})`, margin, currentY);
+
+      currentY += 3;
+
+      const addonBody = selectedAddons.map((a, idx) => [
+        `${idx + 1}`,
+        a.name,
+        a.description,
+        a.unit,
+        `Rs. ${a.price.toLocaleString('en-IN')}`
+      ]);
+
+      autoTable(doc, {
+        startY: currentY,
+        margin: { left: margin, right: margin },
+        head: [['#', 'Add-on Item', 'Specification / Scope', 'Capacity / Unit', 'Price (INR)']],
+        body: addonBody,
+        theme: 'grid',
+        headStyles: {
+          fillColor: brandNavy,
+          textColor: [255, 255, 255],
+          fontSize: 8,
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { cellWidth: 7, halign: 'center' },
+          1: { cellWidth: 48, fontStyle: 'bold', textColor: brandNavy },
+          2: { cellWidth: 'auto', fontSize: 7.2 },
+          3: { cellWidth: 26, halign: 'center', fontSize: 7.2 },
+          4: { cellWidth: 28, halign: 'right', fontStyle: 'bold', textColor: brandNavy }
+        },
+        styles: {
+          fontSize: 7.5,
+          cellPadding: 1.8,
+          textColor: textMain
+        },
+        alternateRowStyles: {
+          fillColor: brandSand
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 8;
+    }
+
+    // ==========================================
+    // 10. COMPLEMENTARY SERVICES INCLUDED (100% FREE)
+    // ==========================================
+    if (currentY > pageHeight - 85) {
+      doc.addPage();
+      currentY = 16;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text(`COMPLEMENTARY SERVICES INCLUDED (WORTH RS. ${this.totalComplementaryValue.toLocaleString('en-IN')} - ZERO COST)`, margin, currentY);
+
+    currentY += 3;
+
+    const compBody = this.complementaryServices.map((s, idx) => [
+      `${idx + 1}`,
+      s.title,
+      s.subtitle,
+      `Rs. ${s.marketValue.toLocaleString('en-IN')}`,
+      '100% FREE'
+    ]);
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      head: [['#', 'Complementary Service', 'Deliverables / Scope', 'Market Value', 'Our Charge']],
+      body: compBody,
+      theme: 'grid',
+      headStyles: {
+        fillColor: brandNavy,
+        textColor: [255, 255, 255],
+        fontSize: 8,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 7, halign: 'center' },
+        1: { cellWidth: 50, fontStyle: 'bold', textColor: brandNavy },
+        2: { cellWidth: 'auto', fontSize: 7.2 },
+        3: { cellWidth: 26, halign: 'right', textColor: textMuted },
+        4: { cellWidth: 25, halign: 'center', fontStyle: 'bold', textColor: [22, 163, 74] }
+      },
+      styles: {
+        fontSize: 7.5,
+        cellPadding: 1.8,
+        textColor: textMain
+      },
+      alternateRowStyles: {
+        fillColor: brandSand
+      }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+
     if (currentY > pageHeight - 45) {
       doc.addPage();
       currentY = 16;
     }
 
     // ==========================================
-    // 9. TERMS & SIGNATURE SECTION
+    // 11. TERMS & SIGNATURE SECTION
     // ==========================================
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
@@ -1048,6 +1485,7 @@ export class FixedCostCalculatorPage implements OnInit {
     this.wallType = 'red_brick';
     this.plasterType = 'gypsum';
     this.includeInterior = true;
+    this.paidAddons.forEach(a => a.selected = false);
     this.recalculate();
   }
 

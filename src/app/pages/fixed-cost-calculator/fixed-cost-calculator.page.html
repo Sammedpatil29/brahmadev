@@ -166,7 +166,6 @@
 
         </ion-card-content>
       </ion-card>
-
     </div>
 
     <!-- Right / Result Column: Cost Summary & Breakdown -->
@@ -184,6 +183,9 @@
                 <span class="meta-tag">₹ {{ ratePerSqft.toLocaleString('en-IN') }} / sq.ft</span>
                 <span class="meta-tag">{{ totalAreaCalculated.toLocaleString('en-IN') }} sq.ft Total Area</span>
                 <span class="meta-tag">{{ getFloorsLabel() }}</span>
+                @if (selectedAddonsCost > 0) {
+                  <span class="meta-tag meta-tag-addon">+₹{{ selectedAddonsCost.toLocaleString('en-IN') }} ({{ getSelectedAddonsCount() }} Add-ons)</span>
+                }
               </div>
             </div>
             
@@ -222,6 +224,20 @@
               }
             </div>
           </div>
+
+          <!-- Complementary Services Quick Callout Banner -->
+          <div class="comp-callout-strip mt-3" (click)="activeTab = 'complementary'">
+            <div class="d-flex align-items-center gap-2">
+              <span class="comp-gift-icon">🎁</span>
+              <div>
+                <div class="comp-callout-title">
+                  Complementary Services Worth <strong>₹{{ totalComplementaryValue.toLocaleString('en-IN') }}+</strong> Included <strong>FREE</strong>
+                </div>
+                <small class="comp-callout-sub">Underground RCC Water Sump, Compound Wall & Gate, 2D/3D Design, Structural Blueprints, MEP & Site Supervision</small>
+              </div>
+            </div>
+          </div>
+
         </ion-card-content>
       </ion-card>
 
@@ -232,14 +248,28 @@
           [class.active]="activeTab === 'categories'" 
           (click)="activeTab = 'categories'">
           <ion-icon name="construct-outline"></ion-icon>
-          <span>Category Breakdown ({{ categories.length }})</span>
+          <span>Category Breakdown</span>
         </button>
         <button 
           class="tab-btn" 
           [class.active]="activeTab === 'materials'" 
           (click)="activeTab = 'materials'">
           <ion-icon name="cube-outline"></ion-icon>
-          <span>Material Quantities (BOQ)</span>
+          <span>Material BOQ</span>
+        </button>
+        <button 
+          class="tab-btn tab-btn-addon" 
+          [class.active]="activeTab === 'addons'" 
+          (click)="activeTab = 'addons'">
+          <ion-icon name="flash-outline"></ion-icon>
+          <span>Paid Add-Ons ({{ getSelectedAddonsCount() }})</span>
+        </button>
+        <button 
+          class="tab-btn tab-btn-comp" 
+          [class.active]="activeTab === 'complementary'" 
+          (click)="activeTab = 'complementary'">
+          <span class="gift-tab-badge">🎁 FREE</span>
+          <span>Complementary ({{ complementaryServices.length }})</span>
         </button>
       </div>
 
@@ -376,6 +406,137 @@
             </div>
           </ion-card-content>
         </ion-card>
+      }
+
+      <!-- TAB 3: Paid Add-Ons (Optional Upgrades) -->
+      @if (activeTab === 'addons') {
+        <div class="addons-tab-content">
+          <div class="addon-intro-banner mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+              <span class="badge bg-warning text-dark fw-bold px-2 py-1">⚡ OPTIONAL UPGRADES</span>
+              @if (selectedAddonsCost > 0) {
+                <span class="text-primary fw-bold">
+                  {{ getSelectedAddonsCount() }} Selected (+₹{{ selectedAddonsCost.toLocaleString('en-IN') }})
+                </span>
+              } @else {
+                <span class="text-muted small">Tap card to select & add to your construction quote</span>
+              }
+            </div>
+            <h5 class="comp-banner-heading">Modern Infrastructure & Smart Technology Add-Ons</h5>
+            <p class="comp-banner-sub mb-0">
+              Customize your dream home with green solar power, large underground RCC water sumps, compound security walls, smart automation, rainwater harvesting, and borewell installations.
+            </p>
+          </div>
+
+          <div class="paid-addons-grid">
+            @for (addon of paidAddons; track addon.id) {
+              <ion-card 
+                class="paid-addon-card" 
+                [class.selected]="addon.selected"
+                (click)="toggleAddon(addon)">
+                <div class="addon-card-header">
+                  <div class="d-flex align-items-start gap-3">
+                    <div class="addon-icon-box" [style.background-color]="addon.iconBg" [style.color]="addon.iconColor">
+                      <ion-icon [name]="addon.icon"></ion-icon>
+                    </div>
+                    <div class="flex-1">
+                      <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div>
+                          <h6 class="addon-title mb-0">{{ addon.name }}</h6>
+                          <small class="addon-unit-tag">{{ addon.unit }}</small>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            [checked]="addon.selected" 
+                            (click)="$event.stopPropagation()" 
+                            (change)="toggleAddon(addon)">
+                        </div>
+                      </div>
+                      <div class="addon-price-tag mt-1">
+                        +₹{{ addon.price.toLocaleString('en-IN') }}
+                      </div>
+                    </div>
+                  </div>
+                  <p class="addon-desc text-muted mt-2 mb-0">{{ addon.description }}</p>
+                </div>
+
+                <div class="addon-specs-box">
+                  <div class="specs-title">Included Scope & Specifications:</div>
+                  <ul class="specs-list">
+                    @for (feat of addon.features; track feat) {
+                      <li>
+                        <ion-icon name="checkmark-circle-outline" class="spec-check-icon"></ion-icon>
+                        <span>{{ feat }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </ion-card>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- TAB 4: Complementary Services (100% FREE) -->
+      @if (activeTab === 'complementary') {
+        <div class="complementary-tab-content">
+          
+          <!-- Banner -->
+          <div class="comp-intro-card mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="comp-badge-free">🎁 100% FREE ADD-ONS</span>
+                <span class="comp-save-text">Total Value: ₹{{ totalComplementaryValue.toLocaleString('en-IN') }}+</span>
+              </div>
+              <span class="badge bg-success px-2 py-1">Zero Additional Cost</span>
+            </div>
+            <h5 class="comp-banner-heading">Complete Complimentary Turnkey Package (9 Key Free Add-Ons)</h5>
+            <p class="comp-banner-sub mb-0">
+              When you build your home with <strong>Brahmadev Constructions</strong>, <strong>{{ complementaryServices.length }} premium turnkey additions</strong> — including an 8,000L underground RCC water sump, compound boundary wall with designer main gate, architectural 2D floor planning, 3D elevation modeling, structural blueprints, MEP schematics, and civil site supervision — are included <strong>100% FREE</strong> (Value: ₹{{ totalComplementaryValue.toLocaleString('en-IN') }}+).
+            </p>
+          </div>
+
+          <!-- Services Grid -->
+          <div class="comp-services-grid">
+            @for (svc of complementaryServices; track svc.id) {
+              <ion-card class="comp-service-card">
+                <div class="comp-card-header">
+                  <div class="d-flex align-items-start gap-3">
+                    <div class="comp-icon-box" [style.background-color]="svc.iconBg" [style.color]="svc.iconColor">
+                      <ion-icon [name]="svc.icon"></ion-icon>
+                    </div>
+                    <div class="flex-1">
+                      <div class="d-flex align-items-center justify-content-between gap-2">
+                        <h6 class="comp-service-title mb-0">{{ svc.title }}</h6>
+                        <span class="comp-pill-badge">{{ svc.badge }}</span>
+                      </div>
+                      <div class="comp-price-row mt-1">
+                        <span class="comp-mkt-val">Market Value: <del>₹{{ svc.marketValue.toLocaleString('en-IN') }}</del></span>
+                        <span class="comp-free-text">₹0 FREE</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="comp-service-desc text-muted mt-2 mb-0">{{ svc.description }}</p>
+                </div>
+
+                <div class="comp-deliverables-box">
+                  <div class="deliverables-title">Deliverables & Scope:</div>
+                  <ul class="deliverables-list">
+                    @for (feat of svc.features; track feat) {
+                      <li>
+                        <ion-icon name="checkmark-circle-outline" class="feat-check-icon"></ion-icon>
+                        <span>{{ feat }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </ion-card>
+            }
+          </div>
+
+        </div>
       }
 
     </div>
