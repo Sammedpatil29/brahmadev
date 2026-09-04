@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, Subject } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocketService {
   private socket: Socket;
-  private readonly serverUrl: string = 'http://localhost:3000';
+  private readonly serverUrl: string = environment.apiUrl;
   private newLeadSubject = new Subject<any>();
 
   constructor() {

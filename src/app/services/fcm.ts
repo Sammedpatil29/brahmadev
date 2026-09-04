@@ -4,6 +4,7 @@ import { Route, Router } from '@angular/router';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { Platform } from '@ionic/angular';
 import { jwtDecode } from 'jwt-decode';
+import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class FcmService {
@@ -36,7 +37,7 @@ export class FcmService {
       console.log('user token:', userToken)
       let decoded:any = jwtDecode(userToken)
       console.log('user id:', decoded)
-      this.http.patch('http://localhost:3000/users/fcm-token', {
+      this.http.patch(`${environment.apiUrl}/users/fcm-token`, {
     id: decoded.id, // Get this from your Auth state
     fcm_token: token.value
   }).subscribe({
