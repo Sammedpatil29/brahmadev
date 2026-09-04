@@ -6,14 +6,23 @@
       </ion-button>
     </ion-buttons>
     <ion-title>
-     <div class="d-flex justify-content-between align-items-center">
-       <div>
-        Business Leads
-      </div> 
-      <div (click)="addLead()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+      <div class="leads-header-bar d-flex justify-content-between align-items-center">
+        <div class="leads-title-text">
+          Business Leads
+        </div> 
+        <div class="leads-header-right d-flex align-items-center gap-2">
+          <div class="desktop-header-searchbar">
+            <ion-searchbar 
+              [(ngModel)]="searchTerm" 
+              (ionInput)="handleSearch()" 
+              placeholder="Search by name or city">
+            </ion-searchbar>
+          </div>
+          <div class="btn-add-lead cursor-pointer" (click)="addLead()">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+          </div>
+        </div>
       </div>
-     </div>
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -44,7 +53,7 @@
   </div>
 </div>
     }
-<div>
+<div class="mobile-searchbar-wrap">
   <ion-searchbar 
   [(ngModel)]="searchTerm" 
   (ionInput)="handleSearch()" 

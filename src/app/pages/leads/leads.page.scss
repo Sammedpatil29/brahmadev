@@ -121,7 +121,8 @@
   overflow-x: auto;      /* Enables horizontal scrolling */
   white-space: nowrap;    /* Keeps chips in one line */
   gap: 10px;             /* Space between chips */
-  padding: 10px;
+  padding: 0px 10px;
+  margin-top: 10px;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
 }
 
@@ -162,4 +163,62 @@
   border-radius: 50%;
   padding: 15px;
   display: inline-flex;
+}
+
+// Header & Desktop Search Bar
+.leads-header-bar {
+  width: 100%;
+}
+
+
+.leads-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.btn-add-lead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}
+
+.desktop-header-searchbar {
+  display: none;
+
+  @media (min-width: 992px) {
+    display: block;
+    width: 340px;
+
+    ion-searchbar {
+      --background: #f1f5f9;
+      --box-shadow: none;
+      --border-radius: 10px;
+      --placeholder-color: #64748b;
+      --icon-color: #64748b;
+      --color: #0f172a;
+      padding-top: 0;
+      padding-bottom: 0;
+      padding-inline-start: 0;
+      padding-inline-end: 0;
+      min-height: 36px;
+      height: 36px;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.mobile-searchbar-wrap {
+  display: block;
+
+  @media (min-width: 992px) {
+    display: none;
+  }
 }
