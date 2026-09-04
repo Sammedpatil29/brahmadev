@@ -1,3 +1,38 @@
+.topbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.topbar-cost-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  background: linear-gradient(135deg, #0d6efd 0%, #1e40af 100%);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
+  line-height: 1.15;
+  cursor: default;
+
+  .cost-pill-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #bfdbfe;
+  }
+
+  .cost-pill-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+  }
+}
+
 .calculator-layout {
   display: flex;
   flex-direction: column;
@@ -202,6 +237,17 @@
 
   .hero-gradient-bar { height: 4px; background: linear-gradient(90deg, #0d6efd, #00d2ff, #10b981); }
   .hero-sublabel { font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+  
+  .hero-tax-pill {
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 12px;
+    border: 1px solid #bbf7d0;
+  }
+
   .hero-amount { font-size: 1.9rem; font-weight: 800; color: #0f172a; margin: 2px 0 6px; }
 
   .hero-meta-row {
@@ -215,6 +261,12 @@
       font-size: 0.75rem; 
       font-weight: 700; 
       color: #334155; 
+
+      &.meta-tag-tax {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
 
       &.meta-tag-addon {
         background: #fef3c7;

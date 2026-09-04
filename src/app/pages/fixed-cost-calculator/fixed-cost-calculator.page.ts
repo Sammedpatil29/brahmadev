@@ -759,9 +759,9 @@ export class FixedCostCalculatorPage implements OnInit {
         text += `${idx + 1}. *${a.name}* (${a.unit}) - ₹${a.price.toLocaleString('en-IN')}\n`;
       });
       text += `↳ *Add-ons Subtotal:* ₹${this.selectedAddonsCost.toLocaleString('en-IN')}\n`;
-      text += `💰 *GRAND TOTAL COST:* ₹${this.totalCost.toLocaleString('en-IN')}\n`;
+      text += `💰 *GRAND TOTAL COST:* ₹${this.totalCost.toLocaleString('en-IN')} *(Inclusive of all Taxes)*\n`;
     } else {
-      text += `🏷️ *Total Estimated Cost:* ₹${this.totalCost.toLocaleString('en-IN')}\n`;
+      text += `🏷️ *Total Estimated Cost:* ₹${this.totalCost.toLocaleString('en-IN')} *(Inclusive of all Taxes)*\n`;
     }
 
     text += `\n📊 *CATEGORY BREAKDOWN:*\n`;
@@ -1011,7 +1011,7 @@ export class FixedCostCalculatorPage implements OnInit {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(brandGold[0], brandGold[1], brandGold[2]);
-    doc.text('TOTAL ESTIMATED CONSTRUCTION COST', margin + 6, currentY + 6);
+    doc.text('TOTAL ESTIMATED CONSTRUCTION COST (INCL. ALL TAXES)', margin + 6, currentY + 6);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(17);
@@ -1022,9 +1022,9 @@ export class FixedCostCalculatorPage implements OnInit {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(200, 200, 200);
     if (this.selectedAddonsCost > 0) {
-      doc.text(`(Base: Rs. ${this.baseConstructionCost.toLocaleString('en-IN')} + ${this.getSelectedAddonsCount()} Add-ons: Rs. ${this.selectedAddonsCost.toLocaleString('en-IN')})`, margin + 6, currentY + 20);
+      doc.text(`(Base: Rs. ${this.baseConstructionCost.toLocaleString('en-IN')} + ${this.getSelectedAddonsCount()} Add-ons: Rs. ${this.selectedAddonsCost.toLocaleString('en-IN')} • Inclusive of all Taxes)`, margin + 6, currentY + 20);
     } else {
-      doc.text(`(All-inclusive fixed cost estimate)`, margin + 6, currentY + 20);
+      doc.text(`(All-inclusive fixed cost estimate • Inclusive of all Taxes)`, margin + 6, currentY + 20);
     }
 
     // Right Stats inside banner
@@ -1311,8 +1311,9 @@ export class FixedCostCalculatorPage implements OnInit {
     doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
     doc.text([
       '1. Rates are based on current market material costs and standard soil conditions.',
-      '2. Electricity and water required during the construction period to be supplied by the client.',
-      '3. Stage-wise payment milestones to be followed as per the mutual construction contract.'
+      '2. Final estimated cost is fully inclusive of all applicable statutory taxes.',
+      '3. Electricity and water required during the construction period to be supplied by the client.',
+      '4. Stage-wise payment milestones to be followed as per the mutual construction contract.'
     ], margin, currentY + 4);
 
     // Signature line (Right Aligned)

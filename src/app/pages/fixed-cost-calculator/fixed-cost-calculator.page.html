@@ -6,10 +6,14 @@
       </ion-button>
     </ion-buttons>
     <ion-title>
-      <div class="d-flex justify-content-between align-items-center">
-        <div>Fixed Cost Estimator</div>
-      </div>
+      <div class="topbar-title">Fixed Cost Estimator</div>
     </ion-title>
+    <ion-buttons slot="end" class="pe-2">
+      <div class="topbar-cost-pill">
+        <span class="cost-pill-label">Total (Incl. Taxes)</span>
+        <span class="cost-pill-val">₹ {{ totalCost.toLocaleString('en-IN') }}</span>
+      </div>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -177,12 +181,15 @@
         <ion-card-content class="p-3">
           <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
-              <span class="hero-sublabel">Total Estimated Construction Cost</span>
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <span class="hero-sublabel">Total Estimated Construction Cost</span>
+              </div>
               <div class="hero-amount">₹ {{ totalCost.toLocaleString('en-IN') }}</div>
               <div class="hero-meta-row">
                 <span class="meta-tag">₹ {{ ratePerSqft.toLocaleString('en-IN') }} / sq.ft</span>
                 <span class="meta-tag">{{ totalAreaCalculated.toLocaleString('en-IN') }} sq.ft Total Area</span>
                 <span class="meta-tag">{{ getFloorsLabel() }}</span>
+                <span class="meta-tag meta-tag-tax">All Taxes Included</span>
                 @if (selectedAddonsCost > 0) {
                   <span class="meta-tag meta-tag-addon">+₹{{ selectedAddonsCost.toLocaleString('en-IN') }} ({{ getSelectedAddonsCount() }} Add-ons)</span>
                 }
@@ -411,7 +418,7 @@
       <!-- TAB 3: Paid Add-Ons (Optional Upgrades) -->
       @if (activeTab === 'addons') {
         <div class="addons-tab-content">
-          <div class="addon-intro-banner mb-3">
+          <div class="addon-intro-banner">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
               <span class="badge bg-warning text-dark fw-bold px-2 py-1">⚡ OPTIONAL UPGRADES</span>
               @if (selectedAddonsCost > 0) {
@@ -422,10 +429,10 @@
                 <span class="text-muted small">Tap card to select & add to your construction quote</span>
               }
             </div>
-            <h5 class="comp-banner-heading">Modern Infrastructure & Smart Technology Add-Ons</h5>
-            <p class="comp-banner-sub mb-0">
+            <h5 class="comp-banner-heading m-0">Modern Infrastructure & Smart Technology Add-Ons</h5>
+            <!-- <p class="comp-banner-sub mb-0">
               Customize your dream home with green solar power, large underground RCC water sumps, compound security walls, smart automation, rainwater harvesting, and borewell installations.
-            </p>
+            </p> -->
           </div>
 
           <div class="paid-addons-grid">
@@ -484,7 +491,7 @@
         <div class="complementary-tab-content">
           
           <!-- Banner -->
-          <div class="comp-intro-card mb-3">
+          <div class="comp-intro-card">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
               <div class="d-flex align-items-center gap-2">
                 <span class="comp-badge-free">🎁 100% FREE ADD-ONS</span>
@@ -565,7 +572,7 @@
               <span>📐 Area: <strong>{{ totalAreaCalculated }} sq.ft</strong></span>
             </div>
             <div class="text-primary fw-bold">
-              💰 Estimate: ₹ {{ totalCost.toLocaleString('en-IN') }} (₹{{ ratePerSqft }}/sqft)
+              💰 Estimate: ₹ {{ totalCost.toLocaleString('en-IN') }} (₹{{ ratePerSqft }}/sqft) &bull; <span class="text-success fw-bold">Incl. of all Taxes</span>
             </div>
           </div>
 
