@@ -5,11 +5,62 @@
   justify-content: center;
 }
 
-// Header & Refresh Button
+// Header & Action Buttons
 .page-header-title {
   font-size: 1.05rem;
   font-weight: 700;
   color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-action-wrap {
+  flex-shrink: 0;
+}
+
+.btn-export-stats {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 0 12px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+
+  ion-icon {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .export-spinner {
+    width: 15px;
+    height: 15px;
+    --color: #334155;
+  }
+
+  &:hover:not([disabled]) {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 }
 
 .btn-refresh-stats {
@@ -18,16 +69,22 @@
   border-radius: 50%;
   width: 32px;
   height: 32px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #334155;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 1.05rem;
+  }
 
   &:hover {
     background: #e2e8f0;
     color: #0f172a;
+    border-color: #cbd5e1;
   }
 }
 
@@ -590,3 +647,60 @@
     margin: 0;
   }
 }
+
+// PDF Preview Modal
+.pdf-preview-modal {
+  --width: 900px;
+  --max-width: 95vw;
+  --height: 90vh;
+  --max-height: 92vh;
+  --border-radius: 16px;
+  --box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+
+  .preview-modal-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: #525659;
+    border-radius: 16px;
+    overflow: hidden;
+
+    ion-toolbar {
+      --background: #0f172a;
+      --color: #ffffff;
+      ion-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+    }
+
+    .btn-download-header {
+      --color: #ffffff;
+      --background: rgba(255, 255, 255, 0.15);
+      --border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .preview-modal-body {
+      flex: 1;
+      height: 100%;
+      min-height: 0;
+      background: #525659;
+      position: relative;
+    }
+
+    .pdf-iframe-element {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .preview-modal-footer {
+      flex-shrink: 0;
+    }
+  }
+}
+

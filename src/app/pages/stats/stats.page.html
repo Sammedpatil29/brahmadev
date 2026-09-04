@@ -10,7 +10,20 @@
         <div class="page-header-title">
           {{ selectedTab === 'analytics' ? 'Lead Statistics' : (selectedTab === 'meta_ads' ? 'Meta Ads Spending' : 'Google Ads Report') }}
         </div>
-        <div class="header-action-wrap">
+        <div class="header-action-wrap d-flex align-items-center gap-2">
+          <button 
+            class="btn-export-stats" 
+            (click)="exportReportPDF()" 
+            [disabled]="isGeneratingPdf || selectedTab === 'google_ads'" 
+            title="Export Report PDF">
+            @if (isGeneratingPdf) {
+              <ion-spinner name="crescent" class="export-spinner"></ion-spinner>
+              <span>Generating...</span>
+            } @else {
+              <ion-icon name="download-outline"></ion-icon>
+              <span>Export Report</span>
+            }
+          </button>
           <button class="btn-refresh-stats" (click)="refreshCurrentTab()" title="Refresh Data">
             <ion-icon name="refresh-outline"></ion-icon>
           </button>
@@ -376,4 +389,65 @@
     </div>
   }
 
+  <!-- PDF Preview Modal -->
+  <ion-modal [isOpen]="isPreviewModalOpen" (didDismiss)="closePreviewModal()" class="pdf-preview-modal">
+    <ng-template>
+      <div class="preview-modal-wrapper">
+        <ion-header>
+          <ion-toolbar color="primary">
+            <ion-title>
+              {{ previewTitle }}
+            </ion-title>
+            <ion-buttons slot="end">
+              <ion-button 
+                class="btn-download-header"
+                (click)="downloadCurrentPDF()"
+                [disabled]="isGeneratingPdf">
+                <ion-icon slot="start" name="download-outline"></ion-icon>
+                Download PDF
+              </ion-button>
+              <ion-button (click)="closePreviewModal()">
+                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="preview-modal-body">
+          @if (pdfPreviewSafeUrl) {
+            <iframe 
+              [src]="pdfPreviewSafeUrl" 
+              class="pdf-iframe-element" 
+              title="PDF Report Preview">
+            </iframe>
+          } @else {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+              <ion-spinner name="crescent"></ion-spinner>
+              <p class="mt-2 text-muted">Preparing PDF Preview...</p>
+            </div>
+          }
+        </div>
+
+        <div class="preview-modal-footer p-2 bg-light border-top d-flex justify-content-between align-items-center">
+          <div class="d-none d-sm-block text-muted small px-2">
+            Brahmadev Constructions &bull; Internal Report Preview
+          </div>
+          <div class="d-flex gap-2 ms-auto">
+            <button class="btn btn-outline-secondary btn-sm px-3" (click)="closePreviewModal()">
+              Close
+            </button>
+            <button 
+              class="btn btn-primary btn-sm px-4 fw-bold d-flex align-items-center gap-1" 
+              (click)="downloadCurrentPDF()"
+              [disabled]="isGeneratingPdf">
+              <ion-icon name="download-outline"></ion-icon>
+              <span>Download PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>
+
