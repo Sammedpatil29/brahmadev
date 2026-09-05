@@ -73,7 +73,7 @@ import { Leads } from '../../services/leads';
 export class QuotationPage implements OnInit {
   // Configurable rates
   gstPercentage: number = 18;
-  discountPercentage: number = 10;
+  discountPercentage: number = 0;
   showSettings: boolean = false;
   isItemModalOpen: boolean = false;
   isLoading: boolean = false;

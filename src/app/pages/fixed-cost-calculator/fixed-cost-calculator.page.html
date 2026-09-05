@@ -8,7 +8,11 @@
     <ion-title>
       <div class="topbar-title">Fixed Cost Estimator</div>
     </ion-title>
-    <ion-buttons slot="end" class="pe-2">
+    <ion-buttons slot="end" class="pe-2 d-flex align-items-center gap-2">
+      <button class="btn-set-price" (click)="openSetPriceModal()">
+        <ion-icon name="pricetag-outline"></ion-icon>
+        <span>Set Price</span>
+      </button>
       <div class="topbar-cost-pill">
         <span class="cost-pill-label">Total (Incl. Taxes)</span>
         <span class="cost-pill-val">₹ {{ totalCost.toLocaleString('en-IN') }}</span>
@@ -706,6 +710,82 @@
               <ion-icon name="download-outline"></ion-icon>
               <span>Download PDF</span>
             </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Set Package Prices Modal -->
+  <ion-modal [isOpen]="isSetPriceModalOpen" (didDismiss)="closeSetPriceModal()" class="set-price-modal">
+    <ng-template>
+      <div class="set-price-modal-wrapper">
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>Set Package Prices</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="closeSetPriceModal()">
+                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="modal-body-scroll p-3">
+          <p class="text-muted small mb-3">
+            Customise the base rate (₹ per sq.ft) for each package tier. Calculations, estimates, and PDFs will dynamically update with these prices.
+          </p>
+
+          <div class="price-inputs-list">
+            @for (pkg of packages; track pkg.id) {
+              <div 
+                class="package-price-row mb-3 p-3 rounded-3 border"
+                [style.border-color]="selectedPackage === pkg.id ? '#0d6efd !important' : '#e2e8f0'"
+                [style.background]="selectedPackage === pkg.id ? '#f0f7ff' : '#f8fafc'">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <input 
+                      type="radio" 
+                      name="activePkgRadio" 
+                      [checked]="selectedPackage === pkg.id" 
+                      (change)="selectedPackage = pkg.id"
+                      [id]="'pkg_radio_' + pkg.id"
+                      class="form-check-input mt-0 cursor-pointer">
+                    <label [for]="'pkg_radio_' + pkg.id" class="fw-bold text-dark mb-0 cursor-pointer">{{ pkg.name }}</label>
+                    @if (selectedPackage === pkg.id) {
+                      <span class="badge bg-primary">Active</span>
+                    }
+                    <span class="badge" [style.background-color]="pkg.color + '20'" [style.color]="pkg.color">{{ pkg.badge }}</span>
+                  </div>
+                  <small class="text-muted">Default: ₹{{ defaultPackageRates[pkg.id] }}/sq.ft</small>
+                </div>
+
+                <div class="input-group">
+                  <span class="input-group-text bg-white fw-bold text-muted">₹</span>
+                  <input 
+                    type="number" 
+                    class="form-control fw-bold" 
+                    [(ngModel)]="tempPackageRates[pkg.id]" 
+                    (ngModelChange)="onRateChange(pkg.id, $event)"
+                    [name]="'pkg_rate_' + pkg.id"
+                    placeholder="Enter rate per sq.ft"
+                    min="100" 
+                    step="50">
+                  <span class="input-group-text bg-white text-muted small">/ sq.ft</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center gap-2 mt-4 pt-2 border-top">
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" (click)="resetDefaultRates()">
+              <ion-icon name="refresh-outline"></ion-icon>
+              <span>Reset Defaults</span>
+            </button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-light btn-sm" (click)="closeSetPriceModal()">Cancel</button>
+              <button class="btn btn-dark btn-sm px-3 fw-bold" (click)="applyCustomRates()">Save & Apply</button>
+            </div>
           </div>
         </div>
       </div>

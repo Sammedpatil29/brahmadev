@@ -4,6 +4,40 @@
   color: #0f172a;
 }
 
+.btn-set-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1.5px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  ion-icon {
+    font-size: 0.95rem;
+    color: #1a1a1a;
+  }
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+}
+
 .topbar-cost-pill {
   display: flex;
   flex-direction: column;
@@ -855,3 +889,73 @@
 .bg-soft-orange { background: #ffedd5; color: #ea580c; }
 .bg-soft-green { background: #dcfce7; color: #16a34a; }
 .bg-soft-red { background: #ffe4e6; color: #e11d48; }
+
+// Set Price Modal
+.set-price-modal {
+  --width: 500px;
+  --max-width: 92vw;
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 16px;
+  --box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
+
+  .set-price-modal-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #ffffff;
+
+    ion-header {
+      --background: #ffffff;
+      ion-toolbar {
+        --background: #ffffff;
+        --color: #0f172a;
+        --border-color: #e2e8f0;
+
+        ion-title {
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        ion-button {
+          --color: #64748b;
+        }
+      }
+    }
+
+    .modal-body-scroll {
+      overflow-y: auto;
+      max-height: calc(90vh - 60px);
+    }
+
+    .package-price-row {
+      background: #f8fafc;
+      border-color: #e2e8f0 !important;
+      transition: all 0.2s ease;
+
+      &:focus-within {
+        border-color: #0f172a !important;
+        box-shadow: 0 0 0 1px #0f172a;
+      }
+
+      .input-group {
+        border-radius: 8px;
+        overflow: hidden;
+
+        input {
+          border-color: #cbd5e1;
+          font-size: 0.95rem;
+
+          &:focus {
+            border-color: #0f172a;
+            box-shadow: none;
+          }
+        }
+      }
+    }
+  }
+}

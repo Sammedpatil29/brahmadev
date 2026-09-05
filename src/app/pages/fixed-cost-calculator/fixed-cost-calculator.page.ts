@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -53,7 +53,8 @@ import {
   videocamOutline,
   cameraOutline,
   shieldCheckmarkOutline,
-  wifiOutline
+  wifiOutline,
+  pricetagOutline
 } from 'ionicons/icons';
 
 export interface CategoryItem {
@@ -444,6 +445,16 @@ export class FixedCostCalculatorPage implements OnInit {
     }
   ];
 
+  defaultPackageRates: { [id: string]: number } = {
+    basic: 1650,
+    standard: 1850,
+    premium: 2300,
+    luxury: 2850
+  };
+
+  isSetPriceModalOpen: boolean = false;
+  tempPackageRates: { [id: string]: number } = {};
+
   // Calculated Results
   totalCost: number = 0;
   baseConstructionCost: number = 0;
@@ -472,7 +483,8 @@ export class FixedCostCalculatorPage implements OnInit {
     private navCtrl: NavController,
     private toastCtrl: ToastController,
     private sanitizer: DomSanitizer,
-    private platform: Platform
+    private platform: Platform,
+    private cdr: ChangeDetectorRef
   ) {
     addIcons({
       arrowBackOutline,
@@ -503,7 +515,8 @@ export class FixedCostCalculatorPage implements OnInit {
       videocamOutline,
       cameraOutline,
       shieldCheckmarkOutline,
-      wifiOutline
+      wifiOutline,
+      pricetagOutline
     });
   }
 
@@ -738,6 +751,7 @@ export class FixedCostCalculatorPage implements OnInit {
       flooringSqft: Math.round(this.totalAreaCalculated * 1.15),
       paintLitres: Math.round(this.totalAreaCalculated * 0.18)
     };
+    this.cdr.markForCheck();
   }
 
   toggleCategory(cat: CategoryItem) {
@@ -764,6 +778,62 @@ export class FixedCostCalculatorPage implements OnInit {
 
   closeDownloadModal() {
     this.isDownloadModalOpen = false;
+  }
+
+  openSetPriceModal() {
+    this.tempPackageRates = {};
+    this.packages.forEach(pkg => {
+      this.tempPackageRates[pkg.id] = pkg.baseRate;
+    });
+    this.isSetPriceModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closeSetPriceModal() {
+    this.isSetPriceModalOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  resetDefaultRates() {
+    this.packages.forEach(pkg => {
+      if (this.defaultPackageRates[pkg.id]) {
+        this.tempPackageRates[pkg.id] = this.defaultPackageRates[pkg.id];
+      }
+    });
+    this.cdr.markForCheck();
+  }
+
+  onRateChange(pkgId: string, value: any) {
+    const num = Number(value);
+    if (!isNaN(num)) {
+      this.tempPackageRates[pkgId] = num;
+    }
+  }
+
+  async applyCustomRates() {
+    // Create new array & object references so Angular template tracking immediately detects and re-renders
+    this.packages = this.packages.map(pkg => {
+      const inputVal = this.tempPackageRates[pkg.id];
+      const parsedVal = typeof inputVal === 'string' ? parseFloat(inputVal) : Number(inputVal);
+      return {
+        ...pkg,
+        baseRate: (!isNaN(parsedVal) && parsedVal > 0) ? parsedVal : pkg.baseRate
+      };
+    });
+
+    // Re-run all cost and material estimations
+    this.recalculate();
+    this.cdr.detectChanges();
+    this.isSetPriceModalOpen = false;
+
+    const currentPkg = this.packages.find(p => p.id === this.selectedPackage) || this.packages[1];
+    const toast = await this.toastCtrl.create({
+      message: `Prices updated! Active package (${currentPkg.name}) is at ₹${currentPkg.baseRate}/sq.ft. Total: ₹${this.totalCost.toLocaleString('en-IN')}`,
+      duration: 3000,
+      position: 'bottom',
+      color: 'dark'
+    });
+    await toast.present();
   }
 
   async copyEstimate() {
@@ -1510,6 +1580,11 @@ export class FixedCostCalculatorPage implements OnInit {
     this.plasterType = 'gypsum';
     this.includeInterior = true;
     this.paidAddons.forEach(a => a.selected = false);
+    this.packages.forEach(pkg => {
+      if (this.defaultPackageRates[pkg.id]) {
+        pkg.baseRate = this.defaultPackageRates[pkg.id];
+      }
+    });
     this.recalculate();
   }
 
