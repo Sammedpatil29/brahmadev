@@ -21,21 +21,35 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-list>
-    <ion-item *ngFor="let item of items" class="item-card-row">
-      <ion-label button (click)="openModal(item)" class="item-clickable-label">
-        <h2>{{ item.description }}</h2>
-        <p>Price: {{ item.price | currency:'INR' }} / {{ item.unit }}</p>
-        <p>GST: {{ item.gst }}%</p>
-      </ion-label>
-      <ion-note slot="end" style="font-size: 0.8rem;" class="me-2">
-        {{ item.createdAt | date:'mediumDate' }}
-      </ion-note>
-      <ion-button slot="end" fill="clear" color="danger" (click)="deleteItem(item); $event.stopPropagation()" class="btn-item-delete">
-        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-      </ion-button>
-    </ion-item>
-  </ion-list>
+  @if (isLoading) {
+    <div class="loader-wrapper">
+      <ion-spinner name="crescent" color="dark"></ion-spinner>
+      <p class="loader-text">Loading items...</p>
+    </div>
+  } @else {
+    <ion-list>
+      <ion-item *ngFor="let item of items" class="item-card-row">
+        <ion-label button (click)="openModal(item)" class="item-clickable-label">
+          <h2>{{ item.description }}</h2>
+          <p>Price: {{ item.price | currency:'INR' }} / {{ item.unit }}</p>
+          <p>GST: {{ item.gst }}%</p>
+        </ion-label>
+        <ion-note slot="end" style="font-size: 0.8rem;" class="me-2">
+          {{ item.createdAt | date:'mediumDate' }}
+        </ion-note>
+        <ion-button slot="end" fill="clear" color="danger" (click)="deleteItem(item); $event.stopPropagation()" class="btn-item-delete">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+      @if (items.length === 0) {
+        <div class="empty-state text-center py-5 text-muted">
+          <ion-icon name="cube-outline" style="font-size: 3rem; opacity: 0.35;"></ion-icon>
+          <p class="mt-2 mb-0 fw-bold">No items found</p>
+          <p class="small">Tap the + button below to add your first item.</p>
+        </div>
+      }
+    </ion-list>
+  }
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
   <ion-fab-button color="dark" (click)="openModal()">
@@ -69,13 +83,15 @@
           </ion-item>
         </ion-list>
         <div class="button-stack">
-    <!-- <ion-button expand="block" mode="ios" (click)="generatePDF(false)" class="preview-btn">
-      <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
-    </ion-button> -->
-    <ion-button expand="block" mode="ios" color="dark" (click)="saveItem()" class="share-btn" [disabled]="!editingItem.description || !editingItem.price || !editingItem.unit">
-       {{ editingItem?.id ? 'Update' : 'Save' }}
-    </ion-button>
-  </div>
+          <ion-button expand="block" mode="ios" color="dark" (click)="saveItem()" class="share-btn" [disabled]="!editingItem.description || !editingItem.price || !editingItem.unit || isSaving">
+            @if (isSaving) {
+              <ion-spinner name="crescent" color="light" class="me-2"></ion-spinner>
+              <span>Saving Item...</span>
+            } @else {
+              <span>{{ editingItem?.id ? 'Update' : 'Save' }}</span>
+            }
+          </ion-button>
+        </div>
       </ion-content>
     </ng-template>
   </ion-modal>

@@ -110,10 +110,68 @@
   font-size: 1.4rem;
 }
 
-/* Misc */
-.main-logo {
-  height: 150px;
-  object-fit: contain;
+/* Logo & Metal Shine Loop Animation */
+.logo-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+
+  .main-logo {
+    height: 150px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .metal-shine {
+    position: absolute;
+    top: -60%;
+    left: -130%;
+    width: 65%;
+    height: 220%;
+    background: linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0) 20%,
+      rgba(255, 255, 255, 0.3) 38%,
+      rgba(255, 225, 140, 0.75) 47%,
+      rgba(255, 255, 255, 0.95) 50%,
+      rgba(255, 225, 140, 0.75) 53%,
+      rgba(255, 255, 255, 0.3) 62%,
+      transparent 80%,
+      transparent 100%
+    );
+    transform: rotate(25deg) translateZ(0);
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    will-change: left, opacity;
+    animation: metallicShine 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+}
+
+@keyframes metallicShine {
+  0% {
+    left: -130%;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  35% {
+    left: 150%;
+    opacity: 1;
+  }
+  36%, 100% {
+    left: 150%;
+    opacity: 0;
+  }
 }
 
 .disabled-card {

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AlertController, IonicModule } from '@ionic/angular';
 import { Leads } from '../../services/leads';
 import { addIcons } from 'ionicons';
-import { add, arrowBackOutline, trash, trashOutline } from 'ionicons/icons';
+import { add, arrowBackOutline, trash, trashOutline, cubeOutline } from 'ionicons/icons';
 import { NavController } from '@ionic/angular';
 
 interface Item {
@@ -27,11 +27,13 @@ interface Item {
 export class ItemsPage implements OnInit {
 
   items: Item[] = [];
+  isLoading = true;
+  isSaving = false;
   isModalOpen = false;
   editingItem: any = {};
 
   constructor(private alertController: AlertController, private leads: Leads, private navCtrl: NavController) {
-    addIcons({ add, trash, trashOutline, arrowBackOutline });  
+    addIcons({ add, trash, trashOutline, arrowBackOutline, cubeOutline });  
   }
 
   ngOnInit() {
@@ -39,8 +41,16 @@ export class ItemsPage implements OnInit {
   }
 
   getItems() {
-    this.leads.getItems().subscribe((res: any) => {
-      this.items = res;
+    this.isLoading = true;
+    this.leads.getItems().subscribe({
+      next: (res: any) => {
+        this.items = res || [];
+        this.isLoading = false;
+      },
+      error: (err: any) => {
+        console.error('Error fetching items:', err);
+        this.isLoading = false;
+      }
     });
   }
 
@@ -64,8 +74,15 @@ export class ItemsPage implements OnInit {
         {
           text: 'Delete',
           handler: () => {
-            this.leads.deleteItem(itemToDelete.id).subscribe(() => {
-              this.getItems();
+            this.isLoading = true;
+            this.leads.deleteItem(itemToDelete.id).subscribe({
+              next: () => {
+                this.getItems();
+              },
+              error: (err: any) => {
+                console.error('Error deleting item:', err);
+                this.isLoading = false;
+              }
             });
           }
         }
@@ -75,15 +92,31 @@ export class ItemsPage implements OnInit {
   }
 
   saveItem() {
+    if (this.isSaving) return;
+    this.isSaving = true;
     if (this.editingItem.id) {
-      this.leads.updateItem(this.editingItem.id, this.editingItem).subscribe(() => {
-        this.isModalOpen = false;
-        this.getItems();
+      this.leads.updateItem(this.editingItem.id, this.editingItem).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.isModalOpen = false;
+          this.getItems();
+        },
+        error: (err: any) => {
+          console.error('Error updating item:', err);
+          this.isSaving = false;
+        }
       });
     } else {
-      this.leads.saveItem(this.editingItem).subscribe(() => {
-        this.isModalOpen = false;
-        this.getItems();
+      this.leads.saveItem(this.editingItem).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.isModalOpen = false;
+          this.getItems();
+        },
+        error: (err: any) => {
+          console.error('Error saving item:', err);
+          this.isSaving = false;
+        }
       });
     }
   }

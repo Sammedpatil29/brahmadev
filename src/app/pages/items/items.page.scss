@@ -71,3 +71,31 @@ ion-modal {
     --min-height: 56px;
   }
 }
+
+.loader-wrapper {
+  height: 65vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  ion-spinner {
+    width: 38px;
+    height: 38px;
+  }
+
+  .loader-text {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+}
+
+.empty-state {
+  padding: 60px 20px;
+
+  ion-icon {
+    color: #94a3b8;
+  }
+}
