@@ -14,7 +14,6 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonBadge,
   IonModal,
   IonSpinner
 } from '@ionic/angular/standalone';
@@ -115,7 +114,6 @@ export interface PaidAddon {
   imports: [
     IonSpinner,
     IonModal,
-    IonBadge,
     IonCardTitle,
     IonCardHeader,
     IonCardContent,

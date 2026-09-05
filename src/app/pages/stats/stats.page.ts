@@ -15,7 +15,6 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonSpinner,
-  IonBadge,
   IonModal
 } from '@ionic/angular/standalone';
 import { NavController, ToastController, Platform } from '@ionic/angular';
@@ -57,7 +56,6 @@ declare var google: any;
   standalone: true,
   imports: [
     IonSpinner,
-    IonBadge,
     IonCardTitle,
     IonCardHeader,
     IonCardContent,

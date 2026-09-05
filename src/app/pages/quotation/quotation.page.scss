@@ -5,9 +5,9 @@ ion-content {
 .section-title {
   font-size: 0.75rem;
   font-weight: 800;
-  color: #a0aec0;
+  color: #64748b;
   letter-spacing: 1px;
-  margin: 20px 0 10px 5px;
+  margin: 18px 0 8px 4px;
 }
 
 .settings-drawer {
@@ -19,54 +19,502 @@ ion-content {
   &.open { max-height: 200px; padding-bottom: 15px; border-bottom: 2px solid #3880ff; }
 }
 
-.input-group {
-  background: white;
-  border-radius: 15px;
-  padding: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  .custom-input { border-bottom: 1px solid #f0f0f0; --padding-start: 10px; }
-}
-
-.area-card {
+.customer-info-card {
   background: #ffffff;
-  padding: 30px 20px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #e2e8f0;
-  .massive-input { font-size: 3rem; font-weight: 800; text-align: center; color: #2d3748; }
-  .sqft-label { font-weight: bold; color: #718096; margin-left: 10px; }
+  border-radius: 18px;
+  padding: 18px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+
+  .inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+
+    @media (min-width: 600px) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
 }
 
-.result-card {
-  margin-top: 30px;
-  background: #1a202c; // Dark Premium Card
-  padding: 25px;
-  border-radius: 24px;
-  color: white;
-  .row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
-  .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; }
-  .grand-total { font-size: 1.4rem; font-weight: 800; color: #48bb78; }
+.items-container {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
 }
 
-.button-stack {
-  margin-top: 30px;
-  ion-button {
-    height: 60px;
-    --border-radius: 16px;
+.outline-input {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --border-color: #cbd5e1;
+  --border-width: 1.5px;
+  --highlight-color-focused: #14213d;
+  --color: #0f172a;
+  --placeholder-color: #94a3b8;
+  font-size: 0.92rem;
+  font-weight: 500;
+
+  &.ion-focused {
+    --border-color: #14213d;
+  }
+}
+
+.selected-item-row {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  --padding-start: 14px;
+  --padding-end: 8px;
+  --inner-padding-end: 0;
+
+  .item-main-label {
+    margin: 10px 0;
+  }
+
+  .item-title {
+    font-size: 0.95rem;
     font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 12px;
+    color: #1e293b;
+    margin: 0 0 2px 0;
+  }
+
+  .item-unit-rate {
+    font-size: 0.82rem;
+    color: #b8924a;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .qty-field {
+    width: 82px;
+    margin-right: 6px;
+  }
+
+  .outline-qty-input {
+    --background: #ffffff;
+    --border-radius: 10px;
+    --border-color: #cbd5e1;
+    --border-width: 1.5px;
+    --highlight-color-focused: #14213d;
+    --color: #0f172a;
+    font-size: 0.92rem;
+    font-weight: 600;
+    min-height: 44px;
+    height: 44px;
+  }
+
+  .btn-remove-item {
+    --padding-start: 6px;
+    --padding-end: 6px;
+  }
+}
+
+.discount-box {
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+
+  .discount-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .discount-hint {
+    font-size: 0.78rem;
+    color: #64748b;
   }
 }
 
 .add-btn {
   width: 100%;
-  height: 80px;
-  color: #2d3748;
+  height: 48px;
+  color: #1a1a1a;
   font-weight: 600;
+  font-size: 0.92rem;
   border-radius: 12px;
+  margin-top: 12px;
+  border: 1.5px dashed #94a3b8;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background: #f1f5f9;
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  ion-icon {
+    font-size: 1.25rem;
+    color: #1a1a1a;
+  }
+}
+
+.result-card {
+  margin-top: 24px;
+  background: #14213d; // Brand Navy
+  padding: 22px 20px;
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(20, 33, 61, 0.16);
+
+  .summary-line {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+
+    .label {
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+      flex: 1;
+      text-align: left;
+    }
+
+    .value {
+      color: #ffffff;
+      font-weight: 700;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .discount-val {
+      color: #fca5a5;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &.grand-total {
+      margin-top: 6px;
+      margin-bottom: 0;
+
+      .label {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #4ade80;
+        letter-spacing: 0.5px;
+      }
+
+      .value {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: #4ade80;
+      }
+    }
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 14px 0;
+  }
+}
+
+.button-stack {
   margin-top: 20px;
-  border: 1px dashed black
+
+  .small-spinner {
+    width: 18px;
+    height: 18px;
+    --color: #ffffff;
+  }
+}
+
+.preview-btn {
+  --background: #14213d;
+  --color: #ffffff;
+}
+
+.split-layout-container {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.desktop-catalog-panel {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .split-layout-container {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .left-panel {
+    min-width: 0;
+  }
+
+  .desktop-catalog-panel {
+    display: block;
+    position: sticky;
+    top: 10px;
+  }
+
+  .mobile-add-btn {
+    display: none !important;
+  }
+}
+
+.empty-items-placeholder {
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.catalog-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  max-height: 750px;
+
+  .catalog-header {
+    padding: 16px 16px 8px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #faf8f2; // Brand Sand
+
+    .catalog-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #14213d;
+      margin: 0;
+    }
+
+    .btn-add-new-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 8px;
+      padding: 6px 12px;
+      background: #1a1a1a;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: #ffffff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      ion-icon {
+        font-size: 1.05rem;
+      }
+
+      &:hover {
+        background: #2d3748;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        color: #ffffff;
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .catalog-search {
+      --box-shadow: none;
+      --background: #ffffff;
+      --border-radius: 12px;
+      padding: 0;
+      font-size: 0.85rem;
+    }
+  }
+
+  .catalog-scroll-area {
+    overflow-y: auto;
+    padding: 10px;
+    flex: 1;
+  }
+
+  .catalog-item-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+
+    &:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+
+    &.selected {
+      background: #f0fdf4;
+      border-color: #86efac;
+
+      .item-desc {
+        color: #15803d;
+        font-weight: 700;
+      }
+    }
+
+    .item-checkbox-col {
+      margin-right: 10px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .item-info {
+      flex: 1;
+      min-width: 0;
+
+      .item-desc {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0 0 2px 0;
+      }
+
+      .item-meta {
+        font-size: 0.78rem;
+        color: #718096;
+        margin: 0;
+      }
+    }
+
+    .item-action-badge {
+      margin-left: 8px;
+
+      .action-chip {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: #f1f5f9;
+        color: #64748b;
+        transition: all 0.15s;
+
+        &.active {
+          background: #14213d;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+}
+
+// PDF Preview Modal
+.pdf-preview-modal {
+  --width: 900px;
+  --max-width: 95vw;
+  --height: 90vh;
+  --max-height: 92vh;
+  --border-radius: 16px;
+  --box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+
+  .preview-modal-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: #525659;
+    border-radius: 16px;
+    overflow: hidden;
+
+    ion-toolbar {
+      --background: #1a1a1a;
+      --color: #ffffff;
+      ion-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+    }
+
+    .btn-download-header {
+      --color: #ffffff;
+      --background: rgba(255, 255, 255, 0.15);
+      --border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .preview-modal-body {
+      flex: 1;
+      height: 100%;
+      min-height: 0;
+      background: #525659;
+      position: relative;
+    }
+
+    .pdf-iframe-element {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .preview-modal-footer {
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Item Selection & Add Item Modals (Clean White Toolbar, No Blue)
+.item-select-modal,
+.add-item-modal {
+  ion-toolbar {
+    --background: #ffffff;
+    --color: #1a1a1a;
+    --border-color: #e2e8f0;
+
+    ion-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1a1a1a;
+    }
+
+    ion-button {
+      --color: #1a1a1a;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .modal-header-action-btn {
+      --color: #1a1a1a;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+  }
+
+  ion-searchbar {
+    --background: #f1f5f9;
+    --border-radius: 10px;
+    --box-shadow: none;
+    padding-top: 0;
+    padding-bottom: 8px;
+  }
 }

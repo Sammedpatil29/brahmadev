@@ -22,24 +22,19 @@
   </ion-header>
 
   <ion-list>
-    <ion-item-sliding *ngFor="let item of items">
-      <ion-item button (click)="openModal(item)">
-        <ion-label>
-          <h2>{{ item.description }}</h2>
-          <p>Price: {{ item.price | currency:'INR' }} / {{ item.unit }}</p>
-          <p>GST: {{ item.gst }}%</p>
-        </ion-label>
-        <ion-note slot="end" style="font-size: 0.8rem;">
-          {{ item.createdAt | date:'mediumDate' }}
-        </ion-note>
-      </ion-item>
-
-      <ion-item-options side="end">
-        <ion-item-option color="danger" (click)="deleteItem(item)">
-          <ion-icon slot="icon-only" name="trash"></ion-icon>
-        </ion-item-option>
-      </ion-item-options>
-    </ion-item-sliding>
+    <ion-item *ngFor="let item of items" class="item-card-row">
+      <ion-label button (click)="openModal(item)" class="item-clickable-label">
+        <h2>{{ item.description }}</h2>
+        <p>Price: {{ item.price | currency:'INR' }} / {{ item.unit }}</p>
+        <p>GST: {{ item.gst }}%</p>
+      </ion-label>
+      <ion-note slot="end" style="font-size: 0.8rem;" class="me-2">
+        {{ item.createdAt | date:'mediumDate' }}
+      </ion-note>
+      <ion-button slot="end" fill="clear" color="danger" (click)="deleteItem(item); $event.stopPropagation()" class="btn-item-delete">
+        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
   </ion-list>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">

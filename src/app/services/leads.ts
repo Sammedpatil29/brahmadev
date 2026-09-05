@@ -65,6 +65,14 @@ getLeadDetails(id: number){
     return this.http.post(`${this.url}/invoices`, params);
   }
 
+  getInvoices(){
+    return this.http.get(`${this.url}/invoices`);
+  }
+
+  deleteInvoice(id:any){
+    return this.http.delete(`${this.url}/invoices/${id}`);
+  }
+
   createQuote(params:any){
     return this.http.post(`${this.url}/quotations`, params);
   }

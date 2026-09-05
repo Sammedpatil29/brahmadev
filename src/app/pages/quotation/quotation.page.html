@@ -15,7 +15,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Zm480-80q17 0 28.5-11.5T760-200v-560H320v440h360v120q0 17 11.5 28.5T720-160ZM360-600v-80h240v80H360Zm0 120v-80h240v80H360Zm320-120q-17 0-28.5-11.5T640-640q0-17 11.5-28.5T680-680q17 0 28.5 11.5T720-640q0 17-11.5 28.5T680-600Zm0 120q-17 0-28.5-11.5T640-520q0-17 11.5-28.5T680-560q17 0 28.5 11.5T720-520q0 17-11.5 28.5T680-480ZM240-160h360v-80H200v40q0 17 11.5 28.5T240-160Zm-40 0v-80 80Z"/></svg>
       </div>
       <div (click)="addLead()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm80-80h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm221.5-198.5Q510-807 510-820t-8.5-21.5Q493-850 480-850t-21.5 8.5Q450-833 450-820t8.5 21.5Q467-790 480-790t21.5-8.5ZM200-200v-560 560Z"/></svg>
       </div>
       </div>
      </div>
@@ -27,106 +27,364 @@
 <ion-content class="ion-padding">
   
   <div class="settings-drawer" [class.open]="showSettings">
-    <div class="drawer-inner">
-      <ion-item lines="none">
-        <ion-label>GST (%)</ion-label>
-        <ion-input type="number" [(ngModel)]="gstPercentage"></ion-input>
-      </ion-item>
+    <div class="drawer-inner p-3">
+      <ion-input 
+        fill="outline" 
+        label="GST (%)" 
+        labelPlacement="floating" 
+        type="number" 
+        [(ngModel)]="gstPercentage" 
+        class="outline-input">
+      </ion-input>
     </div>
   </div>
 
-  <div class="input-container">
-    <p class="section-title">CUSTOMER INFO</p>
-    <div class="input-group">
-      <ion-input [(ngModel)]="customerName" placeholder="Customer Name" class="custom-input"></ion-input>
-      <ion-input [(ngModel)]="siteAddress" placeholder="Site Address/City" class="custom-input"></ion-input>
-      <ion-input [(ngModel)]="contact" placeholder="Customer Contact Number" class="custom-input"></ion-input>
+  <div class="split-layout-container">
+    <!-- LEFT PANEL: Customer Info, Selected Items, Totals & Action -->
+    <div class="left-panel">
+      <div class="input-container">
+        <p class="section-title">CUSTOMER INFO</p>
+        <div class="customer-info-card">
+          <div class="inputs-grid">
+            <ion-input 
+              fill="outline" 
+              label="Customer Name *" 
+              labelPlacement="floating" 
+              [(ngModel)]="customerName" 
+              placeholder="e.g. Ramesh Kumar" 
+              class="outline-input">
+            </ion-input>
+
+            <ion-input 
+              fill="outline" 
+              type="tel" 
+              label="Contact Number *" 
+              labelPlacement="floating" 
+              [(ngModel)]="contact" 
+              placeholder="10-digit mobile number" 
+              class="outline-input">
+            </ion-input>
+
+            <ion-input 
+              fill="outline" 
+              type="email" 
+              label="Email (Optional)" 
+              labelPlacement="floating" 
+              [(ngModel)]="email" 
+              placeholder="e.g. client@example.com" 
+              class="outline-input">
+            </ion-input>
+
+            <ion-input 
+              fill="outline" 
+              label="Site Address / City *" 
+              labelPlacement="floating" 
+              [(ngModel)]="siteAddress" 
+              placeholder="e.g. Whitefield, Bengaluru" 
+              class="outline-input">
+            </ion-input>
+
+            <ion-input 
+              fill="outline" 
+              label="GSTIN (Optional)" 
+              labelPlacement="floating" 
+              [(ngModel)]="customerGst" 
+              placeholder="e.g. 29AAAAA0000A1Z5" 
+              class="outline-input">
+            </ion-input>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <p class="section-title mb-0">SELECTED ITEMS ({{ selectedItems.length }})</p>
+          <span class="desktop-hint d-none d-lg-inline text-muted small">Select from catalogue on right &rarr;</span>
+        </div>
+        <div class="items-container">
+          @if (selectedItems.length === 0) {
+            <div class="empty-items-placeholder text-center p-4">
+              <p class="text-muted small mb-0 fw-semibold">No items added yet.</p>
+              <p class="desktop-hint d-none d-lg-block text-muted smaller mt-1">Click items from the catalogue on the right to add them directly.</p>
+            </div>
+          }
+          <ion-list lines="none" class="p-0">
+            <ion-item *ngFor="let item of selectedItems; let i = index" class="selected-item-row">
+              <ion-label class="item-main-label">
+                <h2 class="item-title">{{ item.description }}</h2>
+                <p class="item-unit-rate">₹{{ item.price | number }} / {{ item.unit }}</p>
+              </ion-label>
+              <div class="qty-field" slot="end">
+                <ion-input 
+                  fill="outline" 
+                  type="number" 
+                  label="Qty" 
+                  labelPlacement="floating" 
+                  [(ngModel)]="item.quantity" 
+                  class="outline-qty-input">
+                </ion-input>
+              </div>
+              <ion-button slot="end" fill="clear" color="danger" (click)="removeItem(i)" class="btn-remove-item">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-list>
+          <button (click)="openItemSelectionModal()" class="add-btn mobile-add-btn">
+            <ion-icon name="add-circle-outline"></ion-icon>
+            <span>Add Items</span>
+          </button>
+          
+          <div class="discount-box mt-3 p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="discount-label">Discount (%)</span>
+                <p class="discount-hint text-muted small mb-0">Direct deduction from subtotal</p>
+              </div>
+              <div style="width: 100px;">
+                <ion-input 
+                  fill="outline" 
+                  type="number" 
+                  label="Disc %" 
+                  labelPlacement="floating" 
+                  [(ngModel)]="discountPercentage" 
+                  placeholder="0" 
+                  class="outline-input">
+                </ion-input>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" *ngIf="selectedItems.length > 0">
+        <div class="summary-line">
+          <span class="label">Base Amount</span>
+          <span class="value">₹{{ subTotal | number }}</span>
+        </div>
+        <div class="summary-line" *ngIf="discountPercentage > 0">
+          <span class="label">Discount ({{discountPercentage}}%)</span>
+          <span class="value discount-val">- ₹{{ discountAmount | number }}</span>
+        </div>
+        <div class="summary-line">
+          <span class="label">Total GST</span>
+          <span class="value">₹{{ gstAmount | number }}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="summary-line grand-total">
+          <span class="label">TOTAL QUOTE</span>
+          <span class="value">₹{{ grandTotal | number }}</span>
+        </div>
+      </div>
+
+      <div class="button-stack">
+        <button class="login-button d-flex align-items-center justify-content-center gap-2" (click)="previewPDF()" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0 || isGeneratingPdf">
+          @if (isGeneratingPdf) {
+            <ion-spinner name="crescent" color="light" class="small-spinner"></ion-spinner>
+            <span>Preparing Quotation...</span>
+          } @else {
+            <ion-icon name="eye-outline" style="font-size: 1.2rem;"></ion-icon>
+            <span>Preview Quotation</span>
+          }
+        </button>
+      </div>
     </div>
 
-    <p class="section-title">ITEMS</p>
-    <div class="items-container">
-      <ion-list lines="none">
-        <ion-item *ngFor="let item of selectedItems; let i = index">
-          <ion-label>
-            <h2>{{ item.description }}</h2>
-            <p>₹{{ item.price }} / {{ item.unit }}</p>
-          </ion-label>
-          <ion-input type="number" [(ngModel)]="item.quantity" placeholder="Qty" slot="end" style="max-width: 80px; text-align: right; border-bottom: 1px solid #ccc;"></ion-input>
-          <ion-button slot="end" fill="clear" color="danger" (click)="removeItem(i)">
-            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-item>
-      </ion-list>
-      <!-- <ion-button (click)="openItemSelectionModal()" class="share-btn">
-        Add Items
-      </ion-button> -->
-      <button (click)="openItemSelectionModal()" class="add-btn">
-        Add Items
-      </button>
-      <ion-item lines="none" class="ion-margin-top">
-        <ion-label>Discount (%)</ion-label>
-        <ion-input type="number" [(ngModel)]="discountPercentage" placeholder="0" style="max-width: 80px; text-align: right; border-bottom: 1px solid #ccc;" slot="end"></ion-input>
-      </ion-item>
+    <!-- RIGHT PANEL: DESKTOP DIRECT ITEM SELECTION CATALOGUE -->
+    <div class="right-panel desktop-catalog-panel">
+      <div class="catalog-card">
+        <div class="catalog-header">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="catalog-title">Available Items</h3>
+              <span class="badge bg-secondary">{{ filteredAvailableItems.length }}</span>
+            </div>
+            <button class="btn-add-new-item" (click)="openNewItemModal()">
+              <ion-icon name="add-circle-outline"></ion-icon>
+              <span>Add Item</span>
+            </button>
+          </div>
+          <ion-searchbar 
+            [(ngModel)]="itemSearchQuery" 
+            placeholder="Search items..." 
+            class="catalog-search"
+            [debounce]="150">
+          </ion-searchbar>
+        </div>
+
+        <div class="catalog-scroll-area">
+          @for (item of filteredAvailableItems; track item.id || item.description) {
+            <div 
+              class="catalog-item-row" 
+              [class.selected]="isItemSelected(item)"
+              (click)="toggleItem(item)">
+              <div class="item-checkbox-col">
+                <ion-icon 
+                  [name]="isItemSelected(item) ? 'checkmark-circle' : 'add-circle-outline'"
+                  [color]="isItemSelected(item) ? 'success' : 'medium'"
+                  class="catalog-item-icon">
+                </ion-icon>
+              </div>
+              <div class="item-info">
+                <p class="item-desc">{{ item.description }}</p>
+                <p class="item-meta">₹{{ item.price | number }} / {{ item.unit }}</p>
+              </div>
+              <div class="item-action-badge">
+                <span class="action-chip" [class.active]="isItemSelected(item)">
+                  {{ isItemSelected(item) ? 'Selected' : '+ Add' }}
+                </span>
+              </div>
+            </div>
+          } @empty {
+            <div class="text-center p-4 text-muted small">
+              No matching items found.
+            </div>
+          }
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="result-card" *ngIf="selectedItems.length > 0">
-    <div class="row">
-      <span>Base Amount</span>
-      <span>₹{{ subTotal | number }}</span>
-    </div>
-    <div class="row" *ngIf="discountPercentage > 0">
-      <span>Discount ({{discountPercentage}}%)</span>
-      <span>- ₹{{ discountAmount | number }}</span>
-    </div>
-    <div class="row">
-      <span>Total GST</span>
-      <span>₹{{ gstAmount | number }}</span>
-    </div>
-    <div class="divider"></div>
-    <div class="row grand-total">
-      <span>TOTAL QUOTE</span>
-      <span>₹{{ grandTotal | number }}</span>
-    </div>
-  </div>
-
-  <div class="button-stack">
-    <!-- <ion-button expand="block" mode="ios" (click)="generatePDF(false)" class="preview-btn">
-      <ion-icon name="eye-outline" slot="start"></ion-icon> View Quotation
-    </ion-button> -->
-    <ion-button expand="block" mode="ios" color="dark" (click)="generatePDF()" class="share-btn" [disabled]="!customerName || !siteAddress || contact.length < 10 || selectedItems.length === 0 || isLoading">
-      <ion-icon name="logo-whatsapp" slot="start"></ion-icon> 
-      @if (!isLoading) {
-        <span>Share Quotation</span>
-      } @else {
-        <span>Creating Quotation...</span>
-      }
-    </ion-button>
-  </div>
-
-  <ion-modal [isOpen]="isItemModalOpen" (didDismiss)="isItemModalOpen = false">
+  <ion-modal [isOpen]="isItemModalOpen" (didDismiss)="isItemModalOpen = false" class="item-select-modal">
     <ng-template>
       <ion-header>
         <ion-toolbar>
           <ion-title>Select Items</ion-title>
           <ion-buttons slot="end">
+            <ion-button (click)="openNewItemModal()" class="modal-header-action-btn">
+              <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+              New Item
+            </ion-button>
             <ion-button (click)="isItemModalOpen = false">Close</ion-button>
           </ion-buttons>
         </ion-toolbar>
+        <ion-toolbar>
+          <ion-searchbar 
+            [(ngModel)]="itemSearchQuery" 
+            placeholder="Search items..." 
+            [debounce]="150">
+          </ion-searchbar>
+        </ion-toolbar>
       </ion-header>
-      <ion-content>
-        <ion-list>
-          <ion-item *ngFor="let item of availableItems">
-            <ion-checkbox slot="start" color="dark" [(ngModel)]="item.selected"></ion-checkbox>
-            <ion-label>
-              <h2>{{ item.description }}</h2>
-              <p>₹{{ item.price }} / {{ item.unit }}</p>
-            </ion-label>
+      <ion-content class="ion-padding-bottom">
+        <ion-list lines="inset">
+          @for (item of filteredAvailableItems; track item.id || item.description) {
+            <ion-item (click)="item.selected = !item.selected" button [detail]="false">
+              <ion-checkbox slot="start" color="dark" [(ngModel)]="item.selected" (click)="$event.stopPropagation()"></ion-checkbox>
+              <ion-label>
+                <h2 class="fw-bold">{{ item.description }}</h2>
+                <p class="text-muted">₹{{ item.price | number }} / {{ item.unit }}</p>
+              </ion-label>
+            </ion-item>
+          } @empty {
+            <div class="text-center p-4 text-muted small">
+              No matching items found.
+            </div>
+          }
+        </ion-list>
+      </ion-content>
+      <ion-footer class="p-3 bg-white border-top">
+        <ion-button expand="block" color="dark" mode="ios" class="m-0" (click)="addSelectedItems()">
+          Apply Selected Items
+        </ion-button>
+      </ion-footer>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Add New Item Modal (Matches Items Page Popup) -->
+  <ion-modal [isOpen]="isNewItemModalOpen" (didDismiss)="closeNewItemModal()" class="add-item-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Add New Item</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeNewItemModal()">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-list lines="inset">
+          <ion-item>
+            <ion-input label="Description" labelPlacement="floating" [(ngModel)]="newItem.description" placeholder="e.g. Concrete Work"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Price (₹)" labelPlacement="floating" type="number" [(ngModel)]="newItem.price" placeholder="0"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Unit" labelPlacement="floating" [(ngModel)]="newItem.unit" placeholder="e.g. sqft, brass, nos"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input label="GST (%)" labelPlacement="floating" type="number" [(ngModel)]="newItem.gst" placeholder="18"></ion-input>
           </ion-item>
         </ion-list>
-          <ion-button expand="block" color="dark" mode="ios" class="share-btn" (click)="addSelectedItems()">Add Selected</ion-button>
-        
+        <div class="mt-3">
+          <ion-button expand="block" mode="ios" color="dark" (click)="saveNewItem()" [disabled]="!newItem.description || !newItem.price || !newItem.unit || isSavingItem">
+            @if (isSavingItem) {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+              <span>Saving Item...</span>
+            } @else {
+              <span>Save & Add to Quote</span>
+            }
+          </ion-button>
+        </div>
       </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- PDF Preview Modal -->
+  <ion-modal [isOpen]="isPreviewModalOpen" (didDismiss)="closePreviewModal()" class="pdf-preview-modal">
+    <ng-template>
+      <div class="preview-modal-wrapper">
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>
+              Quotation Preview &mdash; {{ customerName || 'Quotation' }}
+            </ion-title>
+            <ion-buttons slot="end">
+              <ion-button 
+                class="btn-download-header"
+                (click)="downloadCurrentPDF()"
+                [disabled]="isGeneratingPdf">
+                <ion-icon slot="start" name="download-outline"></ion-icon>
+                Download PDF
+              </ion-button>
+              <ion-button (click)="closePreviewModal()">
+                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="preview-modal-body">
+          @if (pdfPreviewSafeUrl) {
+            <iframe 
+              [src]="pdfPreviewSafeUrl" 
+              class="pdf-iframe-element" 
+              title="Quotation PDF Preview">
+            </iframe>
+          } @else {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+              <ion-spinner name="crescent"></ion-spinner>
+              <p class="mt-2 text-muted">Rendering Quotation Preview...</p>
+            </div>
+          }
+        </div>
+
+        <div class="preview-modal-footer p-2 bg-light border-top d-flex justify-content-between align-items-center">
+          <div class="d-none d-sm-block text-muted small px-2">
+            Brahmadev Constructions &bull; Quotation
+          </div>
+          <div class="d-flex gap-2 ms-auto">
+            <button class="btn btn-outline-secondary btn-sm px-3" (click)="closePreviewModal()">
+              Close
+            </button>
+            <button 
+              class="btn btn-primary btn-sm px-4 fw-bold d-flex align-items-center gap-1" 
+              (click)="downloadCurrentPDF()"
+              [disabled]="isGeneratingPdf">
+              <ion-icon name="download-outline"></ion-icon>
+              <span>Download PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </ng-template>
   </ion-modal>
 </ion-content>

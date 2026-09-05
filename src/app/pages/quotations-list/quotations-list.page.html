@@ -6,56 +6,148 @@
       </ion-button>
     </ion-buttons>
     <ion-title>
-     <div class="d-flex justify-content-between align-items-center">
-       <div>
-         Quotations List
-      </div> 
-      <!-- <div class="d-flex gap-3">
-        <div (click)="viewQuotations()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Zm480-80q17 0 28.5-11.5T760-200v-560H320v440h360v120q0 17 11.5 28.5T720-160ZM360-600v-80h240v80H360Zm0 120v-80h240v80H360Zm320-120q-17 0-28.5-11.5T640-640q0-17 11.5-28.5T680-680q17 0 28.5 11.5T720-640q0 17-11.5 28.5T680-600Zm0 120q-17 0-28.5-11.5T640-520q0-17 11.5-28.5T680-560q17 0 28.5 11.5T720-520q0 17-11.5 28.5T680-480ZM240-160h360v-80H200v40q0 17 11.5 28.5T240-160Zm-40 0v-80 80Z"/></svg>
+      <div class="page-header-bar d-flex justify-content-between align-items-center">
+        <div class="header-title-text">
+          Quotations List
+        </div> 
+        <div class="header-right d-flex align-items-center gap-2">
+          <div class="desktop-header-searchbar">
+            <ion-searchbar 
+              [(ngModel)]="searchTerm" 
+              (ionInput)="handleSearch()" 
+              placeholder="Search by name, city, or quote ID">
+            </ion-searchbar>
+          </div>
+
+          <!-- Desktop Date Range Button -->
+          <div class="date-picker-trigger desktop-date-trigger" [class.active]="isDateFilterActive" (click)="openDateModal()">
+            <ion-icon name="calendar-outline" class="cal-icon"></ion-icon>
+            <span class="date-text">{{ dateRangeLabel }}</span>
+            @if (isDateFilterActive) {
+              <ion-icon name="close-circle-outline" class="clear-icon" (click)="$event.stopPropagation(); clearDateFilter()"></ion-icon>
+            }
+          </div>
+        </div>
       </div>
-      <div (click)="addLead()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-      </div>
-      </div> -->
-     </div>
     </ion-title>
   </ion-toolbar>
-  <ion-searchbar placeholder="Custom Placeholder" (ionInput)="search($event)"></ion-searchbar>
+
+  <!-- Mobile Search and Date Filter Row -->
+  <div class="mobile-filter-row">
+    <div class="mobile-search-col">
+      <ion-searchbar 
+        [(ngModel)]="searchTerm" 
+        (ionInput)="handleSearch()" 
+        placeholder="Search quotations...">
+      </ion-searchbar>
+    </div>
+    <div class="mobile-date-col">
+      <div class="date-picker-trigger mobile-date-trigger" [class.active]="isDateFilterActive" (click)="openDateModal()">
+        <ion-icon name="calendar-outline" class="cal-icon"></ion-icon>
+        <span class="date-text">
+          {{ isDateFilterActive ? dateRangeLabel : 'Date' }}
+        </span>
+        @if (isDateFilterActive) {
+          <ion-icon name="close-circle-outline" class="clear-icon" (click)="$event.stopPropagation(); clearDateFilter()"></ion-icon>
+        }
+      </div>
+    </div>
+  </div>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding-top">
+<!-- Date Range Popup Modal -->
+<ion-modal [isOpen]="isDateModalOpen" (didDismiss)="closeDateModal()" class="date-range-modal">
+  <ng-template>
+    <div class="date-modal-wrapper p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 fw-bold text-dark">Filter by Date Range</h5>
+        <ion-button fill="clear" color="medium" size="small" (click)="closeDateModal()">
+          <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="date-input-group mb-3">
+        <label class="form-label text-muted small fw-bold mb-1">START DATE</label>
+        <div class="input-date-wrap">
+          <input 
+            type="date" 
+            [(ngModel)]="tempStartDate" 
+            class="form-control native-date-control"
+            placeholder="Select Start Date">
+        </div>
+      </div>
+
+      <div class="date-input-group mb-4">
+        <label class="form-label text-muted small fw-bold mb-1">END DATE</label>
+        <div class="input-date-wrap">
+          <input 
+            type="date" 
+            [(ngModel)]="tempEndDate" 
+            class="form-control native-date-control"
+            placeholder="Select End Date">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <button class="btn btn-light px-3 py-2 fw-semibold" (click)="clearDateFilter()">
+          Clear
+        </button>
+        <button class="btn btn-dark px-4 py-2 fw-semibold d-flex align-items-center gap-1" (click)="applyDateFilter()">
+          <ion-icon name="checkmark-outline"></ion-icon>
+          <span>Apply Filter</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<ion-content class="ion-padding-top">
   
 @if(!isLoading){
   <div class="ion-padding-horizontal">
-    @for (item of quotations(); track $index) {
-      <ion-card mode="ios" class="ion-no-margin ion-margin-bottom">
-      <ion-card-header>
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <ion-card-title>{{ item.customerName }}</ion-card-title>
-            <ion-card-subtitle>{{ item.siteAddress }}</ion-card-subtitle>
-            <ion-note class="ion-margin-top d-block">{{ item.date | date:'mediumDate' }} &bull; <b>{{ item.quoteId }}</b></ion-note>
-          </div>
-          <div class="ion-text-end">
-            <h3 class="ion-no-margin">₹{{ item.grandTotal | number }}</h3>
-          </div>
+    @if (quotations().length === 0) {
+      <div class="no-data-container d-flex flex-column align-items-center justify-content-center p-4 text-center">
+        <div class="icon-wrapper mb-3">
+          <ion-icon name="document-text-outline" style="font-size: 36px; color: #94a3b8;"></ion-icon>
         </div>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="d-flex justify-content-end gap-2">
-          <ion-button size="small" fill="outline" mode="ios" (click)="download(item)">
-            <ion-icon slot="icon-only" name="download-outline"></ion-icon>
-          </ion-button>
-          <!-- <ion-button size="small" fill="outline" color="secondary" mode="ios" (click)="mail(item)">
-            <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
-          </ion-button> -->
-          <ion-button size="small" fill="outline" color="danger" mode="ios" (click)="delete(item)">
-            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
+        <h5 style="color: #334155; font-weight: 700; margin-bottom: 4px;">No quotations found</h5>
+        <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Try adjusting your search criteria</p>
+      </div>
+    } @else {
+      <div class="quotations-grid">
+        @for (item of quotations(); track item.id || $index) {
+          <div class="quote-card-col">
+            <ion-card mode="ios" class="ion-no-margin">
+              <ion-card-header>
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <ion-card-title>{{ item.customerName | titlecase }}</ion-card-title>
+                    <ion-card-subtitle>{{ item.siteAddress | titlecase }}</ion-card-subtitle>
+                    <ion-note class="ion-margin-top d-block">{{ item.date | date:'mediumDate' }} &bull; <b>{{ item.quoteId }}</b></ion-note>
+                  </div>
+                  <div class="ion-text-end">
+                    <h3 class="ion-no-margin">₹{{ item.grandTotal | number }}</h3>
+                  </div>
+                </div>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="d-flex justify-content-end gap-2">
+                  <ion-button size="small" fill="outline" mode="ios" (click)="download(item)" [disabled]="downloadingId === item.id">
+                    @if (downloadingId === item.id) {
+                      <ion-spinner name="crescent"></ion-spinner>
+                    } @else {
+                      <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+                    }
+                  </ion-button>
+                  <ion-button size="small" fill="outline" color="danger" mode="ios" (click)="delete(item)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
+        }
+      </div>
     }
   </div>
 } @else {

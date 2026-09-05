@@ -7,19 +7,29 @@ ion-list {
   padding: 10px 10px 80px 10px;
 }
 
-ion-item-sliding {
+ion-item.item-card-row {
   margin-bottom: 10px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f7;
   overflow: hidden;
+
+  .item-clickable-label {
+    cursor: pointer;
+  }
+
+  .btn-item-delete {
+    --padding-start: 8px;
+    --padding-end: 8px;
+  }
 }
 
 ion-item {
-  --background: transparent;
   --border-width: 0;
   --padding-start: 16px;
-  --inner-padding-end: 16px;
+  --inner-padding-end: 12px;
   --min-height: 70px;
 
   h2 {

@@ -1,13 +1,168 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="bg-white">
   <ion-toolbar>
-    <ion-title>invoice-list</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="page-header-bar d-flex justify-content-between align-items-center">
+        <div class="header-title-text">
+          Invoices List
+        </div> 
+        <div class="header-right d-flex align-items-center gap-2">
+          <div class="desktop-header-searchbar">
+            <ion-searchbar 
+              [(ngModel)]="searchTerm" 
+              (ionInput)="handleSearch()" 
+              placeholder="Search by name, city, GST, or invoice ID">
+            </ion-searchbar>
+          </div>
+
+          <!-- Desktop Date Range Button -->
+          <div class="date-picker-trigger desktop-date-trigger" [class.active]="isDateFilterActive" (click)="openDateModal()">
+            <ion-icon name="calendar-outline" class="cal-icon"></ion-icon>
+            <span class="date-text">{{ dateRangeLabel }}</span>
+            @if (isDateFilterActive) {
+              <ion-icon name="close-circle-outline" class="clear-icon" (click)="$event.stopPropagation(); clearDateFilter()"></ion-icon>
+            }
+          </div>
+        </div>
+      </div>
+    </ion-title>
   </ion-toolbar>
+
+  <!-- Mobile Search and Date Filter Row -->
+  <div class="mobile-filter-row">
+    <div class="mobile-search-col">
+      <ion-searchbar 
+        [(ngModel)]="searchTerm" 
+        (ionInput)="handleSearch()" 
+        placeholder="Search invoices...">
+      </ion-searchbar>
+    </div>
+    <div class="mobile-date-col">
+      <div class="date-picker-trigger mobile-date-trigger" [class.active]="isDateFilterActive" (click)="openDateModal()">
+        <ion-icon name="calendar-outline" class="cal-icon"></ion-icon>
+        <span class="date-text">
+          {{ isDateFilterActive ? dateRangeLabel : 'Date' }}
+        </span>
+        @if (isDateFilterActive) {
+          <ion-icon name="close-circle-outline" class="clear-icon" (click)="$event.stopPropagation(); clearDateFilter()"></ion-icon>
+        }
+      </div>
+    </div>
+  </div>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">invoice-list</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<!-- Date Range Popup Modal -->
+<ion-modal [isOpen]="isDateModalOpen" (didDismiss)="closeDateModal()" class="date-range-modal">
+  <ng-template>
+    <div class="date-modal-wrapper p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 fw-bold text-dark">Filter by Date Range</h5>
+        <ion-button fill="clear" color="medium" size="small" (click)="closeDateModal()">
+          <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="date-input-group mb-3">
+        <label class="form-label text-muted small fw-bold mb-1">START DATE</label>
+        <div class="input-date-wrap">
+          <input 
+            type="date" 
+            [(ngModel)]="tempStartDate" 
+            class="form-control native-date-control"
+            placeholder="Select Start Date">
+        </div>
+      </div>
+
+      <div class="date-input-group mb-4">
+        <label class="form-label text-muted small fw-bold mb-1">END DATE</label>
+        <div class="input-date-wrap">
+          <input 
+            type="date" 
+            [(ngModel)]="tempEndDate" 
+            class="form-control native-date-control"
+            placeholder="Select End Date">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <button class="btn btn-light px-3 py-2 fw-semibold" (click)="clearDateFilter()">
+          Clear
+        </button>
+        <button class="btn btn-dark px-4 py-2 fw-semibold d-flex align-items-center gap-1" (click)="applyDateFilter()">
+          <ion-icon name="checkmark-outline"></ion-icon>
+          <span>Apply Filter</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<ion-content class="ion-padding-top">
+  
+@if(!isLoading){
+  <div class="ion-padding-horizontal">
+    @if (invoices().length === 0) {
+      <div class="no-data-container d-flex flex-column align-items-center justify-content-center p-4 text-center">
+        <div class="icon-wrapper mb-3">
+          <ion-icon name="document-text-outline" style="font-size: 36px; color: #94a3b8;"></ion-icon>
+        </div>
+        <h5 style="color: #334155; font-weight: 700; margin-bottom: 4px;">No invoices found</h5>
+        <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Try adjusting your search criteria</p>
+      </div>
+    } @else {
+      <div class="invoices-grid">
+        @for (item of invoices(); track item.id || $index) {
+          <div class="invoice-card-col">
+            <ion-card mode="ios" class="ion-no-margin">
+              <ion-card-header>
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <ion-card-title>{{ item.customerName | titlecase }}</ion-card-title>
+                    <ion-card-subtitle>{{ item.siteAddress | titlecase }}</ion-card-subtitle>
+                    <ion-note class="ion-margin-top d-block">
+                      {{ item.date | date:'mediumDate' }} &bull; <b>{{ item.invoiceId }}</b>
+                      @if (item.customerGst) {
+                        <span class="ms-1">&bull; GST: {{ item.customerGst }}</span>
+                      }
+                    </ion-note>
+                  </div>
+                  <div class="ion-text-end">
+                    <h3 class="ion-no-margin">₹{{ item.grandTotal | number }}</h3>
+                  </div>
+                </div>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="d-flex justify-content-end gap-2">
+                  <ion-button size="small" fill="outline" mode="ios" (click)="download(item)" [disabled]="downloadingId === item.id">
+                    @if (downloadingId === item.id) {
+                      <ion-spinner name="crescent"></ion-spinner>
+                    } @else {
+                      <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+                    }
+                  </ion-button>
+                  <ion-button size="small" fill="outline" color="danger" mode="ios" (click)="delete(item)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
+        }
+      </div>
+    }
+  </div>
+} @else {
+  <div class="loader" style="
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;">
+      <ion-spinner color="primary"></ion-spinner>
+    </div>
+}
+  
 </ion-content>
