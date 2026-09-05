@@ -68,6 +68,27 @@
   font-weight: bold;
 }
 
+.beta-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  display: inline-block;
+
+  // Show only on mobile devices
+  @media (min-width: 768px) {
+    display: none !important;
+  }
+}
+
 .date-badge {
   display: inline-block;
   background: #f1f3f5;

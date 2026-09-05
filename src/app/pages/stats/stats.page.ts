@@ -18,7 +18,7 @@ import {
   IonBadge,
   IonModal
 } from '@ionic/angular/standalone';
-import { NavController, ToastController } from '@ionic/angular';
+import { NavController, ToastController, Platform } from '@ionic/angular';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Share } from '@capacitor/share';
@@ -122,7 +122,8 @@ export class StatsPage implements OnInit {
     private navCtrl: NavController,
     private toastCtrl: ToastController,
     private sanitizer: DomSanitizer,
-    private service: Leads
+    private service: Leads,
+    private platform: Platform
   ) {
     addIcons({
       arrowBackOutline,
@@ -148,8 +149,32 @@ export class StatsPage implements OnInit {
   }
 
   ngOnInit() {
+    this.checkAndShowBetaToast();
     this.loadData();
     this.loadAdAccountStatus();
+  }
+
+  async checkAndShowBetaToast() {
+    const isMobile = this.platform.is('mobile') || 
+                     this.platform.is('android') || 
+                     this.platform.is('ios') || 
+                     Capacitor.isNativePlatform() || 
+                     (typeof window !== 'undefined' && window.innerWidth < 768);
+    if (isMobile) {
+      const toast = await this.toastCtrl.create({
+        message: 'This feature is in beta on mobile. For the best view, switch to web.',
+        duration: 3500,
+        position: 'bottom',
+        color: 'dark',
+        buttons: [
+          {
+            text: 'OK',
+            role: 'cancel'
+          }
+        ]
+      });
+      await toast.present();
+    }
   }
 
   @HostListener('window:resize')

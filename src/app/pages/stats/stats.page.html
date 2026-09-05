@@ -8,7 +8,7 @@
     <ion-title>
       <div class="d-flex justify-content-between align-items-center">
         <div class="page-header-title">
-          {{ selectedTab === 'analytics' ? 'Lead Statistics' : (selectedTab === 'meta_ads' ? 'Meta Ads Spending' : 'Google Ads Report') }}
+          {{ selectedTab === 'analytics' ? 'Lead Statistics' : (selectedTab === 'meta_ads' ? 'Meta Ads Report' : 'Google Ads Report') }}
         </div>
         <div class="header-action-wrap d-flex align-items-center gap-2">
           <button 
@@ -18,10 +18,25 @@
             title="Export Report PDF">
             @if (isGeneratingPdf) {
               <ion-spinner name="crescent" class="export-spinner"></ion-spinner>
-              <span>Generating...</span>
+              <span class="btn-export-text">Generating...</span>
             } @else {
-              <ion-icon name="download-outline"></ion-icon>
-              <span>Export Report</span>
+              <!-- Mobile only: show download icon -->
+              <ion-icon name="download-outline" class="mobile-export-icon d-sm-none"></ion-icon>
+              <!-- Desktop/Tablet: show tab-specific logo -->
+              <span class="desktop-export-icon d-none d-sm-inline-flex">
+                @if (selectedTab === 'meta_ads') {
+                  <svg class="meta-logo-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" xml:space="preserve">
+                    <g style="stroke: none; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                      <path d="M 64.592 15.096 c -7.38 0 -13.148 5.558 -18.371 12.619 c -7.176 -9.137 -13.178 -12.619 -20.36 -12.619 C 11.219 15.096 0 34.152 0 54.322 c 0 12.621 6.106 20.582 16.334 20.582 c 7.361 0 12.655 -3.471 22.067 -19.922 c 0 0 3.923 -6.928 6.622 -11.701 c 0.946 1.527 1.942 3.173 2.988 4.936 l 4.413 7.424 c 8.597 14.386 13.387 19.262 22.067 19.262 C 84.455 74.904 90 66.834 90 53.95 C 90 32.832 78.528 15.096 64.592 15.096 z M 31.224 50.527 c -7.63 11.961 -10.27 14.642 -14.519 14.642 c -4.372 0 -6.971 -3.838 -6.971 -10.683 c 0 -14.642 7.301 -29.615 16.004 -29.615 c 4.713 0 8.651 2.722 14.684 11.358 C 34.694 45.016 31.224 50.527 31.224 50.527 z M 74.698 65.169 c -4.346 0 -6.423 -2.87 -14.675 -16.148 l -5.277 -8.801 c -1.428 -2.322 -2.8 -4.46 -4.117 -6.413 c 4.756 -7.34 8.679 -10.998 13.344 -10.998 c 9.693 0 17.447 14.271 17.447 31.801 C 81.421 61.292 79.232 65.169 74.698 65.169 z" style="fill: currentColor;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
+                    </g>
+                  </svg>
+                } @else if (selectedTab === 'google_ads') {
+                  <ion-icon name="logo-google"></ion-icon>
+                } @else {
+                  <ion-icon name="analytics-outline"></ion-icon>
+                }
+              </span>
+              <span class="btn-export-text">Export Report</span>
             }
           </button>
           <button class="btn-refresh-stats" (click)="refreshCurrentTab()" title="Refresh Data">
@@ -38,27 +53,30 @@
     <button 
       class="tab-pill-btn" 
       [class.active]="selectedTab === 'analytics'" 
-      (click)="switchTab('analytics')">
+      (click)="switchTab('analytics')"
+      title="Lead Analytics">
       <ion-icon name="analytics-outline"></ion-icon>
-      <span>Lead Analytics</span>
+      <span class="tab-btn-text">Lead Analytics</span>
     </button>
     <button 
       class="tab-pill-btn" 
       [class.active]="selectedTab === 'meta_ads'" 
-      (click)="switchTab('meta_ads')">
+      (click)="switchTab('meta_ads')"
+      title="Meta Ads Report">
       <svg class="meta-logo-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" xml:space="preserve">
         <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
           <path d="M 64.592 15.096 c -7.38 0 -13.148 5.558 -18.371 12.619 c -7.176 -9.137 -13.178 -12.619 -20.36 -12.619 C 11.219 15.096 0 34.152 0 54.322 c 0 12.621 6.106 20.582 16.334 20.582 c 7.361 0 12.655 -3.471 22.067 -19.922 c 0 0 3.923 -6.928 6.622 -11.701 c 0.946 1.527 1.942 3.173 2.988 4.936 l 4.413 7.424 c 8.597 14.386 13.387 19.262 22.067 19.262 C 84.455 74.904 90 66.834 90 53.95 C 90 32.832 78.528 15.096 64.592 15.096 z M 31.224 50.527 c -7.63 11.961 -10.27 14.642 -14.519 14.642 c -4.372 0 -6.971 -3.838 -6.971 -10.683 c 0 -14.642 7.301 -29.615 16.004 -29.615 c 4.713 0 8.651 2.722 14.684 11.358 C 34.694 45.016 31.224 50.527 31.224 50.527 z M 74.698 65.169 c -4.346 0 -6.423 -2.87 -14.675 -16.148 l -5.277 -8.801 c -1.428 -2.322 -2.8 -4.46 -4.117 -6.413 c 4.756 -7.34 8.679 -10.998 13.344 -10.998 c 9.693 0 17.447 14.271 17.447 31.801 C 81.421 61.292 79.232 65.169 74.698 65.169 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
         </g>
       </svg>
-      <span>Meta Ads Report</span>
+      <span class="tab-btn-text">Meta Ads Report</span>
     </button>
     <button 
       class="tab-pill-btn" 
       [class.active]="selectedTab === 'google_ads'" 
-      (click)="switchTab('google_ads')">
+      (click)="switchTab('google_ads')"
+      title="Google Ads Report">
       <ion-icon name="logo-google"></ion-icon>
-      <span>Google Ads Report</span>
+      <span class="tab-btn-text">Google Ads Report</span>
     </button>
   </div>
 </div>
