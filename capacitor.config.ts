@@ -5,11 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Brahmadev Plus',
   webDir: 'www',
   plugins: {
-    LiveUpdates: {
-      appId: '7d71b691',
-      channel: 'Production',
-      autoUpdateMethod: 'background',
-      maxVersions: 2
+    OtaKit: {
+      appId: '5717488f-8cbe-46d2-8bbf-4f5b038edb72'
     }
   }
 };

@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { FcmService } from './services/fcm';
 import { AppUpdate, AppUpdateInfo } from '@capawesome/capacitor-app-update';
 import { Platform } from '@ionic/angular';
+import { OtaKit } from '@otakit/capacitor-updater';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +19,15 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.initializeApp();
     this.platform.ready().then(async () => {
+      // Notify OtaKit that the app started successfully (prevents automatic rollback)
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await OtaKit.notifyAppReady();
+        } catch (e) {
+          console.warn('[OtaKit] notifyAppReady error:', e);
+        }
+      }
+
       // Only run this on Android devices
       if (this.platform.is('android')) {
         await this.checkForUpdate();
