@@ -1,4 +1,4 @@
-name: Build Android Bundle
+name: Build & Sign Android Release (APK & AAB)
 
 on:
   workflow_dispatch: # Allows you to manually trigger the build from the Actions tab
@@ -33,16 +33,44 @@ jobs:
           distribution: 'zulu'
           cache: 'gradle'
 
-      - name: Build Android App Bundle (.aab)
+      - name: Build Android Release (APK & AAB)
         run: |
           npx cap sync android
           cd android
           chmod +x gradlew
-          ./gradlew bundleRelease --no-daemon
+          ./gradlew assembleRelease bundleRelease --no-daemon
 
-      - name: Upload Artifact
+      - name: Sign Release APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_apk
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY || secrets.ANDROID_KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS || 'visit-alias' }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+
+      - name: Sign Release AAB
+        uses: r0adkll/sign-android-release@v1
+        id: sign_aab
+        with:
+          releaseDirectory: android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY || secrets.ANDROID_KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS || 'visit-alias' }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+
+      - name: Upload Signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: brahmadev-release-bundle
-          path: android/app/build/outputs/bundle/release/*.aab
+          name: brahmadev-release-apk
+          path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
           retention-days: 7
+
+      - name: Upload Signed AAB (Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: brahmadev-release-aab
+          path: ${{ steps.sign_aab.outputs.signedReleaseFile }}
+          retention-days: 7
+
