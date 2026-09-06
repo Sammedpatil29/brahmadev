@@ -184,3 +184,32 @@
   top: 10px;
   right: 10px;
 }
+
+/* Fixed Top Header */
+.home-header {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .header-container {
+    background: #ffffff;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+  }
+}
+
+.logout-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s, transform 0.1s;
+
+  &:active {
+    transform: scale(0.92);
+    background-color: #fee2e2;
+  }
+}

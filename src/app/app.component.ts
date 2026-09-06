@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { PushNotifications, Token, PushNotification } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
@@ -10,11 +10,19 @@ import { OtaKit } from '@otakit/capacitor-updater';
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
+  styleUrls: ['app.component.scss'],
   imports: [IonApp, IonRouterOutlet],
 })
 export class AppComponent implements OnInit {
-  constructor(private fcmService: FcmService, private platform: Platform) {}
-  
+  showRelaunchPrompt = false;
+  newVersion = '';
+  isRelaunching = false;
+
+  constructor(
+    private fcmService: FcmService,
+    private platform: Platform,
+    private ngZone: NgZone
+  ) {}
 
   ngOnInit(): void {
     this.initializeApp();
@@ -26,6 +34,9 @@ export class AppComponent implements OnInit {
         } catch (e) {
           console.warn('[OtaKit] notifyAppReady error:', e);
         }
+
+        // Setup silent background OTA update checks & staged listeners
+        this.setupOtaUpdates();
       }
 
       // Only run this on Android devices
@@ -33,6 +44,56 @@ export class AppComponent implements OnInit {
         await this.checkForUpdate();
       }
     });
+  }
+
+  private async setupOtaUpdates() {
+    try {
+      // 1. Listen for background download completion (staged)
+      await OtaKit.addListener('updateStaged', (event) => {
+        this.ngZone.run(() => {
+          this.newVersion = event.bundle?.version || '';
+          this.showRelaunchPrompt = true;
+        });
+      });
+
+      // 2. Check if an update was already staged previously
+      const state = await OtaKit.getState();
+      if (state.staged) {
+        this.ngZone.run(() => {
+          this.newVersion = state.staged?.version || '';
+          this.showRelaunchPrompt = true;
+        });
+      }
+
+      // 3. Perform silent background check & download
+      const check = await OtaKit.check();
+      if (check.kind === 'update_available') {
+        this.newVersion = check.latest?.version || '';
+        // Download silently in background (no UI progress shown)
+        await OtaKit.download();
+      } else if (check.kind === 'already_staged') {
+        this.ngZone.run(() => {
+          this.newVersion = check.latest?.version || '';
+          this.showRelaunchPrompt = true;
+        });
+      }
+    } catch (err) {
+      console.warn('[OtaKit] Silent update setup error:', err);
+    }
+  }
+
+  async relaunchApp() {
+    this.isRelaunching = true;
+    try {
+      await OtaKit.apply();
+    } catch (e) {
+      console.error('[OtaKit] Failed to apply update:', e);
+      this.isRelaunching = false;
+    }
+  }
+
+  dismissPrompt() {
+    this.showRelaunchPrompt = false;
   }
 
   initializeApp() {
