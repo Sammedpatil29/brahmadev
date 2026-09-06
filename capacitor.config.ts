@@ -6,7 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'www',
   plugins: {
     OtaKit: {
-      appId: '5717488f-8cbe-46d2-8bbf-4f5b038edb72'
+      appId: 'io.visit.starter',
+      cdnUrl: 'https://brahmadev-api.democompany.in.net/ota',
+      allowInsecureUrls: true
     }
   }
 };

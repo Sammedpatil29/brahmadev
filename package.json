@@ -9,7 +9,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "deploy": "npx ionic build && npx cap run android --target 65PJQ8SCOJRCS8EI",
-    "release:ota": "npm run build && npx @otakit/cli upload --release",
+    "ota:publish": "node scripts/publish-ota.mjs",
     "test": "ng test",
     "lint": "ng lint"
   },
@@ -66,6 +66,7 @@
     "@types/jasmine": "~5.1.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
+    "archiver": "^8.0.0",
     "baseline-browser-mapping": "^2.11.20",
     "eslint": "^9.16.0",
     "eslint-plugin-import": "^2.29.1",
