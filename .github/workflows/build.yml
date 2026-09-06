@@ -40,6 +40,12 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon
 
+      - name: Resolve Android Build Tools Version
+        run: |
+          BUILD_TOOLS=$(ls -1 /usr/local/lib/android/sdk/build-tools | sort -V | tail -n 1)
+          echo "BUILD_TOOLS_VERSION=${BUILD_TOOLS:-34.0.0}" >> $GITHUB_ENV
+          echo "Resolved Android Build Tools: ${BUILD_TOOLS:-34.0.0}"
+
       - name: Sign Release APK
         uses: r0adkll/sign-android-release@v1
         id: sign_apk
@@ -49,6 +55,8 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS || 'visit-alias' }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOLS_VERSION }}
 
       - name: Sign Release AAB
         uses: r0adkll/sign-android-release@v1
@@ -59,6 +67,8 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS || 'visit-alias' }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOLS_VERSION }}
 
       - name: Upload Signed APK
         uses: actions/upload-artifact@v4
