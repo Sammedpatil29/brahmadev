@@ -6,7 +6,10 @@
       </ion-button>
     </ion-buttons>
     <ion-title>
-      <div class="topbar-title">FCE</div>
+      <div class="topbar-title">
+        <span class="title-full">Fixed Cost Calculator</span>
+        <span class="title-short">FCE</span>
+      </div>
     </ion-title>
     <ion-buttons slot="end" class="pe-2 d-flex align-items-center gap-2">
       <button class="btn-set-price" (click)="openSetPriceModal()">
@@ -43,23 +46,64 @@
         </ion-card-header>
 
         <ion-card-content>
-          <!-- Builtup Area Input -->
+          <!-- Area & Dimensions Input Row -->
           <div class="form-group mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0">Built-up Area (Sq.Ft)</label>
-              <span class="badge bg-light text-primary fw-bold">{{ builtUpArea }} sq.ft</span>
-            </div>
-            <div class="input-stepper-wrap">
-              <button class="btn-step" (click)="decreaseArea()">-</button>
-              <input 
-                type="number" 
-                class="form-control text-center custom-num-input" 
-                [(ngModel)]="builtUpArea" 
-                (ngModelChange)="recalculate()"
-                placeholder="Enter area in sqft"
-                min="100" 
-                step="50">
-              <button class="btn-step" (click)="increaseArea()">+</button>
+            <div class="row g-2 align-items-end mb-2">
+              <!-- Left Side: Length & Width in Ft -->
+              <div class="col-6">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label mb-0 small fw-bold">Length × Width</label>
+                  <span class="text-muted small" style="font-size: 0.72rem;">in feet</span>
+                </div>
+                <div class="dimension-inputs-wrap">
+                  <div class="dim-input-box">
+                    <input 
+                      type="number" 
+                      class="form-control text-center dim-field" 
+                      [(ngModel)]="plotLength" 
+                      (ngModelChange)="onDimensionChange()"
+                      placeholder="30"
+                      min="1" 
+                      step="1"
+                      title="Length in feet">
+                    <span class="dim-unit">ft</span>
+                  </div>
+                  <span class="dim-times">×</span>
+                  <div class="dim-input-box">
+                    <input 
+                      type="number" 
+                      class="form-control text-center dim-field" 
+                      [(ngModel)]="plotWidth" 
+                      (ngModelChange)="onDimensionChange()"
+                      placeholder="40"
+                      min="1" 
+                      step="1"
+                      title="Width in feet">
+                    <span class="dim-unit">ft</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Side: Built-up Area (Sq.Ft) -->
+              <div class="col-6">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label mb-0 small fw-bold">Built-up Area</label>
+                  <span class="badge bg-light text-primary fw-bold" style="font-size: 0.72rem;">{{ builtUpArea }} sq.ft</span>
+                </div>
+                <div class="input-stepper-wrap compact-stepper">
+                  <button class="btn-step" (click)="decreaseArea()" title="Decrease 100 sqft">-</button>
+                  <input 
+                    type="number" 
+                    class="form-control text-center custom-num-input" 
+                    [(ngModel)]="builtUpArea" 
+                    (ngModelChange)="onAreaDirectChange()"
+                    placeholder="Sq.ft"
+                    min="100" 
+                    step="50"
+                    title="Enter sq.ft directly">
+                  <button class="btn-step" (click)="increaseArea()" title="Increase 100 sqft">+</button>
+                </div>
+              </div>
             </div>
 
             <!-- Quick Area Preset Chips -->
@@ -148,8 +192,8 @@
                 <div class="custom-select-wrap">
                   <label class="small text-muted d-block mb-1">Internal Plaster</label>
                   <select class="form-select form-select-sm custom-select" [(ngModel)]="plasterType" (ngModelChange)="recalculate()">
-                    <option value="gypsum">✨ Smooth Gypsum Plaster</option>
                     <option value="cement_plaster">🏗️ Traditional Cement Plaster</option>
+                    <option value="gypsum">✨ Smooth Gypsum Plaster (-₹25/sq.ft)</option>
                   </select>
                 </div>
               </div>
@@ -163,8 +207,11 @@
                 <ion-icon name="home-outline"></ion-icon>
               </div>
               <div>
-                <div class="toggle-title">Include Modular Interiors & Woodwork</div>
-                <small class="text-muted">Modular kitchen, wardrobes, false ceiling & lights</small>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <div class="toggle-title">Include Modular Interiors & Woodwork</div>
+                  <span class="badge bg-primary text-white" style="font-size: 0.72rem; padding: 2px 7px;">+₹{{ currentInteriorRate }}/sq.ft Extra</span>
+                </div>
+                <small class="text-muted">Modular kitchen, wardrobes, false ceiling & lights (+₹{{ (currentInteriorRate * totalAreaCalculated).toLocaleString('en-IN') }})</small>
               </div>
             </div>
             <div class="form-check form-switch m-0">
@@ -244,7 +291,7 @@
                 <div class="comp-callout-title">
                   Complementary Services Worth <strong>₹{{ totalComplementaryValue.toLocaleString('en-IN') }}+</strong> Included <strong>FREE</strong>
                 </div>
-                <small class="comp-callout-sub">Underground RCC Water Sump, Compound Wall & Gate, 2D/3D Design, Structural Blueprints, MEP & Site Supervision</small>
+                <small class="comp-callout-sub">Underground RCC Water Sump, 2-Coat Wall Putty, Architectural 2D Planning, Structural Blueprints, MEP & Site Supervision</small>
               </div>
             </div>
           </div>
@@ -471,6 +518,144 @@
                     </div>
                   </div>
                   <p class="addon-desc text-muted mt-2 mb-0">{{ addon.description }}</p>
+
+                  @if (addon.id === 'solar_power') {
+                    <!-- UTL Solar Plans Selector -->
+                    <div class="utl-solar-section mt-3" (click)="$event.stopPropagation()">
+                      
+                      <!-- 1. Grid Type Switcher -->
+                      <div class="solar-type-toggle mb-2">
+                        <button 
+                          type="button" 
+                          class="type-toggle-btn"
+                          [class.active]="selectedSolarType === 'on_grid'"
+                          (click)="setSolarType('on_grid', $event)">
+                          <ion-icon name="flash-outline"></ion-icon>
+                          <span>On-Grid (Net Metering)</span>
+                        </button>
+                        <button 
+                          type="button" 
+                          class="type-toggle-btn"
+                          [class.active]="selectedSolarType === 'off_grid'"
+                          (click)="setSolarType('off_grid', $event)">
+                          <ion-icon name="battery-charging-outline"></ion-icon>
+                          <span>Off-Grid (Battery Backup)</span>
+                        </button>
+                      </div>
+
+                      <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">
+                        <span class="utl-badge">
+                          <ion-icon name="flash-outline"></ion-icon> {{ selectedSolarType === 'on_grid' ? 'UTL ON-GRID PLANS' : 'UTL OFF-GRID WITH BATTERY' }}
+                        </span>
+                        @if (selectedSolarType === 'on_grid') {
+                          <span class="utl-subsidy-badge">
+                            PM Surya Ghar Subsidy
+                          </span>
+                        } @else {
+                          <span class="utl-offgrid-badge">
+                            24/7 Power Cut Protection
+                          </span>
+                        }
+                      </div>
+
+                      <!-- Capacity Chips -->
+                      <div class="solar-plan-chips">
+                        @for (plan of utlSolarPlans; track plan.capacity) {
+                          <button 
+                            type="button"
+                            class="solar-plan-chip" 
+                            [class.active]="selectedSolarPlan === plan.capacity"
+                            (click)="selectSolarPlan(plan.capacity, $event)">
+                            <span class="plan-cap">{{ plan.capacity }}</span>
+                            <span class="plan-price">₹{{ (getSolarPrice(plan) / 1000).toFixed(0) }}k</span>
+                          </button>
+                        }
+                      </div>
+
+                      <!-- 2. Battery Selection if Off-Grid -->
+                      @if (selectedSolarType === 'off_grid') {
+                        <div class="solar-battery-selector mt-2">
+                          <div class="battery-label mb-1">Choose Battery Bank:</div>
+                          <div class="battery-pills-row">
+                            <button 
+                              type="button" 
+                              class="battery-pill-btn"
+                              [class.active]="selectedBatteryType === 'tubular'"
+                              (click)="setBatteryType('tubular', $event)">
+                              <ion-icon name="cube-outline"></ion-icon>
+                              <span>C10 Tubular Battery</span>
+                            </button>
+                            <button 
+                              type="button" 
+                              class="battery-pill-btn"
+                              [class.active]="selectedBatteryType === 'lithium'"
+                              (click)="setBatteryType('lithium', $event)">
+                              <ion-icon name="sparkles-outline"></ion-icon>
+                              <span>LiFePO4 Lithium-Ion</span>
+                            </button>
+                          </div>
+                        </div>
+                      }
+
+                      <!-- Plan Specs & Cost Details -->
+                      @if (getCurrentSolarPlan(); as activePlan) {
+                        <div class="selected-plan-details mt-2">
+                          <div class="plan-metric-row">
+                            <div class="metric-item">
+                              <span class="metric-lbl">Daily Generation</span>
+                              <span class="metric-val text-success">{{ activePlan.generation }}</span>
+                            </div>
+                            <div class="metric-item">
+                              <span class="metric-lbl">{{ selectedSolarType === 'on_grid' ? 'Roof Space' : 'Battery Backup' }}</span>
+                              <span class="metric-val">{{ selectedSolarType === 'on_grid' ? activePlan.roofSpace : activePlan.backupTime }}</span>
+                            </div>
+                            <div class="metric-item">
+                              <span class="metric-lbl">Best Suited For</span>
+                              <span class="metric-val">{{ activePlan.bestFor }}</span>
+                            </div>
+                          </div>
+
+                          @if (selectedSolarType === 'on_grid') {
+                            <!-- On-Grid Subsidy Breakdown -->
+                            <div class="subsidy-breakdown mt-2">
+                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="subsidy-label">UTL On-Grid System Cost:</span>
+                                <span class="fw-bold">₹{{ activePlan.onGridPrice.toLocaleString('en-IN') }}</span>
+                              </div>
+                              <div class="d-flex justify-content-between align-items-center mb-1 text-success">
+                                <span class="subsidy-label">Govt. Subsidy (PM Surya Ghar):</span>
+                                <span class="fw-bold">- ₹{{ activePlan.subsidy.toLocaleString('en-IN') }}</span>
+                              </div>
+                              <div class="d-flex justify-content-between align-items-center border-top pt-1 text-primary">
+                                <span class="net-cost-label">Net Effective Investment:</span>
+                                <span class="net-cost-val">₹{{ activePlan.onGridNetCost.toLocaleString('en-IN') }}</span>
+                              </div>
+                            </div>
+                          } @else {
+                            <!-- Off-Grid Battery Breakdown -->
+                            <div class="subsidy-breakdown mt-2">
+                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="subsidy-label">Battery Storage Bank:</span>
+                                <span class="fw-bold text-dark">
+                                  {{ selectedBatteryType === 'tubular' ? activePlan.tubularBatterySpec : activePlan.lithiumBatterySpec }}
+                                </span>
+                              </div>
+                              <div class="d-flex justify-content-between align-items-center mb-1 text-muted">
+                                <span class="subsidy-label">Inverter & Structure:</span>
+                                <span>rMPPT Solar Inverter + HDG Mounting</span>
+                              </div>
+                              <div class="d-flex justify-content-between align-items-center border-top pt-1 text-primary">
+                                <span class="net-cost-label">Complete Off-Grid Cost:</span>
+                                <span class="net-cost-val">
+                                  ₹{{ (selectedBatteryType === 'tubular' ? activePlan.offGridTubularPrice : activePlan.offGridLithiumPrice).toLocaleString('en-IN') }}
+                                </span>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
 
                 <div class="addon-specs-box">
@@ -503,9 +688,9 @@
               </div>
               <span class="badge bg-success px-2 py-1">Zero Additional Cost</span>
             </div>
-            <h5 class="comp-banner-heading">Complete Complimentary Turnkey Package (9 Key Free Add-Ons)</h5>
+            <h5 class="comp-banner-heading">Complete Complimentary Turnkey Package ({{ complementaryServices.length }} Key Free Add-Ons)</h5>
             <p class="comp-banner-sub mb-0">
-              When you build your home with <strong>Brahmadev Constructions</strong>, <strong>{{ complementaryServices.length }} premium turnkey additions</strong> — including an 8,000L underground RCC water sump, compound boundary wall with designer main gate, architectural 2D floor planning, 3D elevation modeling, structural blueprints, MEP schematics, and civil site supervision — are included <strong>100% FREE</strong> (Value: ₹{{ totalComplementaryValue.toLocaleString('en-IN') }}+).
+              When you build your home with <strong>Brahmadev Constructions</strong>, <strong>{{ complementaryServices.length }} premium turnkey additions</strong> — including an underground RCC water sump, 2-coat premium wall putty, architectural 2D floor planning, structural blueprints, MEP schematics, and civil site supervision — are included <strong>100% FREE</strong> (Value: ₹{{ totalComplementaryValue.toLocaleString('en-IN') }}+).
             </p>
           </div>
 
@@ -757,21 +942,42 @@
                     }
                     <span class="badge" [style.background-color]="pkg.color + '20'" [style.color]="pkg.color">{{ pkg.badge }}</span>
                   </div>
-                  <small class="text-muted">Default: ₹{{ defaultPackageRates[pkg.id] }}/sq.ft</small>
+                  <small class="text-muted">Base: ₹{{ defaultPackageRates[pkg.id] }} | Interior: +₹{{ defaultInteriorRates[pkg.id] }}</small>
                 </div>
 
-                <div class="input-group">
-                  <span class="input-group-text bg-white fw-bold text-muted">₹</span>
-                  <input 
-                    type="number" 
-                    class="form-control fw-bold" 
-                    [(ngModel)]="tempPackageRates[pkg.id]" 
-                    (ngModelChange)="onRateChange(pkg.id, $event)"
-                    [name]="'pkg_rate_' + pkg.id"
-                    placeholder="Enter rate per sq.ft"
-                    min="100" 
-                    step="50">
-                  <span class="input-group-text bg-white text-muted small">/ sq.ft</span>
+                <div class="row g-2">
+                  <div class="col-7">
+                    <label class="form-label text-muted small mb-1">Base Construction</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white fw-bold text-muted">₹</span>
+                      <input 
+                        type="number" 
+                        class="form-control fw-bold" 
+                        [(ngModel)]="tempPackageRates[pkg.id]" 
+                        (ngModelChange)="onRateChange(pkg.id, $event)"
+                        [name]="'pkg_rate_' + pkg.id"
+                        placeholder="Base rate"
+                        min="100" 
+                        step="50">
+                      <span class="input-group-text bg-white text-muted small">/ sq.ft</span>
+                    </div>
+                  </div>
+                  <div class="col-5">
+                    <label class="form-label text-muted small mb-1">Interior (Extra)</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white fw-bold text-muted">+₹</span>
+                      <input 
+                        type="number" 
+                        class="form-control fw-bold" 
+                        [(ngModel)]="tempInteriorRates[pkg.id]" 
+                        (ngModelChange)="onInteriorRateChange(pkg.id, $event)"
+                        [name]="'pkg_interior_' + pkg.id"
+                        placeholder="Extra"
+                        min="0" 
+                        step="25">
+                      <span class="input-group-text bg-white text-muted small">/ sq.ft</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             }

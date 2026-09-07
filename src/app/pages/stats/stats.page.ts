@@ -42,7 +42,8 @@ import {
   logoGoogle,
   downloadOutline,
   closeOutline,
-  documentTextOutline
+  documentTextOutline,
+  arrowForwardOutline
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Leads } from 'src/app/services/leads';
@@ -147,7 +148,8 @@ export class StatsPage implements OnInit {
       alertCircleOutline,
       downloadOutline,
       closeOutline,
-      documentTextOutline
+      documentTextOutline,
+      arrowForwardOutline
     });
   }
 
@@ -254,6 +256,10 @@ export class StatsPage implements OnInit {
 
   back() {
     this.navCtrl.back();
+  }
+
+  goToLeads() {
+    this.navCtrl.navigateForward('/layout/leads');
   }
 
   switchTab(tab: 'analytics' | 'meta_ads' | 'google_ads') {

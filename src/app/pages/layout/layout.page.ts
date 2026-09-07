@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonRouterOutlet, IonIcon } from '@ionic/angular/standalone';
@@ -43,11 +43,16 @@ export class LayoutPage implements OnInit, OnDestroy {
   private alarmIntervalId: any = null;
   private audioElement: HTMLAudioElement | null = null;
   private userInteractionListener: any = null;
+  private visibilityListener: any = null;
+  private originalTitle: string = '';
+  private titleFlashIntervalId: any = null;
 
   constructor(
     private navCtrl: NavController,
     private leadsService: Leads,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {
     addIcons({ notificationsOutline, closeOutline, arrowForwardOutline, sparklesOutline, giftOutline });
   }
@@ -64,27 +69,45 @@ export class LayoutPage implements OnInit, OnDestroy {
     // Pre-unlock audio on first user touch/click to comply with browser autoplay policies
     this.setupAudioUnlocker();
 
+    // Setup tab visibility listener (detects when user switches away/to tab)
+    this.setupVisibilityListener();
+
+    // Request browser system notification permission (for desktop alerts when in other tabs)
+    this.requestNotificationPermission();
+
     // Fetch initial new leads count quietly for badge/display without showing alert toast
     this.checkForNewLeads();
 
     // Listen to real-time new lead alerts exclusively via Socket.IO
     this.socketSubscription = this.socketService.onNewLead().subscribe((leadData: any) => {
       if (leadData) {
-        this.latestLead = leadData;
-        this.newLeadsCount = (this.newLeadsCount || 0) + 1;
-        this.showNewLeadAlert = true;
+        this.ngZone.run(() => {
+          this.latestLead = leadData;
+          this.newLeadsCount = (this.newLeadsCount || 0) + 1;
+          this.showNewLeadAlert = true;
+          this.cdr.detectChanges();
 
-        // Clear previous auto-dismiss timer before starting new alert
-        this.clearAutoCloseTimer();
+          // Clear previous auto-dismiss timer before starting new alert
+          this.clearAutoCloseTimer();
 
-        // Play looping alarm sound
-        this.playAlarmSound();
+          // Play looping alarm sound
+          this.playAlarmSound();
 
-        // Start 30 seconds auto-dismiss timer
-        this.autoCloseTimer = setTimeout(() => {
-          this.showNewLeadAlert = false;
-          this.stopAlarmSound();
-        }, 30000);
+          // Check if tab is in background / user is on another tab
+          const isTabHidden = typeof document !== 'undefined' && document.hidden;
+          if (isTabHidden) {
+            // 1. Show native OS / browser desktop notification (bypasses browser tab invisibility)
+            this.showDesktopNotification(leadData);
+
+            // 2. Flash browser tab title so user notices in the browser tab bar
+            this.startTitleFlashing(leadData?.name || 'Customer');
+
+            // NOTE: Do NOT auto-dismiss while hidden! Keep alert ready until user switches to tab.
+          } else {
+            // Tab is currently in foreground, auto-dismiss after 30 seconds
+            this.startAutoCloseTimer(30000);
+          }
+        });
       }
     });
   }
@@ -94,8 +117,10 @@ export class LayoutPage implements OnInit, OnDestroy {
       this.socketSubscription.unsubscribe();
     }
     this.removeAudioUnlocker();
+    this.removeVisibilityListener();
     this.clearAutoCloseTimer();
     this.stopAlarmSound();
+    this.stopTitleFlashing();
   }
 
   private setupAudioUnlocker() {
@@ -114,6 +139,9 @@ export class LayoutPage implements OnInit, OnDestroy {
           }
         } catch (_) {}
       }
+      // Request browser notification permission on first interaction
+      this.requestNotificationPermission();
+
       this.removeAudioUnlocker();
     };
 
@@ -129,6 +157,116 @@ export class LayoutPage implements OnInit, OnDestroy {
       window.removeEventListener('pointerdown', this.userInteractionListener);
       this.userInteractionListener = null;
     }
+  }
+
+  private setupVisibilityListener() {
+    this.visibilityListener = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        // User switched back to this tab
+        this.stopTitleFlashing();
+
+        // Ensure socket is actively connected and refresh lead count
+        if (!this.socketService.isConnected) {
+          this.socketService.connect();
+        }
+        this.checkForNewLeads();
+
+        // If an alert is showing and no auto-dismiss timer is running, start 25s timer now
+        if (this.showNewLeadAlert && !this.autoCloseTimer) {
+          this.startAutoCloseTimer(25000);
+        }
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.visibilityListener);
+    }
+  }
+
+  private removeVisibilityListener() {
+    if (this.visibilityListener && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityListener);
+      this.visibilityListener = null;
+    }
+  }
+
+  private requestNotificationPermission() {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(perm => {
+          console.log('🔔 Desktop notification permission:', perm);
+        }).catch(err => {
+          console.warn('Could not request notification permission:', err);
+        });
+      }
+    }
+  }
+
+  private showDesktopNotification(leadData: any) {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+
+    if (Notification.permission === 'granted') {
+      try {
+        const leadName = leadData?.name || 'New Customer';
+        const leadPlatform = leadData?.platform ? `[${leadData.platform}] ` : '';
+        const leadContact = leadData?.contact ? ` • 📞 ${leadData.contact}` : '';
+        const leadCity = leadData?.city ? ` • 📍 ${leadData.city}` : '';
+
+        const notification = new Notification('🚨 New Lead Received!', {
+          body: `${leadPlatform}${leadName}${leadContact}${leadCity}`,
+          icon: 'assets/icon/favicon.png',
+          badge: 'assets/icon/favicon.png',
+          tag: 'brahmadev-new-lead',
+          requireInteraction: true // Keeps notification visible until user interacts
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+          this.ngZone.run(() => {
+            this.viewLeads();
+          });
+        };
+      } catch (err) {
+        console.warn('Error displaying desktop notification:', err);
+      }
+    } else if (Notification.permission === 'default') {
+      this.requestNotificationPermission();
+    }
+  }
+
+  private startTitleFlashing(leadName?: string) {
+    this.stopTitleFlashing();
+    if (typeof document === 'undefined') return;
+
+    this.originalTitle = document.title || 'Brahmadev Constructions';
+    let isAlert = true;
+
+    this.titleFlashIntervalId = setInterval(() => {
+      document.title = isAlert ? `🚨 (1) NEW LEAD: ${leadName || 'Customer'}!` : `⭐ ${this.originalTitle}`;
+      isAlert = !isAlert;
+    }, 1200);
+  }
+
+  private stopTitleFlashing() {
+    if (this.titleFlashIntervalId) {
+      clearInterval(this.titleFlashIntervalId);
+      this.titleFlashIntervalId = null;
+    }
+    if (this.originalTitle && typeof document !== 'undefined') {
+      document.title = this.originalTitle;
+    }
+  }
+
+  private startAutoCloseTimer(durationMs: number = 30000) {
+    this.clearAutoCloseTimer();
+    this.autoCloseTimer = setTimeout(() => {
+      this.ngZone.run(() => {
+        this.showNewLeadAlert = false;
+        this.stopAlarmSound();
+        this.stopTitleFlashing();
+        this.cdr.detectChanges();
+      });
+    }, durationMs);
   }
 
   dismissAnnouncement() {
@@ -167,13 +305,17 @@ export class LayoutPage implements OnInit, OnDestroy {
     }
     this.clearAutoCloseTimer();
     this.stopAlarmSound();
+    this.stopTitleFlashing();
     this.showNewLeadAlert = false;
+    this.cdr.detectChanges();
   }
 
   viewLeads() {
     this.clearAutoCloseTimer();
     this.stopAlarmSound();
+    this.stopTitleFlashing();
     this.showNewLeadAlert = false;
+    this.cdr.detectChanges();
     this.navCtrl.navigateForward('/layout/leads');
   }
 

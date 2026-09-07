@@ -84,7 +84,7 @@
       <ion-card-content>
         <div class="card-header-row">
           <div class="user-avatar">
-            {{ lead.name.charAt(0).toUpperCase() }}
+            {{ (lead.name ? lead.name.charAt(0) : 'L').toUpperCase() }}
           </div>
           <div class="header-info">
             <h2 class="lead-name">{{ lead.name | titlecase}}</h2>

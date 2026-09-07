@@ -54,7 +54,8 @@ import {
   cameraOutline,
   shieldCheckmarkOutline,
   wifiOutline,
-  pricetagOutline
+  pricetagOutline,
+  batteryChargingOutline
 } from 'ionicons/icons';
 
 export interface CategoryItem {
@@ -77,6 +78,7 @@ export interface PackageTier {
   badge: string;
   description: string;
   baseRate: number; // ₹ per sqft
+  interiorRate: number; // ₹ per sqft extra for interior
   color: string;
 }
 
@@ -107,6 +109,24 @@ export interface PaidAddon {
   features: string[];
 }
 
+export interface UtlSolarPlan {
+  capacity: string;
+  name: string;
+  generation: string;
+  bestFor: string;
+  roofSpace: string;
+  // On-Grid details
+  onGridPrice: number;
+  subsidy: number;
+  onGridNetCost: number;
+  // Off-Grid details with battery bank
+  offGridTubularPrice: number;
+  tubularBatterySpec: string;
+  offGridLithiumPrice: number;
+  lithiumBatterySpec: string;
+  backupTime: string;
+}
+
 @Component({
   selector: 'app-fixed-cost-calculator',
   templateUrl: './fixed-cost-calculator.page.html',
@@ -135,11 +155,13 @@ export class FixedCostCalculatorPage implements OnInit {
   Math = Math;
 
   // Main input parameters
+  plotLength: number | null = 30; // Length in ft
+  plotWidth: number | null = 40;  // Width in ft
   builtUpArea: number = 1200; // in sq.ft
   selectedFloors: number = 1; // 1 = Ground, 2 = G+1, 3 = G+2, 4 = G+3
   selectedPackage: string = 'standard';
   wallType: string = 'red_brick'; // red_brick | aac_block | concrete_block
-  plasterType: string = 'gypsum'; // gypsum | cement_plaster
+  plasterType: string = 'cement_plaster'; // cement_plaster | gypsum
   includeInterior: boolean = true;
 
   activeTab: 'categories' | 'materials' | 'complementary' | 'addons' = 'categories';
@@ -161,23 +183,6 @@ export class FixedCostCalculatorPage implements OnInit {
         'Dimensioned working architectural drawings',
         'Furniture, door & window schedule layout',
         'Sectional elevations and vertical zoning'
-      ]
-    },
-    {
-      id: '3d_modelling',
-      title: '3D Exterior Elevation & Modeling',
-      subtitle: 'High-definition photorealistic 3D building visualization',
-      description: 'Ultra-realistic 3D exterior views with daylight & night lighting, modern facade treatments, texture proposals, and color palettes.',
-      icon: 'cube-outline',
-      iconColor: '#9333ea',
-      iconBg: '#f3e8ff',
-      marketValue: 25000,
-      badge: '100% FREE',
-      features: [
-        'Photorealistic 3D exterior rendering angles',
-        'Modern facade cladding & texture proposals',
-        'Exterior color scheme & lighting concepts',
-        'Compound wall & gate customized 3D design'
       ]
     },
     {
@@ -233,19 +238,19 @@ export class FixedCostCalculatorPage implements OnInit {
     },
     {
       id: 'quality_testing',
-      title: 'Site Soil Survey & Concrete Cube Testing',
-      subtitle: 'Pre-construction verification & compressive strength lab tests',
-      description: 'Site ground leveling survey, soil bearing suitability inspection, and mandatory 7-day & 28-day concrete cube compressive strength quality testing.',
-      icon: 'sparkles-outline',
+      title: 'Concrete Test Report',
+      subtitle: '7-day & 28-day compressive strength lab reports',
+      description: 'Mandatory 7-day & 28-day concrete cube compressive strength laboratory testing and certified quality compliance reports.',
+      icon: 'document-text-outline',
       iconColor: '#16a34a',
       iconBg: '#dcfce7',
       marketValue: 10000,
       badge: '100% FREE',
       features: [
-        'Site boundary & ground level survey',
-        'Soil suitability & excavation depth audit',
-        '7-day & 28-day concrete cube compression tests',
-        'Cement & aggregate quality check certificates'
+        '7-day & 28-day concrete cube compressive strength tests',
+        'Certified material testing lab reports',
+        'Cement & aggregate mix ratio verification',
+        'Structural concrete grade compliance certification'
       ]
     },
     {
@@ -267,7 +272,7 @@ export class FixedCostCalculatorPage implements OnInit {
     },
     {
       id: 'underground_sump',
-      title: 'Underground RCC Water Sump (8,000L)',
+      title: 'Underground RCC Water Sump (5,000L)',
       subtitle: 'Heavy-duty waterproof underground reservoir with cover',
       description: 'Complete reinforced cement concrete (RCC) underground water sump constructed with M25 grade concrete, dual-coat chemical waterproof plastering, and airtight manhole cover.',
       icon: 'water-outline',
@@ -283,44 +288,83 @@ export class FixedCostCalculatorPage implements OnInit {
       ]
     },
     {
+      id: 'wall_putty',
+      title: '2-Coat Premium Wall Putty',
+      subtitle: 'Smooth mirror-like paint-ready wall surface preparation',
+      description: 'Dual-coat polymer-modified white cement wall putty application across all internal walls and ceilings for flawless smoothness, enhanced paint durability, and hairline crack resistance.',
+      icon: 'color-palette-outline',
+      iconColor: '#7c3aed',
+      iconBg: '#f3e8ff',
+      marketValue: 25000,
+      badge: '100% FREE',
+      features: [
+        '2 coats of branded polymer-modified white cement putty (Birla / JK)',
+        'Complete coverage on all internal walls and ceilings',
+        'Fine machine sanding for ultra-smooth paint-ready finish',
+        'Prevents moisture patches & enhances emulsion paint life'
+      ]
+    }
+  ];
+
+  get totalComplementaryValue(): number {
+    return this.complementaryServices.reduce((sum, s) => sum + s.marketValue, 0);
+  }
+
+  // Optional Paid Upgrades & Add-ons
+  paidAddons: PaidAddon[] = [
+    {
+      id: '3d_modelling',
+      name: '3D Exterior Elevation & Modeling',
+      tagline: 'High-definition photorealistic 3D building visualization (₹5,000/Floor)',
+      description: 'Ultra-realistic 3D exterior views with daylight & night lighting, modern facade treatments, texture proposals, color palettes, and floor-wise architectural styling.',
+      price: 5000,
+      unit: '1 Floor (₹5,000/Floor)',
+      icon: 'cube-outline',
+      iconColor: '#9333ea',
+      iconBg: '#f3e8ff',
+      selected: false,
+      features: [
+        'Photorealistic 3D exterior rendering views',
+        'Modern facade cladding & texture proposals',
+        'Exterior color scheme & architectural lighting',
+        'Customized floor-by-floor 3D design model'
+      ]
+    },
+    {
       id: 'compound_wall',
-      title: 'Compound Boundary Wall & Main Entrance Gate',
-      subtitle: 'Complete property perimeter wall & designer MS gate',
+      name: 'Compound Boundary Wall & Main Entrance Gate',
+      tagline: 'Complete property perimeter wall & designer MS gate',
       description: 'Solid masonry boundary wall up to 120 Rft with coping, smooth cement plastering, weatherproof exterior paint, and designer MS main entrance gate.',
+      price: 125000,
+      unit: 'Up to 120 Rft',
       icon: 'business-outline',
       iconColor: '#d97706',
       iconBg: '#fef3c7',
-      marketValue: 125000,
-      badge: '100% FREE',
+      selected: false,
       features: [
         '5ft solid masonry boundary wall with coping & plastering',
         'Weatherproof primer & exterior apex paint finish',
         'Designer MS main entrance gate (sliding/swing)',
         'Built-in security wicket pedestrian gate'
       ]
-    }
-  ];
-
-  totalComplementaryValue: number = 347000;
-
-  // Optional Paid Upgrades & Add-ons
-  paidAddons: PaidAddon[] = [
+    },
     {
       id: 'solar_power',
-      name: 'Solar Rooftop Power System (3kW)',
-      tagline: 'Generates ~12-15 units/day, reduces 80%+ electricity bills',
-      description: 'Tier-1 high-efficiency Monocrystalline solar panels, on-grid string inverter, elevated galvanized mounting structure, and net-metering synchronization.',
+      name: 'UTL Solar Rooftop System (3kW)',
+      tagline: '~12-15 units/day, ideal for 3-4 BHK | PM Surya Ghar Subsidy Eligible',
+      description: 'UTL high-efficiency Monocrystalline solar panels, on-grid string inverter with Wi-Fi app monitoring, elevated galvanized mounting structure, and net-metering grid synchronization.',
       price: 175000,
-      unit: '3kW On-Grid',
+      unit: '3 kW On-Grid • ~12-15 units/day',
       icon: 'flash-outline',
       iconColor: '#f59e0b',
       iconBg: '#fef3c7',
       selected: false,
       features: [
-        'Monocrystalline high-efficiency solar PV panels',
-        'On-grid string inverter with Wi-Fi monitoring',
-        'Bi-directional net metering approval support',
-        '25-year panel performance warranty'
+        'Tier-1 UTL Monocrystalline Half-cut solar PV panels',
+        'UTL On-Grid string inverter with Wi-Fi mobile monitoring',
+        'PM Surya Ghar: Muft Bijli Yojana subsidy processing support',
+        'Hot-dip galvanized structure, DC/AC distribution boxes with SPD',
+        '25-year panel performance warranty & 5-year inverter warranty'
       ]
     },
     {
@@ -379,11 +423,11 @@ export class FixedCostCalculatorPage implements OnInit {
     },
     {
       id: 'terrace_waterproofing',
-      name: 'Terrace Waterproofing & Heat Barrier',
-      tagline: 'Keeps top floor 4-6°C cooler & 100% leakproof',
+      name: 'Terrace Weather Proofing',
+      tagline: 'Keeps top floor 4-6°C cooler & 100% leakproof (₹100/sq.ft)',
       description: '3-layer elastomeric polymer waterproofing membrane topped with high-SRI white solar reflective cooling thermal barrier paint.',
-      price: 45000,
-      unit: 'Full Terrace',
+      price: 120000,
+      unit: '1,200 sq.ft (₹100/sq.ft)',
       icon: 'sparkles-outline',
       iconColor: '#e11d48',
       iconBg: '#ffe4e6',
@@ -409,6 +453,150 @@ export class FixedCostCalculatorPage implements OnInit {
   pdfPreviewSafeUrl: SafeResourceUrl | null = null;
   currentGeneratedDoc: jsPDF | null = null;
 
+  // UTL Solar Rooftop Plans (On-Grid & Off-Grid with Battery Options)
+  selectedSolarType: 'on_grid' | 'off_grid' = 'on_grid';
+  selectedBatteryType: 'tubular' | 'lithium' = 'tubular';
+  selectedSolarPlan: string = '3kW';
+
+  utlSolarPlans: UtlSolarPlan[] = [
+    {
+      capacity: '1kW',
+      name: '1 kW System',
+      generation: '~4-5 units/day',
+      bestFor: '1-2 BHK',
+      roofSpace: '~100 sq.ft',
+      onGridPrice: 70000,
+      subsidy: 30000,
+      onGridNetCost: 40000,
+      offGridTubularPrice: 85000,
+      tubularBatterySpec: '1x 150Ah C10 Solar Battery',
+      offGridLithiumPrice: 105000,
+      lithiumBatterySpec: '2.5 kWh LiFePO4 Lithium Battery',
+      backupTime: '4-6 Hours'
+    },
+    {
+      capacity: '2kW',
+      name: '2 kW System',
+      generation: '~8-10 units/day',
+      bestFor: '2-3 BHK',
+      roofSpace: '~200 sq.ft',
+      onGridPrice: 125000,
+      subsidy: 60000,
+      onGridNetCost: 65000,
+      offGridTubularPrice: 155000,
+      tubularBatterySpec: '2x 150Ah C10 Solar Batteries',
+      offGridLithiumPrice: 195000,
+      lithiumBatterySpec: '5.0 kWh LiFePO4 Lithium Battery',
+      backupTime: '6-8 Hours'
+    },
+    {
+      capacity: '3kW',
+      name: '3 kW System (Popular)',
+      generation: '~12-15 units/day',
+      bestFor: '3-4 BHK',
+      roofSpace: '~300 sq.ft',
+      onGridPrice: 175000,
+      subsidy: 78000,
+      onGridNetCost: 97000,
+      offGridTubularPrice: 225000,
+      tubularBatterySpec: '4x 150Ah C10 Solar Batteries',
+      offGridLithiumPrice: 285000,
+      lithiumBatterySpec: '7.5 kWh LiFePO4 Lithium Battery',
+      backupTime: '8-10 Hours'
+    },
+    {
+      capacity: '5kW',
+      name: '5 kW System',
+      generation: '~20-25 units/day',
+      bestFor: 'Large Villa',
+      roofSpace: '~500 sq.ft',
+      onGridPrice: 265000,
+      subsidy: 78000,
+      onGridNetCost: 187000,
+      offGridTubularPrice: 345000,
+      tubularBatterySpec: '4x 200Ah C10 Solar Batteries',
+      offGridLithiumPrice: 435000,
+      lithiumBatterySpec: '10.0 kWh LiFePO4 Lithium Battery',
+      backupTime: '10-12 Hours'
+    },
+    {
+      capacity: '10kW',
+      name: '10 kW System',
+      generation: '~40-50 units/day',
+      bestFor: 'Bungalow / Commercial',
+      roofSpace: '~1,000 sq.ft',
+      onGridPrice: 480000,
+      subsidy: 78000,
+      onGridNetCost: 402000,
+      offGridTubularPrice: 620000,
+      tubularBatterySpec: '8x 200Ah C10 Solar Batteries',
+      offGridLithiumPrice: 780000,
+      lithiumBatterySpec: '20.0 kWh LiFePO4 Lithium Battery',
+      backupTime: 'Full Day Heavy Backup'
+    }
+  ];
+
+  getCurrentSolarPlan(): UtlSolarPlan {
+    return this.utlSolarPlans.find(p => p.capacity === this.selectedSolarPlan) || this.utlSolarPlans[2];
+  }
+
+  getSolarPrice(plan: UtlSolarPlan): number {
+    if (this.selectedSolarType === 'on_grid') {
+      return plan.onGridPrice;
+    } else {
+      return this.selectedBatteryType === 'tubular' ? plan.offGridTubularPrice : plan.offGridLithiumPrice;
+    }
+  }
+
+  setSolarType(type: 'on_grid' | 'off_grid', event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedSolarType = type;
+    this.updateSolarAddonState();
+  }
+
+  setBatteryType(battery: 'tubular' | 'lithium', event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedBatteryType = battery;
+    this.updateSolarAddonState();
+  }
+
+  selectSolarPlan(capacity: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedSolarPlan = capacity;
+    this.updateSolarAddonState(true);
+  }
+
+  updateSolarAddonState(autoSelect: boolean = false) {
+    const plan = this.getCurrentSolarPlan();
+    const price = this.getSolarPrice(plan);
+    const solarAddon = this.paidAddons.find(a => a.id === 'solar_power');
+    if (solarAddon) {
+      if (this.selectedSolarType === 'on_grid') {
+        solarAddon.name = `UTL Solar On-Grid System (${plan.capacity})`;
+        solarAddon.price = price;
+        solarAddon.unit = `${plan.capacity} On-Grid • ${plan.generation}`;
+        solarAddon.tagline = `${plan.generation}, ideal for ${plan.bestFor} | PM Surya Ghar Subsidy: Up to ₹${plan.subsidy.toLocaleString('en-IN')}`;
+      } else {
+        const batteryDesc = this.selectedBatteryType === 'tubular' ? plan.tubularBatterySpec : plan.lithiumBatterySpec;
+        solarAddon.name = `UTL Solar Off-Grid System (${plan.capacity})`;
+        solarAddon.price = price;
+        solarAddon.unit = `${plan.capacity} Off-Grid • ${batteryDesc}`;
+        solarAddon.tagline = `24/7 Power Cut Backup (${plan.backupTime}) • ${batteryDesc}`;
+      }
+      if (autoSelect) {
+        solarAddon.selected = true;
+      }
+    }
+    this.recalculate();
+    this.cdr.markForCheck();
+  }
+
   // Available Packages
   packages: PackageTier[] = [
     {
@@ -417,6 +605,7 @@ export class FixedCostCalculatorPage implements OnInit {
       badge: 'Budget Friendly',
       description: 'Standard TMT steel, PPC cement, ceramic tiles, standard fittings.',
       baseRate: 1650,
+      interiorRate: 250,
       color: '#6c757d'
     },
     {
@@ -425,6 +614,7 @@ export class FixedCostCalculatorPage implements OnInit {
       badge: 'Most Popular',
       description: 'Fe550 steel, branded cement, vitrified tiles, modular switches, premium paint.',
       baseRate: 1850,
+      interiorRate: 300,
       color: '#0d6efd'
     },
     {
@@ -433,6 +623,7 @@ export class FixedCostCalculatorPage implements OnInit {
       badge: 'High Quality',
       description: 'Grade A steel, Italian/granite finish, Jaquar/Kohler bath fittings, UPVC windows.',
       baseRate: 2300,
+      interiorRate: 400,
       color: '#198754'
     },
     {
@@ -441,6 +632,7 @@ export class FixedCostCalculatorPage implements OnInit {
       badge: 'Ultra Modern',
       description: 'Architectural finishes, smart home automation, designer modular kitchen & woodwork.',
       baseRate: 2850,
+      interiorRate: 500,
       color: '#6f42c1'
     }
   ];
@@ -452,8 +644,21 @@ export class FixedCostCalculatorPage implements OnInit {
     luxury: 2850
   };
 
+  defaultInteriorRates: { [id: string]: number } = {
+    basic: 250,
+    standard: 300,
+    premium: 400,
+    luxury: 500
+  };
+
   isSetPriceModalOpen: boolean = false;
   tempPackageRates: { [id: string]: number } = {};
+  tempInteriorRates: { [id: string]: number } = {};
+
+  get currentInteriorRate(): number {
+    const pkg = this.packages.find(p => p.id === this.selectedPackage) || this.packages[1];
+    return pkg?.interiorRate ?? 300;
+  }
 
   // Calculated Results
   totalCost: number = 0;
@@ -516,7 +721,8 @@ export class FixedCostCalculatorPage implements OnInit {
       cameraOutline,
       shieldCheckmarkOutline,
       wifiOutline,
-      pricetagOutline
+      pricetagOutline,
+      batteryChargingOutline
     });
   }
 
@@ -559,19 +765,50 @@ export class FixedCostCalculatorPage implements OnInit {
 
   back() { this.navCtrl.back(); }
 
+  onDimensionChange() {
+    const l = Number(this.plotLength);
+    const w = Number(this.plotWidth);
+    if (!isNaN(l) && !isNaN(w) && l > 0 && w > 0) {
+      this.builtUpArea = Math.round(l * w);
+    }
+    this.recalculate();
+  }
+
+  onAreaDirectChange() {
+    this.syncDimensionsFromArea();
+    this.recalculate();
+  }
+
   increaseArea() {
     this.builtUpArea = (this.builtUpArea || 0) + 100;
+    this.syncDimensionsFromArea();
     this.recalculate();
   }
 
   decreaseArea() {
     this.builtUpArea = Math.max(100, (this.builtUpArea || 0) - 100);
+    this.syncDimensionsFromArea();
     this.recalculate();
   }
 
   setPresetArea(area: number) {
     this.builtUpArea = area;
+    this.syncDimensionsFromArea();
     this.recalculate();
+  }
+
+  syncDimensionsFromArea() {
+    if (!this.builtUpArea || this.builtUpArea <= 0) return;
+    const l = Number(this.plotLength);
+    const w = Number(this.plotWidth);
+    if (!isNaN(l) && l > 0) {
+      this.plotWidth = Math.round((this.builtUpArea / l) * 10) / 10;
+    } else if (!isNaN(w) && w > 0) {
+      this.plotLength = Math.round((this.builtUpArea / w) * 10) / 10;
+    } else {
+      this.plotLength = 30;
+      this.plotWidth = Math.round((this.builtUpArea / 30) * 10) / 10;
+    }
   }
 
   setPackage(pkgId: string) {
@@ -591,46 +828,85 @@ export class FixedCostCalculatorPage implements OnInit {
 
   recalculate() {
     const pkg = this.packages.find(p => p.id === this.selectedPackage) || this.packages[1];
-    let baseRate = pkg.baseRate;
+    let constructionBaseRate = pkg.baseRate;
 
     // Adjust for wall type
-    if (this.wallType === 'aac_block') baseRate -= 30;
-    if (this.wallType === 'concrete_block') baseRate -= 20;
+    if (this.wallType === 'aac_block') constructionBaseRate -= 30;
+    if (this.wallType === 'concrete_block') constructionBaseRate -= 20;
 
     // Adjust for plaster type (Gypsum is cost & time effective)
-    if (this.plasterType === 'gypsum') baseRate -= 25;
+    if (this.plasterType === 'gypsum') constructionBaseRate -= 25;
 
     // Total area considering floors (each floor adds builtup space)
     this.totalAreaCalculated = Math.max(100, (this.builtUpArea || 0) * (this.selectedFloors || 1));
 
-    // Base weights
-    let weights = {
-      civil: 0.38,
-      centring: 0.12,
-      finishing: 0.18,
-      plumbing: 0.10,
-      electrical: 0.09,
-      interior: this.includeInterior ? 0.13 : 0
-    };
+    // Base construction package category rates (summing up to exactly 100% of constructionBaseRate)
+    const civilRate = Math.round(constructionBaseRate * 0.42);
+    const centringRate = Math.round(constructionBaseRate * 0.14);
+    const finishingRate = Math.round(constructionBaseRate * 0.22);
+    const plumbingRate = Math.round(constructionBaseRate * 0.12);
+    const electricalRate = constructionBaseRate - (civilRate + centringRate + finishingRate + plumbingRate);
 
-    const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
-    this.ratePerSqft = Math.round(baseRate * totalWeight);
+    // Interior rate (always extra on top of the package tier price)
+    const interiorRate = this.includeInterior ? this.currentInteriorRate : 0;
+
+    // Total construction rate per sq.ft and base construction cost
+    this.ratePerSqft = constructionBaseRate + interiorRate;
     this.baseConstructionCost = Math.round(this.totalAreaCalculated * this.ratePerSqft);
+
+    // Dynamic price calculation for floor-based add-ons (3D Elevation Modeling: ₹5,000 per floor)
+    const modelingAddon = this.paidAddons.find(a => a.id === '3d_modelling');
+    if (modelingAddon) {
+      const floors = this.selectedFloors || 1;
+      modelingAddon.price = floors * 5000;
+      modelingAddon.unit = `${floors} Floor${floors > 1 ? 's' : ''} (₹5,000/Floor)`;
+    }
+
+    // Dynamic price calculation for area-based add-ons (Terrace Weather Proofing: ₹100 per sq.ft)
+    const terraceAddon = this.paidAddons.find(a => a.id === 'terrace_waterproofing');
+    if (terraceAddon) {
+      const area = this.builtUpArea || 0;
+      terraceAddon.price = area * 100;
+      terraceAddon.unit = `${area.toLocaleString('en-IN')} sq.ft (₹100/sq.ft)`;
+    }
+
+    // Dynamic price calculation for solar add-on (UTL Solar Rooftop selected plan & grid type)
+    const solarAddon = this.paidAddons.find(a => a.id === 'solar_power');
+    if (solarAddon) {
+      const plan = this.getCurrentSolarPlan();
+      const price = this.getSolarPrice(plan);
+      solarAddon.price = price;
+      if (this.selectedSolarType === 'on_grid') {
+        solarAddon.name = `UTL Solar On-Grid System (${plan.capacity})`;
+        solarAddon.unit = `${plan.capacity} On-Grid • ${plan.generation}`;
+      } else {
+        const batteryDesc = this.selectedBatteryType === 'tubular' ? plan.tubularBatterySpec : plan.lithiumBatterySpec;
+        solarAddon.name = `UTL Solar Off-Grid System (${plan.capacity})`;
+        solarAddon.unit = `${plan.capacity} Off-Grid • ${batteryDesc}`;
+      }
+    }
+
     this.selectedAddonsCost = this.paidAddons.filter(a => a.selected).reduce((sum, a) => sum + a.price, 0);
     this.totalCost = this.baseConstructionCost + this.selectedAddonsCost;
 
     // Build categories
-    this.categories = [
+    const rawCategories: {
+      id: string;
+      name: string;
+      icon: string;
+      iconColor: string;
+      iconBg: string;
+      ratePerSqft: number;
+      includedItems: string[];
+      materialsHint: string;
+    }[] = [
       {
         id: 'civil',
         name: 'Civil & Structure',
         icon: 'construct-outline',
         iconColor: '#d97706',
         iconBg: '#fef3c7',
-        percentage: Math.round((weights.civil / totalWeight) * 100),
-        ratePerSqft: Math.round(this.ratePerSqft * (weights.civil / totalWeight)),
-        totalCost: Math.round(this.baseConstructionCost * (weights.civil / totalWeight)),
-        isExpanded: false,
+        ratePerSqft: civilRate,
         includedItems: [
           'Excavation & foundation concrete (PCC/RCC)',
           'TMT Steel reinforcement (Fe550 / Fe500D)',
@@ -646,10 +922,7 @@ export class FixedCostCalculatorPage implements OnInit {
         icon: 'layers-outline',
         iconColor: '#0284c7',
         iconBg: '#e0f2fe',
-        percentage: Math.round((weights.centring / totalWeight) * 100),
-        ratePerSqft: Math.round(this.ratePerSqft * (weights.centring / totalWeight)),
-        totalCost: Math.round(this.baseConstructionCost * (weights.centring / totalWeight)),
-        isExpanded: false,
+        ratePerSqft: centringRate,
         includedItems: [
           'Steel / ply shuttering for floor slabs & beams',
           'Heavy duty prop scaffolding & levelling support',
@@ -665,10 +938,7 @@ export class FixedCostCalculatorPage implements OnInit {
         icon: 'color-palette-outline',
         iconColor: '#16a34a',
         iconBg: '#dcfce7',
-        percentage: Math.round((weights.finishing / totalWeight) * 100),
-        ratePerSqft: Math.round(this.ratePerSqft * (weights.finishing / totalWeight)),
-        totalCost: Math.round(this.baseConstructionCost * (weights.finishing / totalWeight)),
-        isExpanded: false,
+        ratePerSqft: finishingRate,
         includedItems: [
           this.plasterType === 'gypsum' ? 'Smooth gypsum internal plaster (Zero crack / Paint ready)' : '2-Coat cement plaster with sponge finish',
           'External double-coat weatherproof sand-face plaster',
@@ -685,10 +955,7 @@ export class FixedCostCalculatorPage implements OnInit {
         icon: 'water-outline',
         iconColor: '#2563eb',
         iconBg: '#dbeafe',
-        percentage: Math.round((weights.plumbing / totalWeight) * 100),
-        ratePerSqft: Math.round(this.ratePerSqft * (weights.plumbing / totalWeight)),
-        totalCost: Math.round(this.baseConstructionCost * (weights.plumbing / totalWeight)),
-        isExpanded: false,
+        ratePerSqft: plumbingRate,
         includedItems: [
           'CPVC & UPVC concealed water supply piping (Astral/Ashirvad)',
           'SWR drainage & sewage pipeline with inspection chambers',
@@ -704,10 +971,7 @@ export class FixedCostCalculatorPage implements OnInit {
         icon: 'flash-outline',
         iconColor: '#e11d48',
         iconBg: '#ffe4e6',
-        percentage: Math.round((weights.electrical / totalWeight) * 100),
-        ratePerSqft: Math.round(this.ratePerSqft * (weights.electrical / totalWeight)),
-        totalCost: Math.round(this.baseConstructionCost * (weights.electrical / totalWeight)),
-        isExpanded: false,
+        ratePerSqft: electricalRate,
         includedItems: [
           'Concealed fire-resistant (FRLS) copper wiring (Polycab/Finolex)',
           'Modular switch plates and sockets (Anchor Roma/Legrand)',
@@ -720,16 +984,13 @@ export class FixedCostCalculatorPage implements OnInit {
     ];
 
     if (this.includeInterior) {
-      this.categories.push({
+      rawCategories.push({
         id: 'interior',
         name: 'Interiors & Woodwork',
         icon: 'home-outline',
         iconColor: '#9333ea',
         iconBg: '#f3e8ff',
-        percentage: Math.round((weights.interior / totalWeight) * 100),
-        ratePerSqft: Math.round(this.ratePerSqft * (weights.interior / totalWeight)),
-        totalCost: Math.round(this.baseConstructionCost * (weights.interior / totalWeight)),
-        isExpanded: false,
+        ratePerSqft: interiorRate,
         includedItems: [
           'Modular kitchen with soft-close tandem drawers & granite countertop',
           'Custom bedroom wardrobes with premium laminate finish & handles',
@@ -740,6 +1001,22 @@ export class FixedCostCalculatorPage implements OnInit {
         materialsHint: 'Modular kitchen, storage wardrobes, false ceiling and aesthetic ambient lighting.'
       });
     }
+
+    let allocatedPct = 0;
+    this.categories = rawCategories.map((cat, idx) => {
+      let pct = Math.round((cat.ratePerSqft / this.ratePerSqft) * 100);
+      if (idx === rawCategories.length - 1) {
+        pct = Math.max(1, 100 - allocatedPct);
+      } else {
+        allocatedPct += pct;
+      }
+      return {
+        ...cat,
+        percentage: pct,
+        totalCost: Math.round(cat.ratePerSqft * this.totalAreaCalculated),
+        isExpanded: false
+      };
+    });
 
     // Material Estimations
     this.estimatedMaterials = {
@@ -782,8 +1059,10 @@ export class FixedCostCalculatorPage implements OnInit {
 
   openSetPriceModal() {
     this.tempPackageRates = {};
+    this.tempInteriorRates = {};
     this.packages.forEach(pkg => {
       this.tempPackageRates[pkg.id] = pkg.baseRate;
+      this.tempInteriorRates[pkg.id] = pkg.interiorRate;
     });
     this.isSetPriceModalOpen = true;
     this.cdr.markForCheck();
@@ -799,6 +1078,9 @@ export class FixedCostCalculatorPage implements OnInit {
       if (this.defaultPackageRates[pkg.id]) {
         this.tempPackageRates[pkg.id] = this.defaultPackageRates[pkg.id];
       }
+      if (this.defaultInteriorRates[pkg.id]) {
+        this.tempInteriorRates[pkg.id] = this.defaultInteriorRates[pkg.id];
+      }
     });
     this.cdr.markForCheck();
   }
@@ -810,14 +1092,24 @@ export class FixedCostCalculatorPage implements OnInit {
     }
   }
 
+  onInteriorRateChange(pkgId: string, value: any) {
+    const num = Number(value);
+    if (!isNaN(num)) {
+      this.tempInteriorRates[pkgId] = num;
+    }
+  }
+
   async applyCustomRates() {
     // Create new array & object references so Angular template tracking immediately detects and re-renders
     this.packages = this.packages.map(pkg => {
       const inputVal = this.tempPackageRates[pkg.id];
       const parsedVal = typeof inputVal === 'string' ? parseFloat(inputVal) : Number(inputVal);
+      const inputIntVal = this.tempInteriorRates[pkg.id];
+      const parsedIntVal = typeof inputIntVal === 'string' ? parseFloat(inputIntVal) : Number(inputIntVal);
       return {
         ...pkg,
-        baseRate: (!isNaN(parsedVal) && parsedVal > 0) ? parsedVal : pkg.baseRate
+        baseRate: (!isNaN(parsedVal) && parsedVal > 0) ? parsedVal : pkg.baseRate,
+        interiorRate: (!isNaN(parsedIntVal) && parsedIntVal >= 0) ? parsedIntVal : pkg.interiorRate
       };
     });
 
@@ -828,7 +1120,7 @@ export class FixedCostCalculatorPage implements OnInit {
 
     const currentPkg = this.packages.find(p => p.id === this.selectedPackage) || this.packages[1];
     const toast = await this.toastCtrl.create({
-      message: `Prices updated! Active package (${currentPkg.name}) is at ₹${currentPkg.baseRate}/sq.ft. Total: ₹${this.totalCost.toLocaleString('en-IN')}`,
+      message: `Prices updated! Active package (${currentPkg.name}) base is ₹${currentPkg.baseRate}/sq.ft (Interior: +₹${currentPkg.interiorRate}/sq.ft). Total: ₹${this.totalCost.toLocaleString('en-IN')}`,
       duration: 3000,
       position: 'bottom',
       color: 'dark'
@@ -840,9 +1132,10 @@ export class FixedCostCalculatorPage implements OnInit {
     const pkg = this.packages.find(p => p.id === this.selectedPackage);
     let text = `🏗️ *BRAHMADEV CONSTRUCTIONS - BUILDING ESTIMATE*\n`;
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `📐 *Built-up Area:* ${this.builtUpArea} sq.ft (${this.getFloorsLabel()})\n`;
-    text += `📦 *Package:* ${pkg?.name} (${pkg?.badge})\n`;
-    text += `💰 *Construction Rate:* ₹${this.ratePerSqft.toLocaleString('en-IN')}/sq.ft\n`;
+    text += `📐 *Built-up Area:* ${this.builtUpArea} sq.ft (${this.getFloorsLabel()})${this.plotLength && this.plotWidth ? ` [${this.plotLength}ft × ${this.plotWidth}ft]` : ''}\n`;
+    text += `📦 *Package:* ${pkg?.name} (${pkg?.badge}) - ₹${pkg?.baseRate}/sq.ft Base\n`;
+    text += `💰 *Effective Rate:* ₹${this.ratePerSqft.toLocaleString('en-IN')}/sq.ft${this.includeInterior ? ` (Base: ₹${pkg?.baseRate} + Interior: +₹${this.currentInteriorRate})` : ''}\n`;
+    text += `🛋️ *Modular Interiors:* ${this.includeInterior ? `Included (+₹${this.currentInteriorRate}/sq.ft Extra)` : 'Not Included'}\n`;
     text += `🏷️ *Base Construction Cost:* ₹${this.baseConstructionCost.toLocaleString('en-IN')}\n`;
 
     const selectedAddons = this.getSelectedAddons();
@@ -1129,8 +1422,8 @@ export class FixedCostCalculatorPage implements OnInit {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.8);
     doc.setTextColor(255, 255, 255);
-    doc.text(`${this.builtUpArea} sq.ft Built-up • ${this.getFloorsLabel()}`, pageWidth - margin - 6, currentY + 15, { align: 'right' });
-    doc.text(`Masonry: ${this.getWallLabel()} | Plaster: ${this.getPlasterLabel()}`, pageWidth - margin - 6, currentY + 20, { align: 'right' });
+    doc.text(`${this.builtUpArea} sq.ft Built-up${this.plotLength && this.plotWidth ? ' (' + this.plotLength + 'x' + this.plotWidth + ' ft)' : ''} • ${this.getFloorsLabel()}`, pageWidth - margin - 6, currentY + 15, { align: 'right' });
+    doc.text(`Masonry: ${this.getWallLabel()} | Plaster: ${this.getPlasterLabel()} | Interiors: ${this.includeInterior ? 'Included (+Rs. ' + this.currentInteriorRate + '/sqft)' : 'Excluded'}`, pageWidth - margin - 6, currentY + 20, { align: 'right' });
 
     currentY += 28;
 
@@ -1573,16 +1866,24 @@ export class FixedCostCalculatorPage implements OnInit {
   }
 
   resetCalculator() {
+    this.plotLength = 30;
+    this.plotWidth = 40;
     this.builtUpArea = 1200;
     this.selectedFloors = 1;
     this.selectedPackage = 'standard';
     this.wallType = 'red_brick';
-    this.plasterType = 'gypsum';
+    this.plasterType = 'cement_plaster';
     this.includeInterior = true;
+    this.selectedSolarType = 'on_grid';
+    this.selectedBatteryType = 'tubular';
+    this.selectedSolarPlan = '3kW';
     this.paidAddons.forEach(a => a.selected = false);
     this.packages.forEach(pkg => {
       if (this.defaultPackageRates[pkg.id]) {
         pkg.baseRate = this.defaultPackageRates[pkg.id];
+      }
+      if (this.defaultInteriorRates[pkg.id]) {
+        pkg.interiorRate = this.defaultInteriorRates[pkg.id];
       }
     });
     this.recalculate();

@@ -234,9 +234,14 @@
         </div>
 
         <!-- 2. Leads Acquired -->
-        <div class="meta-kpi-card kpi-leads">
-          <div class="kpi-icon-wrap">
-            <ion-icon name="people-outline"></ion-icon>
+        <div class="meta-kpi-card kpi-leads clickable" (click)="goToLeads()" role="button" tabindex="0" title="Click to view all leads">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="kpi-icon-wrap">
+              <ion-icon name="people-outline"></ion-icon>
+            </div>
+            <span class="kpi-action-badge">
+              View <ion-icon name="arrow-forward-outline"></ion-icon>
+            </span>
           </div>
           <div class="kpi-body">
             <div class="kpi-label">Leads Acquired</div>
