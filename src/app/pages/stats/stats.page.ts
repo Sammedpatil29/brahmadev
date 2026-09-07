@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -116,12 +116,17 @@ export class StatsPage implements OnInit {
   currentFileName = '';
   isGeneratingPdf = false;
 
+  // Google Charts Loading Guard
+  private googleChartsLoaded = false;
+  private googleChartsLoadingPromise: Promise<void> | null = null;
+
   constructor(
     private navCtrl: NavController,
     private toastCtrl: ToastController,
     private sanitizer: DomSanitizer,
     private service: Leads,
-    private platform: Platform
+    private platform: Platform,
+    private cdr: ChangeDetectorRef
   ) {
     addIcons({
       arrowBackOutline,
@@ -148,8 +153,69 @@ export class StatsPage implements OnInit {
 
   ngOnInit() {
     this.checkAndShowBetaToast();
+    this.ensureGoogleChartsLoaded().catch(e => console.warn('Google charts pre-load notice:', e));
     this.loadData();
     this.loadAdAccountStatus();
+  }
+
+  ionViewDidEnter() {
+    if (this.selectedTab === 'analytics') {
+      if (this.leads.length > 0 && !this.isLoading) {
+        setTimeout(() => this.drawCharts(0), 50);
+      } else if (!this.isLoading) {
+        this.loadData();
+      }
+    } else if (this.selectedTab === 'meta_ads') {
+      if (this.metaAdSpendData && !this.isAdsLoading) {
+        setTimeout(() => this.drawAdSpendChart(0), 50);
+      }
+    }
+  }
+
+  private ensureGoogleChartsLoaded(): Promise<void> {
+    if (this.googleChartsLoaded && typeof google !== 'undefined' && google.visualization) {
+      return Promise.resolve();
+    }
+    if (this.googleChartsLoadingPromise) {
+      return this.googleChartsLoadingPromise;
+    }
+
+    this.googleChartsLoadingPromise = new Promise<void>((resolve, reject) => {
+      const loadPackages = () => {
+        try {
+          google.charts.load('current', { packages: ['corechart'] });
+          google.charts.setOnLoadCallback(() => {
+            this.googleChartsLoaded = true;
+            resolve();
+          });
+        } catch (err) {
+          if (typeof google !== 'undefined' && google.visualization) {
+            this.googleChartsLoaded = true;
+            resolve();
+          } else {
+            reject(err);
+          }
+        }
+      };
+
+      if (typeof google !== 'undefined' && google.charts) {
+        loadPackages();
+      } else {
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          if (typeof google !== 'undefined' && google.charts) {
+            clearInterval(interval);
+            loadPackages();
+          } else if (attempts > 50) {
+            clearInterval(interval);
+            reject(new Error('Timed out waiting for Google Charts library'));
+          }
+        }, 100);
+      }
+    });
+
+    return this.googleChartsLoadingPromise;
   }
 
   async checkAndShowBetaToast() {
@@ -179,9 +245,9 @@ export class StatsPage implements OnInit {
   onResize() {
     if (typeof google !== 'undefined' && google.visualization) {
       if (this.selectedTab === 'analytics' && !this.isLoading) {
-        this.drawCharts();
+        this.drawCharts(0);
       } else if (this.selectedTab === 'meta_ads' && !this.isAdsLoading && this.metaAdSpendData) {
-        this.drawAdSpendChart();
+        this.drawAdSpendChart(0);
       }
     }
   }
@@ -192,14 +258,19 @@ export class StatsPage implements OnInit {
 
   switchTab(tab: 'analytics' | 'meta_ads' | 'google_ads') {
     this.selectedTab = tab;
+    this.cdr.detectChanges();
     if (tab === 'meta_ads') {
       if (!this.metaAdSpendData) {
         this.loadMetaAdSpend();
       } else {
-        setTimeout(() => this.drawAdSpendChart(), 150);
+        setTimeout(() => this.drawAdSpendChart(0), 100);
       }
     } else if (tab === 'analytics') {
-      setTimeout(() => this.drawCharts(), 150);
+      if (this.leads.length === 0) {
+        this.loadData();
+      } else {
+        setTimeout(() => this.drawCharts(0), 100);
+      }
     }
   }
 
@@ -218,36 +289,56 @@ export class StatsPage implements OnInit {
 
   loadData() {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.service.getLeads().subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
         this.leads = res || [];
         this.totalLeads = this.leads.length;
         this.processMonthlyData();
         this.processPlatformData();
         this.processResponseData();
         this.isLoading = false;
+        this.cdr.detectChanges(); // Immediately render chart containers in DOM
 
-        // Ensure Google Charts loaded
-        if (typeof google !== 'undefined') {
-          google.charts.load('current', { packages: ['corechart'] });
-          google.charts.setOnLoadCallback(() => {
-            if (this.selectedTab === 'analytics') {
-              this.drawCharts();
-            }
-          });
+        try {
+          await this.ensureGoogleChartsLoaded();
+        } catch (e) {
+          console.error('Error ensuring Google Charts loaded:', e);
         }
+
+        setTimeout(() => {
+          this.drawCharts(0);
+        }, 50);
       },
-      error: () => {
+      error: (err) => {
+        console.error('Failed to load leads:', err);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  drawCharts() {
-    this.drawMonthlyChart();
-    this.drawPlatformChart();
-    this.drawResponseChart();
-    this.drawMonthlyStatusChart();
+  drawCharts(retryCount = 0) {
+    if (this.selectedTab !== 'analytics' || this.isLoading) return;
+
+    if (!this.monthlyChartRef?.nativeElement || typeof google === 'undefined' || !google.visualization) {
+      if (retryCount < 6) {
+        setTimeout(() => this.drawCharts(retryCount + 1), 100);
+      }
+      return;
+    }
+
+    try {
+      this.drawMonthlyChart();
+      this.drawPlatformChart();
+      this.drawResponseChart();
+      this.drawMonthlyStatusChart();
+    } catch (e) {
+      console.warn('Error while drawing charts, retrying...', e);
+      if (retryCount < 4) {
+        setTimeout(() => this.drawCharts(retryCount + 1), 150);
+      }
+    }
   }
 
   processMonthlyData() {
@@ -309,7 +400,7 @@ export class StatsPage implements OnInit {
   }
 
   drawMonthlyChart() {
-    if (!this.monthlyChartRef) return;
+    if (!this.monthlyChartRef?.nativeElement || typeof google === 'undefined' || !google.visualization) return;
 
     const dataArray: any[] = [['Month', 'Leads', { role: 'style' }, { role: 'annotation' }]];
     const colors = ['#3880ff', '#3dc2ff', '#5260ff', '#2dd36f', '#ffc409', '#eb445a', '#222428', '#7044ff'];
@@ -351,7 +442,7 @@ export class StatsPage implements OnInit {
   }
 
   drawPlatformChart() {
-    if (!this.platformChartRef) return;
+    if (!this.platformChartRef?.nativeElement || typeof google === 'undefined' || !google.visualization) return;
 
     const dataArray: any[] = [['Platform', 'Leads']];
     this.platformData.forEach(item => dataArray.push([item.name, item.count]));
@@ -373,7 +464,7 @@ export class StatsPage implements OnInit {
   }
 
   drawResponseChart() {
-    if (!this.responseChartRef) return;
+    if (!this.responseChartRef?.nativeElement || typeof google === 'undefined' || !google.visualization) return;
 
     const dataArray: any[] = [['Response Status', 'Leads']];
     this.responseData.forEach(item => dataArray.push([item.name, item.count]));
@@ -427,7 +518,7 @@ export class StatsPage implements OnInit {
   }
 
   drawMonthlyStatusChart() {
-    if (!this.monthlyStatusChartRef) return;
+    if (!this.monthlyStatusChartRef?.nativeElement || typeof google === 'undefined' || !google.visualization) return;
 
     const pipelineGroups = ['Active / Hot', 'Follow-up', 'Closed / Lost', 'Professionals'];
     const pipelineColors = ['#2dd36f', '#3880ff', '#eb445a', '#7044ff'];
@@ -523,94 +614,111 @@ export class StatsPage implements OnInit {
 
   loadMetaAdSpend() {
     this.isAdsLoading = true;
+    this.cdr.detectChanges();
     this.service.getMetaAdSpend(this.selectedDatePreset).subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
         this.metaAdSpendData = res;
         this.isAdsLoading = false;
+        this.cdr.detectChanges();
 
-        // Ensure google charts package is loaded, then draw
-        if (typeof google !== 'undefined') {
-          google.charts.load('current', { packages: ['corechart'] });
-          google.charts.setOnLoadCallback(() => {
-            setTimeout(() => this.drawAdSpendChart(), 100);
-          });
+        try {
+          await this.ensureGoogleChartsLoaded();
+        } catch (e) {
+          console.error('Error ensuring Google Charts loaded:', e);
         }
+
+        setTimeout(() => this.drawAdSpendChart(0), 50);
       },
       error: (err) => {
         console.error('Error fetching Meta Ad Spend:', err);
         this.isAdsLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  drawAdSpendChart() {
-    if (!this.adDailyChartRef || !this.metaAdSpendData) return;
+  drawAdSpendChart(retryCount = 0) {
+    if (this.selectedTab !== 'meta_ads' || this.isAdsLoading || !this.metaAdSpendData) return;
+
+    if (!this.adDailyChartRef?.nativeElement || typeof google === 'undefined' || !google.visualization) {
+      if (retryCount < 6) {
+        setTimeout(() => this.drawAdSpendChart(retryCount + 1), 100);
+      }
+      return;
+    }
 
     const trends = this.metaAdSpendData.dailyTrends || [];
     if (trends.length === 0) return;
 
-    const dataArray: any[] = [
-      [
-        'Date',
-        'Daily Spend (₹)',
-        { role: 'style' },
-        'Leads Acquired'
-      ]
-    ];
+    try {
+      const dataArray: any[] = [
+        [
+          'Date',
+          'Daily Spend (₹)',
+          { role: 'style' },
+          'Leads Acquired'
+        ]
+      ];
 
-    trends.forEach((item: any) => {
-      const d = new Date(item.date);
-      const formattedDate = isNaN(d.getTime())
-        ? item.date
-        : `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`;
+      trends.forEach((item: any) => {
+        const d = new Date(item.date);
+        const formattedDate = isNaN(d.getTime())
+          ? item.date
+          : `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`;
 
-      dataArray.push([
-        formattedDate,
-        item.spend || 0,
-        '#1877F2',
-        item.leads || 0
-      ]);
-    });
+        dataArray.push([
+          formattedDate,
+          item.spend || 0,
+          '#1877F2',
+          item.leads || 0
+        ]);
+      });
 
-    const data = google.visualization.arrayToDataTable(dataArray);
+      const data = google.visualization.arrayToDataTable(dataArray);
 
-    const options = {
-      title: '',
-      legend: { position: 'top', alignment: 'center' },
-      seriesType: 'bars',
-      series: {
-        0: { targetAxisIndex: 0, color: '#1877F2' },
-        1: { type: 'line', targetAxisIndex: 1, color: '#10b981', pointSize: 6, lineWidth: 3 }
-      },
-      vAxes: {
-        0: {
-          title: 'Spend (₹)',
-          textStyle: { color: '#1877F2', fontSize: 11 },
-          titleTextStyle: { color: '#1877F2', fontSize: 12, italic: false, bold: true },
-          minValue: 0,
-          gridlines: { color: '#f1f5f9' }
+      const options = {
+        title: '',
+        legend: { position: 'top', alignment: 'center' },
+        seriesType: 'bars',
+        series: {
+          0: { targetAxisIndex: 0, color: '#1877F2' },
+          1: { type: 'line', targetAxisIndex: 1, color: '#10b981', pointSize: 6, lineWidth: 3 }
         },
-        1: {
-          title: 'Leads Acquired',
-          textStyle: { color: '#10b981', fontSize: 11 },
-          titleTextStyle: { color: '#10b981', fontSize: 12, italic: false, bold: true },
-          minValue: 0,
-          gridlines: { count: 0 }
-        }
-      },
-      hAxis: {
-        slantedText: true,
-        slantedTextAngle: 35,
-        textStyle: { fontSize: 10, color: '#64748b' }
-      },
-      chartArea: { width: '85%', height: '65%', top: 35 },
-      bar: { groupWidth: '60%' },
-      backgroundColor: 'transparent',
-      fontName: 'inherit'
-    };
+        vAxes: {
+          0: {
+            title: 'Spend (₹)',
+            textStyle: { color: '#1877F2', fontSize: 11 },
+            titleTextStyle: { color: '#1877F2', fontSize: 12, italic: false, bold: true },
+            minValue: 0,
+            gridlines: { color: '#f1f5f9' }
+          },
+          1: {
+            title: 'Leads Acquired',
+            textStyle: { color: '#10b981', fontSize: 11 },
+            titleTextStyle: { color: '#10b981', fontSize: 12, italic: false, bold: true },
+            minValue: 0,
+            gridlines: { count: 0 }
+          }
+        },
+        hAxis: {
+          slantedText: true,
+          slantedTextAngle: 35,
+          textStyle: { fontSize: 10, color: '#64748b' }
+        },
+        chartArea: { width: '85%', height: '65%', top: 35 },
+        bar: { groupWidth: '60%' },
+        backgroundColor: 'transparent',
+        fontName: 'inherit'
+      };
 
-    const chart = new google.visualization.ComboChart(this.adDailyChartRef.nativeElement);
-    chart.draw(data, options);
+      const chart = new google.visualization.ComboChart(this.adDailyChartRef.nativeElement);
+      chart.draw(data, options);
+    } catch (e) {
+      console.warn('Error drawing ad spend chart, retrying...', e);
+      if (retryCount < 4) {
+        setTimeout(() => this.drawAdSpendChart(retryCount + 1), 150);
+      }
+    }
   }
 
   /* ---------------------------------------------------- */
