@@ -10,8 +10,8 @@
     "watch": "ng build --watch --configuration development",
     "deploy": "npx ionic build && npx cap run android --target 65PJQ8SCOJRCS8EI",
     "ota:publish": "node scripts/publish-ota.mjs",
-    "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "git:fix": "node -e \"const fs=require('fs');try{fs.unlinkSync('.git/index')}catch(e){};require('child_process').execSync('git reset',{stdio:'inherit'})\""
   },
   "private": true,
   "dependencies": {

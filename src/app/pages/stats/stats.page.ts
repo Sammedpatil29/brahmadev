@@ -43,7 +43,8 @@ import {
   downloadOutline,
   closeOutline,
   documentTextOutline,
-  arrowForwardOutline
+  arrowForwardOutline,
+  walletOutline
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Leads } from 'src/app/services/leads';
@@ -149,7 +150,8 @@ export class StatsPage implements OnInit {
       downloadOutline,
       closeOutline,
       documentTextOutline,
-      arrowForwardOutline
+      arrowForwardOutline,
+      walletOutline
     });
   }
 
@@ -611,9 +613,11 @@ export class StatsPage implements OnInit {
     this.service.getMetaAdAccountStatus().subscribe({
       next: (res: any) => {
         this.adAccountStatus = res;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.adAccountStatus = { connected: false, configured: false };
+        this.cdr.detectChanges();
       }
     });
   }

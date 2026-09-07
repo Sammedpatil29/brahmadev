@@ -171,7 +171,13 @@
         </div>
 
         <!-- Account & Campaign Filter Badges -->
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          @if (adAccountStatus?.availableFunds !== null && adAccountStatus?.availableFunds !== undefined) {
+            <div class="ad-account-pill funds-header-pill" title="Meta Ad Account Available Funds">
+              <ion-icon name="wallet-outline"></ion-icon>
+              <span>Balance: ₹{{ (adAccountStatus.availableFunds || 0) | number:'1.2-2' }}</span>
+            </div>
+          }
           @if (metaAdSpendData?.filterApplied?.campaignIds?.length > 0) {
             <div class="ad-account-pill campaign-filter-badge" title="Filtered by Campaign IDs">
               <ion-icon name="funnel-outline"></ion-icon>
@@ -217,7 +223,8 @@
 
       <!-- Top KPI Summary Cards Grid -->
       <div class="meta-kpi-grid">
-        
+
+
         <!-- 1. Total Spend -->
         <div class="meta-kpi-card kpi-spend">
           <div class="kpi-icon-wrap">

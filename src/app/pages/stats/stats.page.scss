@@ -251,6 +251,88 @@
         font-size: 0.9rem;
       }
     }
+
+    &.funds-header-pill {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #e6f9ed 0%, #d4f7e2 50%, #bbf0d0 100%);
+      border: 1.5px solid #22c55e;
+      color: #14532d;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.22);
+      animation: wallet-glow 2.5s infinite ease-in-out;
+
+      ion-icon {
+        font-size: 1.05rem;
+        color: #15803d;
+        flex-shrink: 0;
+      }
+
+      span {
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+
+      // High-visibility bright light beam sweep
+      &::after {
+        content: '';
+        position: absolute;
+        top: -60%;
+        left: -130%;
+        width: 70%;
+        height: 220%;
+        background: linear-gradient(
+          115deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.6) 25%,
+          rgba(255, 255, 255, 1) 50%,
+          rgba(255, 255, 255, 0.6) 75%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        box-shadow: 0 0 16px 4px rgba(255, 255, 255, 0.95);
+        transform: rotate(25deg);
+        animation: wallet-shine 2.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 3;
+      }
+    }
+  }
+}
+
+@keyframes wallet-shine {
+  0% {
+    left: -130%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  45% {
+    left: 170%;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    left: 170%;
+    opacity: 0;
+  }
+}
+
+@keyframes wallet-glow {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+    border-color: #22c55e;
+  }
+  25% {
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.6), 0 0 2px rgba(16, 185, 129, 0.9);
+    border-color: #16a34a;
   }
 }
 
@@ -318,8 +400,16 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
   @media (min-width: 1024px) {
     grid-template-columns: repeat(6, 1fr);
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
 }
 
@@ -343,6 +433,7 @@
     font-size: 1.15rem;
     margin-bottom: 8px;
   }
+
 
   &.kpi-spend {
     border-top: 3px solid #1877f2;
