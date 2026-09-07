@@ -213,8 +213,8 @@ export class LayoutPage implements OnInit, OnDestroy {
 
         const notification = new Notification('🚨 New Lead Received!', {
           body: `${leadPlatform}${leadName}${leadContact}${leadCity}`,
-          icon: 'assets/icon/favicon.png',
-          badge: 'assets/icon/favicon.png',
+          icon: 'assets/icon-192.png',
+          badge: 'assets/icon-192.png',
           tag: 'brahmadev-new-lead',
           requireInteraction: true // Keeps notification visible until user interacts
         });

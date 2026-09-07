@@ -425,11 +425,13 @@
               <ion-button 
                 class="btn-download-header"
                 (click)="downloadCurrentPDF()"
-                [disabled]="isGeneratingPdf">
-                <ion-icon slot="start" name="download-outline"></ion-icon>
-                Download PDF
+                [disabled]="isGeneratingPdf"
+                title="Download PDF">
+                <ion-icon slot="icon-only" class="d-sm-none" name="download-outline"></ion-icon>
+                <ion-icon slot="start" class="d-none d-sm-inline-block" name="download-outline"></ion-icon>
+                <span class="btn-text d-none d-sm-inline">Download PDF</span>
               </ion-button>
-              <ion-button (click)="closePreviewModal()">
+              <ion-button (click)="closePreviewModal()" title="Close">
                 <ion-icon slot="icon-only" name="close-outline"></ion-icon>
               </ion-button>
             </ion-buttons>

@@ -12,9 +12,9 @@
       </div>
     </ion-title>
     <ion-buttons slot="end" class="pe-2 d-flex align-items-center gap-2">
-      <button class="btn-set-price" (click)="openSetPriceModal()">
+      <button class="btn-set-price" (click)="openSetPriceModal()" title="Set Price">
         <ion-icon name="pricetag-outline"></ion-icon>
-        <span>Set Price</span>
+        <span class="btn-text">Set Price</span>
       </button>
       <div class="topbar-cost-pill">
         <span class="cost-pill-label">Total (Incl. Taxes)</span>
@@ -251,11 +251,11 @@
             <div class="d-flex gap-2 align-items-center flex-wrap">
               <button class="btn-share-quote btn-download-quote" (click)="openDownloadModal()" title="Download Detailed PDF Quote">
                 <ion-icon name="download-outline"></ion-icon>
-                <span>Download PDF</span>
+                <span class="btn-text">Download PDF</span>
               </button>
               <button class="btn-share-quote" (click)="copyEstimate()" title="Copy Summary Quote">
                 <ion-icon name="copy-outline"></ion-icon>
-                <span>Copy</span>
+                <span class="btn-text">Copy</span>
               </button>
             </div>
           </div>
@@ -304,30 +304,34 @@
         <button 
           class="tab-btn" 
           [class.active]="activeTab === 'categories'" 
-          (click)="activeTab = 'categories'">
+          (click)="activeTab = 'categories'"
+          title="Category Breakdown">
           <ion-icon name="construct-outline"></ion-icon>
-          <span>Category Breakdown</span>
+          <span class="tab-text">Category Breakdown</span>
         </button>
         <button 
           class="tab-btn" 
           [class.active]="activeTab === 'materials'" 
-          (click)="activeTab = 'materials'">
+          (click)="activeTab = 'materials'"
+          title="Material BOQ">
           <ion-icon name="cube-outline"></ion-icon>
-          <span>Material BOQ</span>
+          <span class="tab-text">Material BOQ</span>
         </button>
         <button 
           class="tab-btn tab-btn-addon" 
           [class.active]="activeTab === 'addons'" 
-          (click)="activeTab = 'addons'">
+          (click)="activeTab = 'addons'"
+          title="Paid Add-Ons">
           <ion-icon name="flash-outline"></ion-icon>
-          <span>Paid Add-Ons ({{ getSelectedAddonsCount() }})</span>
+          <span class="tab-text">Paid Add-Ons ({{ getSelectedAddonsCount() }})</span>
         </button>
         <button 
           class="tab-btn tab-btn-comp" 
           [class.active]="activeTab === 'complementary'" 
-          (click)="activeTab = 'complementary'">
-          <span class="gift-tab-badge">🎁 FREE</span>
-          <span>Complementary ({{ complementaryServices.length }})</span>
+          (click)="activeTab = 'complementary'"
+          title="Complementary Services">
+          <span class="gift-tab-icon">🎁</span>
+          <span class="tab-text">Complementary ({{ complementaryServices.length }})</span>
         </button>
       </div>
 

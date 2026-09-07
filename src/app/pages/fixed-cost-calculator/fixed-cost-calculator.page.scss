@@ -51,6 +51,24 @@
     transform: translateY(0);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
+
+  // Small screens / mobile: icon only
+  @media (max-width: 575.98px) {
+    padding: 7px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    justify-content: center;
+    gap: 0;
+
+    .btn-text {
+      display: none !important;
+    }
+
+    ion-icon {
+      font-size: 1.05rem;
+    }
+  }
 }
 
 .topbar-cost-pill {
@@ -421,6 +439,24 @@
 
       &:hover { background: #0b5ed7; }
     }
+
+    // Small screens / mobile: icon only
+    @media (max-width: 575.98px) {
+      padding: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      justify-content: center;
+      gap: 0;
+
+      .btn-text {
+        display: none !important;
+      }
+
+      ion-icon {
+        font-size: 1.15rem;
+      }
+    }
   }
 }
 
@@ -538,13 +574,28 @@
       color: #b45309;
     }
 
-    .gift-tab-badge {
-      background: #dcfce7;
-      color: #166534;
-      font-size: 0.65rem;
-      padding: 1px 5px;
-      border-radius: 10px;
-      font-weight: 800;
+    .gift-tab-icon {
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    // Small screens / mobile: icon only
+    @media (max-width: 575.98px) {
+      padding: 8px 4px;
+      gap: 0;
+      justify-content: center;
+
+      .tab-text {
+        display: none !important;
+      }
+
+      ion-icon {
+        font-size: 1.25rem;
+      }
+
+      .gift-tab-icon {
+        font-size: 1.25rem;
+      }
     }
   }
 }
