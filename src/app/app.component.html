@@ -24,4 +24,12 @@
       </div>
     </div>
   }
+
+  <div 
+    class="socket-indicator" 
+    [class.connected]="isSocketConnected" 
+    [class.disconnected]="!isSocketConnected">
+    <span class="socket-dot"></span>
+    <span class="socket-text">{{ isSocketConnected ? 'Looking for live leads' : 'Disconnected' }}</span>
+  </div>
 </ion-app>

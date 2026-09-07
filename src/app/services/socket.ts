@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -10,6 +10,8 @@ export class SocketService {
   private socket: Socket;
   private readonly serverUrl: string = environment.apiUrl;
   private newLeadSubject = new Subject<any>();
+  private isConnectedSubject = new BehaviorSubject<boolean>(false);
+  public isConnected$ = this.isConnectedSubject.asObservable();
 
   constructor() {
     this.socket = io(this.serverUrl, {
@@ -22,14 +24,17 @@ export class SocketService {
 
     this.socket.on('connect', () => {
       console.log('🟢 Connected to Socket.IO server:', this.socket.id);
+      this.isConnectedSubject.next(true);
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('🔴 Disconnected from Socket.IO server:', reason);
+      this.isConnectedSubject.next(false);
     });
 
     this.socket.on('connect_error', (error) => {
       console.warn('⚠️ Socket.IO connection error:', error.message);
+      this.isConnectedSubject.next(false);
     });
 
     // Listen for new-lead events and pipe to Subject
@@ -44,6 +49,20 @@ export class SocketService {
    */
   onNewLead(): Observable<any> {
     return this.newLeadSubject.asObservable();
+  }
+
+  /**
+   * Observable stream that emits connection state changes (true = connected, false = disconnected)
+   */
+  onConnectionChange(): Observable<boolean> {
+    return this.isConnected$;
+  }
+
+  /**
+   * Current connection status boolean
+   */
+  get isConnected(): boolean {
+    return this.socket ? this.socket.connected : false;
   }
 
   /**

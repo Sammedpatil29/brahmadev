@@ -105,3 +105,132 @@
     opacity: 0.6;
   }
 }
+
+/* ==========================================================================
+   Socket.IO Connection Indicator (Desktop Only)
+   ========================================================================== */
+.socket-indicator {
+  position: fixed;
+  top: -15px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  z-index: 99999;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-radius 0.3s ease,
+              padding 0.3s ease,
+              box-shadow 0.3s ease,
+              background-color 0.3s ease;
+
+  &.connected {
+    background-color: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.55);
+    animation: socketGlowGreen 2.5s infinite ease-in-out;
+  }
+
+  &.disconnected {
+    background-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.55);
+    animation: socketGlowRed 2s infinite ease-in-out;
+  }
+
+  .socket-dot {
+    width: 7px;
+    height: 7px;
+    min-width: 7px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    margin-right: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .socket-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease 0.08s;
+    letter-spacing: 0.2px;
+  }
+
+  /* Expand horizontally from the fixed point on hover */
+  &:hover {
+    height: 40px;
+    border-radius: 0 0 0 20px;
+    padding-top: 10px;
+    padding-left: 14px;
+    padding-right: 20px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+
+    &.connected {
+      width: 180px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 14px rgba(34, 197, 94, 0.45);
+    }
+
+    &.disconnected {
+      width: 135px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 14px rgba(239, 68, 68, 0.45);
+    }
+
+    .socket-dot {
+      opacity: 1;
+      animation: socketPulseDot 1.4s infinite ease-in-out;
+    }
+
+    .socket-text {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+@keyframes socketGlowGreen {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.85);
+  }
+}
+
+@keyframes socketGlowRed {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.85);
+  }
+}
+
+@keyframes socketPulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+  }
+}
+
+/* Show strictly on desktop devices (hidden on mobile phones & tablets) */
+@media (max-width: 991px) {
+  .socket-indicator {
+    display: none !important;
+  }
+}

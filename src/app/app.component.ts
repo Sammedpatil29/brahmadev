@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { PushNotifications, Token, PushNotification } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
@@ -6,6 +6,8 @@ import { FcmService } from './services/fcm';
 import { AppUpdate, AppUpdateInfo } from '@capawesome/capacitor-app-update';
 import { Platform } from '@ionic/angular';
 import { OtaKit } from '@otakit/capacitor-updater';
+import { Subscription } from 'rxjs';
+import { SocketService } from './services/socket';
 
 @Component({
   selector: 'app-root',
@@ -13,19 +15,31 @@ import { OtaKit } from '@otakit/capacitor-updater';
   styleUrls: ['app.component.scss'],
   imports: [IonApp, IonRouterOutlet],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   showRelaunchPrompt = false;
   newVersion = '';
   isRelaunching = false;
+  isSocketConnected = false;
+  private socketSub?: Subscription;
 
   constructor(
     private fcmService: FcmService,
     private platform: Platform,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private socketService: SocketService
   ) {}
 
   ngOnInit(): void {
     this.initializeApp();
+
+    // Track Socket.IO connection state
+    this.socketSub = this.socketService.onConnectionChange().subscribe((connected) => {
+      this.ngZone.run(() => {
+        this.isSocketConnected = connected;
+      });
+    });
+    this.isSocketConnected = this.socketService.isConnected;
+
     this.platform.ready().then(async () => {
       // Notify OtaKit that the app started successfully (prevents automatic rollback)
       if (Capacitor.isNativePlatform()) {
@@ -118,5 +132,7 @@ async checkForUpdate() {
   }
 
 
-  
+  ngOnDestroy(): void {
+    this.socketSub?.unsubscribe();
+  }
 }
