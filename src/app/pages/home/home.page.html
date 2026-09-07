@@ -1,13 +1,23 @@
 <ion-header class="ion-no-border home-header">
   <div class="header-container d-flex justify-content-between align-items-center px-4 py-3">
     <div class="greeting-box">
-      <small class="text-muted d-block">Welcome back,</small>
+      <small class="text-muted d-block">Welcome {{ userName ? (userName | titlecase) : '' }}</small>
       <b class="text-dark h5">{{greeting}}</b>
     </div>
-    <div class="logout-btn" (click)="logout()">
-      <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#d71d1d">
-        <path d="M480-120q-75 0-140.5-28.5t-114-77q-48.5-48.5-77-114T120-480q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840v80q-117 0-198.5 81.5T200-480q0 117 81.5 198.5T480-200v80Zm160-160-56-57 103-103H360v-80h327L584-624l56-56 200 200-200 200Z"/>
-      </svg>
+    <div class="header-actions d-flex align-items-center gap-2">
+      @if (isAdmin) {
+        <div class="manage-users-btn" (click)="navigate('manage-users')" title="Manage Users">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#0d6efd">
+            <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z"/>
+          </svg>
+          <span class="manage-users-text">Manage Users</span>
+        </div>
+      }
+      <div class="logout-btn" (click)="logout()" title="Logout">
+        <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#d71d1d">
+          <path d="M480-120q-75 0-140.5-28.5t-114-77q-48.5-48.5-77-114T120-480q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840v80q-117 0-198.5 81.5T200-480q0 117 81.5 198.5T480-200v80Zm160-160-56-57 103-103H360v-80h327L584-624l56-56 200 200-200 200Z"/>
+        </svg>
+      </div>
     </div>
   </div>
 </ion-header>

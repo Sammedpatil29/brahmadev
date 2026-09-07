@@ -44,6 +44,9 @@ export class LoginPage implements OnInit {
         localStorage.setItem('userToken', res.token)
         const decoded: any = jwtDecode(res.token);
         localStorage.setItem('userName', decoded.username)
+        if (res.role || decoded?.role) {
+          localStorage.setItem('userRole', res.role || decoded.role);
+        }
         this.isLoading = false
         this.navCtrl.navigateRoot('/layout')
       } else {
@@ -64,6 +67,9 @@ export class LoginPage implements OnInit {
     } else {
       this.loginService.verifyToken({token}).subscribe((res:any)=>{
       if(res.valid == true){
+        if (res.user?.role) {
+          localStorage.setItem('userRole', res.user.role);
+        }
         this.navCtrl.navigateRoot('/layout')
       } else {
         this.showLogin = true

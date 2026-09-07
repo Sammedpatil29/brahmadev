@@ -64,6 +64,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/invoice-list/invoice-list.page').then( m => m.InvoiceListPage)
   },
   {
+    path: 'manage-users',
+    loadComponent: () => import('./pages/manage-users/manage-users.page').then( m => m.ManageUsersPage)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full',

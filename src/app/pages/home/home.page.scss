@@ -199,6 +199,49 @@
   }
 }
 
+.manage-users-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  user-select: none;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e40af;
+  }
+
+  &:active {
+    transform: scale(0.94);
+    background: #bfdbfe;
+  }
+
+  // On screens smaller than md (768px), show only the human icon compactly
+  @media (max-width: 767.98px) {
+    padding: 6px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+
+    .manage-users-text {
+      display: none !important;
+    }
+  }
+}
+
 .logout-btn {
   cursor: pointer;
   display: flex;

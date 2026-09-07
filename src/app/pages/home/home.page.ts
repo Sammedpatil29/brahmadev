@@ -5,9 +5,11 @@ import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonTogg
 // import { SocketService } from 'src/app/services/socket';
 import { NavController, Platform } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
+import { UserService } from 'src/app/services/user';
 import { register } from 'swiper/element/bundle';
 import { Capacitor } from '@capacitor/core';
 import { LeadCardComponent } from "src/app/components/lead-card/lead-card.component";
+import { jwtDecode } from 'jwt-decode';
 register();
 
 @Component({
@@ -26,7 +28,9 @@ export class HomePage implements OnInit {
   rideRequests: any
   newLeads: any = 0
   greeting: string = '';
+  userName: string = '';
   isAndroid: boolean = false;
+  isAdmin: boolean = false;
 
   lead: any;
   today = new Date()
@@ -34,6 +38,7 @@ export class HomePage implements OnInit {
   constructor(
     private navCtrl: NavController,
     private service: Leads,
+    private userService: UserService,
     private platform: Platform
   ) {
     this.isAndroid = this.platform.is('android') || Capacitor.getPlatform() === 'android';
@@ -42,11 +47,12 @@ export class HomePage implements OnInit {
   ngOnInit() {
     // this.startTimeCounter();
     this.setGreeting();
-    this.newLeadsCount()
+    this.getUserName();
+    this.newLeadsCount();
+    this.checkAdminStatus();
     // if (Capacitor.isNativePlatform()) {
     //   this.fcmService.initPush()
     // }
-    
   }
 
   scroll(direction: 'left' | 'right') {
@@ -61,7 +67,43 @@ export class HomePage implements OnInit {
 }
 
   ionViewDidEnter() {
-    this.newLeadsCount()
+    this.getUserName();
+    this.newLeadsCount();
+    this.checkAdminStatus();
+  }
+
+  getUserName() {
+    let name = localStorage.getItem('userName');
+    if (!name) {
+      const token = localStorage.getItem('userToken');
+      if (token) {
+        try {
+          const decoded: any = jwtDecode(token);
+          name = decoded?.username || decoded?.name;
+          if (name) localStorage.setItem('userName', name);
+        } catch (e) {}
+      }
+    }
+    this.userName = name || '';
+  }
+
+  checkAdminStatus() {
+    const role = this.userService.getCurrentUserRole();
+    if (role) {
+      this.isAdmin = role === 'admin';
+    } else {
+      const token = localStorage.getItem('userToken');
+      if (token) {
+        this.userService.verifyToken(token).subscribe({
+          next: (res: any) => {
+            if (res.valid && res.user?.role) {
+              localStorage.setItem('userRole', res.user.role);
+              this.isAdmin = res.user.role.toLowerCase() === 'admin';
+            }
+          }
+        });
+      }
+    }
   }
 
    ngOnDestroy() {
@@ -87,9 +129,10 @@ export class HomePage implements OnInit {
   }
 
   logout(){
-    localStorage.removeItem('userToken')
-    localStorage.removeItem('userName')
-    this.navCtrl.navigateRoot('/login')
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    this.navCtrl.navigateRoot('/login');
   }
 
  setGreeting() {

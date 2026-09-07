@@ -1,0 +1,289 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="leads-header-bar d-flex justify-content-between align-items-center">
+        <div class="leads-title-text">
+          Manage Users
+        </div>
+        <div class="leads-header-right d-flex align-items-center gap-2">
+          <div class="desktop-header-searchbar">
+            <ion-searchbar 
+              [(ngModel)]="searchTerm" 
+              (ionInput)="applyFilter()" 
+              placeholder="Search by name, phone, or email">
+            </ion-searchbar>
+          </div>
+        </div>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openAddModal()" title="Add User" class="btn-add-lead cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
+          <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
+        </svg>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<div class="position-sticky bg-white" style="top: 0px; z-index: 999">
+  @if (!isLoading) {
+    <div class="chip-container pt-0">
+      <div class="chip" [class.total-count]="selectedRoleFilter === 'all'" (click)="setRoleFilter('all')">
+        All ({{ totalCount }})
+      </div>
+      <div class="chip" [class.total-count]="selectedRoleFilter === 'admin'" (click)="setRoleFilter('admin')">
+        Admins ({{ adminCount }})
+      </div>
+      <div class="chip" [class.total-count]="selectedRoleFilter === 'user'" (click)="setRoleFilter('user')">
+        Staff ({{ staffCount }})
+      </div>
+    </div>
+  }
+  <div class="mobile-searchbar-wrap">
+    <ion-searchbar 
+      [(ngModel)]="searchTerm" 
+      (ionInput)="applyFilter()" 
+      placeholder="Search by name, phone, or email">
+    </ion-searchbar>
+  </div>
+</div>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="loadUsers($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (!isLoading) {
+    @if (filteredUsers.length > 0) {
+      <div class="leads-grid">
+        @for (user of filteredUsers; track user.id) {
+          <div class="lead-card-container">
+            <ion-card class="modern-lead-card" [ngStyle]="{
+              'border': (user.role || '').toLowerCase() === 'admin' 
+                ? '0.5px double #1877F233' 
+                : '0.5px double #05966933'
+            }" (click)="openEditModal(user)">
+              <ion-card-content>
+                <div class="card-header-row">
+                  <div class="user-avatar" [ngStyle]="{
+                    'color': (user.role || '').toLowerCase() === 'admin' ? '#1877f2' : '#059669',
+                    'background': (user.role || '').toLowerCase() === 'admin' ? '#eff6ff' : '#ecfdf5'
+                  }">
+                    {{ getInitials(user.name) }}
+                  </div>
+                  <div class="header-info">
+                    <h2 class="lead-name">{{ user.name | titlecase }}</h2>
+                    <div class="d-flex gap-2 align-items-center mt-1">
+                      <p class="lead-platform mb-0">
+                        <ion-icon 
+                          [name]="(user.role || '').toLowerCase() === 'admin' ? 'shield-checkmark-outline' : 'person-outline'" 
+                          [ngClass]="(user.role || '').toLowerCase() === 'admin' ? 'text-primary' : 'text-success'">
+                        </ion-icon> 
+                        {{ (user.role || '').toLowerCase() === 'admin' ? 'Administrator' : 'Staff User' }}
+                      </p>
+                      @if (currentUserId && user.id === currentUserId) {
+                        <span class="badge bg-light text-primary border" style="font-size: 0.68rem;">You</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center gap-1">
+                    <ion-badge 
+                      [color]="(user.role || '').toLowerCase() === 'admin' ? 'primary' : 'success'" 
+                      class="status-badge text-white">
+                      {{ (user.role || 'user') | uppercase }}
+                    </ion-badge>
+                  </div>
+                </div>
+
+                <div class="card-body-row">
+                  <div class="info-item">
+                    <ion-icon name="call-outline"></ion-icon>
+                    <span>{{ user.phone }}</span>
+                  </div>
+                  <div class="info-item">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <span class="text-truncate" style="max-width: 170px;">{{ user.email }}</span>
+                  </div>
+                </div>
+
+                <div class="card-footer-row">
+                  <span class="visit-time text-nowrap">
+                    <ion-icon name="time-outline" color="primary"></ion-icon>
+                    Added {{ (user.createdAt ? (user.createdAt | date:'dd/MM/yy') : 'Recently') }}
+                  </span>
+                  <div class="card-action-btns d-flex align-items-center gap-1">
+                    <ion-button 
+                      fill="clear" 
+                      color="primary" 
+                      size="small" 
+                      class="btn-inline-action"
+                      (click)="openEditModal(user); $event.stopPropagation()">
+                      <ion-icon slot="start" name="create-outline"></ion-icon>
+                      Edit
+                    </ion-button>
+                    @if (!currentUserId || user.id !== currentUserId) {
+                      <ion-button 
+                        fill="clear" 
+                        color="danger" 
+                        size="small" 
+                        class="btn-inline-action"
+                        (click)="confirmDelete(user); $event.stopPropagation()" 
+                        title="Delete User">
+                        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                      </ion-button>
+                    }
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="no-data-container d-flex flex-column align-items-center justify-content-center p-5 text-center">
+        <div class="icon-wrapper mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" height="64px" viewBox="0 -960 960 960" width="64px" fill="#d1d5db">
+            <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+          </svg>
+        </div>
+        <h5 class="text-secondary fw-semibold">No Users Found</h5>
+        <p class="text-muted small">We couldn't find any users matching your search or filter.</p>
+        <button class="btn btn-outline-primary btn-sm mt-2" (click)="resetSearch()">
+          Clear All Filters
+        </button>
+      </div>
+    }
+  } @else {
+    <div class="loader" style="height: 100%; display: flex; align-items: center; justify-content: center; min-height: 250px;">
+      <ion-spinner color="primary"></ion-spinner>
+    </div>
+  }
+
+  <!-- Mobile Floating Action Button -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="d-sm-none">
+    <ion-fab-button color="dark" (click)="openAddModal()" title="Add New User">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <!-- Create / Edit User Modal -->
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()" class="user-form-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ isEditing ? 'Edit User' : 'Add New User' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeModal()" color="medium">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding user-modal-content">
+        <div class="modal-inner-wrap">
+          
+          <div class="input-container">
+            <p class="section-title">USER DETAILS</p>
+            <div class="input-group">
+              <ion-input 
+                [(ngModel)]="editingUser.name" 
+                placeholder="Full Name" 
+                class="custom-input">
+                <ion-icon slot="start" name="person-outline" class="input-field-icon"></ion-icon>
+              </ion-input>
+
+              <ion-input 
+                [(ngModel)]="editingUser.phone" 
+                type="tel" 
+                placeholder="Contact Number (10 digits)" 
+                maxlength="15" 
+                class="custom-input">
+                <ion-icon slot="start" name="call-outline" class="input-field-icon"></ion-icon>
+              </ion-input>
+
+              <ion-input 
+                [(ngModel)]="editingUser.email" 
+                type="email" 
+                placeholder="Email Address" 
+                class="custom-input">
+                <ion-icon slot="start" name="mail-outline" class="input-field-icon"></ion-icon>
+              </ion-input>
+            </div>
+
+            <p class="section-title mt-4">ROLE & ACCESS</p>
+            <div class="role-segment-card">
+              <ion-segment [(ngModel)]="editingUser.role" mode="ios" class="custom-role-segment">
+                <ion-segment-button value="user">
+                  <ion-label class="d-flex align-items-center justify-content-center gap-1">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <span>Staff User</span>
+                  </ion-label>
+                </ion-segment-button>
+                <ion-segment-button value="admin">
+                  <ion-label class="d-flex align-items-center justify-content-center gap-1">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    <span>Admin</span>
+                  </ion-label>
+                </ion-segment-button>
+              </ion-segment>
+              <div class="role-help-text mt-2">
+                @if ((editingUser.role || 'user').toLowerCase() === 'admin') {
+                  <span class="text-primary fw-semibold">
+                    <ion-icon name="shield-checkmark-outline" class="me-1"></ion-icon>
+                    Full Administrator access (Manage Users, Meta Ads, Settings, Leads)
+                  </span>
+                } @else {
+                  <span class="text-muted">
+                    <ion-icon name="person-outline" class="me-1"></ion-icon>
+                    Staff access (Standard view, manage assigned leads and site visits)
+                  </span>
+                }
+              </div>
+            </div>
+
+            <p class="section-title mt-4">ACCOUNT SECURITY</p>
+            <div class="input-group">
+              <div class="password-row d-flex align-items-center">
+                <ion-input 
+                  [type]="isPasswordVisible ? 'text' : 'password'" 
+                  [(ngModel)]="editingUser.password" 
+                  [placeholder]="isEditing ? 'New Password (leave blank to keep current)' : 'Password (min 4 characters)'"
+                  class="custom-input flex-fill">
+                  <ion-icon slot="start" name="lock-closed-outline" class="input-field-icon"></ion-icon>
+                </ion-input>
+                <button type="button" class="btn-eye-toggle" (click)="togglePasswordVisibility()" tabindex="-1">
+                  <ion-icon [name]="isPasswordVisible ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="button-stack">
+            <ion-button 
+              expand="block" 
+              mode="ios" 
+              color="dark" 
+              (click)="saveUser()" 
+              [disabled]="!editingUser.name || !editingUser.phone || !editingUser.email || (!isEditing && !editingUser.password) || isSaving">
+              @if (isSaving) {
+                <ion-spinner name="crescent" color="light" class="me-2"></ion-spinner>
+                <span>Saving User...</span>
+              } @else {
+                <ion-icon slot="start" [name]="isEditing ? 'checkmark-circle-outline' : 'person-add-outline'"></ion-icon>
+                <span>{{ isEditing ? 'Update User Details' : 'Save User Details' }}</span>
+              }
+            </ion-button>
+          </div>
+
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>
