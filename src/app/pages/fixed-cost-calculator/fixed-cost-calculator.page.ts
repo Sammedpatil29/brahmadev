@@ -2,6 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
+declare var pdfjsLib: any;
 import {
   IonContent,
   IonHeader,
@@ -451,7 +453,20 @@ export class FixedCostCalculatorPage implements OnInit {
   customerGst: string = '';
   todayDateFormatted: string = '';
   pdfPreviewSafeUrl: SafeResourceUrl | null = null;
+  pdfBlobUrl: string | null = null;
   currentGeneratedDoc: jsPDF | null = null;
+  // In-UI PDF page rendering for mobile & desktop
+  pdfPages: string[] = [];
+  isRenderingPdfPages = false;
+  isMobile = false;
+
+  get isNativeApp(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+
+  get isMobilePlatform(): boolean {
+    return this.isMobile || (typeof window !== 'undefined' && window.innerWidth < 768);
+  }
 
   // UTL Solar Rooftop Plans (On-Grid & Off-Grid with Battery Options)
   selectedSolarType: 'on_grid' | 'off_grid' = 'on_grid';
@@ -691,6 +706,8 @@ export class FixedCostCalculatorPage implements OnInit {
     private platform: Platform,
     private cdr: ChangeDetectorRef
   ) {
+    this.isMobile = this.platform.is('android') || this.platform.is('ios') || this.platform.is('mobile') || Capacitor.isNativePlatform();
+
     addIcons({
       arrowBackOutline,
       calculatorOutline,
@@ -1780,13 +1797,20 @@ export class FixedCostCalculatorPage implements OnInit {
       const doc = await this.buildPDFDocument();
       this.currentGeneratedDoc = doc;
 
+      if (this.pdfBlobUrl) {
+        URL.revokeObjectURL(this.pdfBlobUrl);
+      }
       const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+      this.pdfBlobUrl = URL.createObjectURL(blob);
+      this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
+      this.pdfPages = [];
 
       this.isDownloadModalOpen = false;
       this.isPreviewModalOpen = true;
       this.isGeneratingPdf = false;
+
+      // Render crisp in-UI page preview for mobile screens & desktop
+      await this.renderPdfPages(doc);
     } catch (error) {
       console.error('Error generating PDF preview:', error);
       this.isGeneratingPdf = false;
@@ -1800,8 +1824,79 @@ export class FixedCostCalculatorPage implements OnInit {
     }
   }
 
+  async renderPdfPages(doc: jsPDF): Promise<void> {
+    this.isRenderingPdfPages = true;
+    this.pdfPages = [];
+    this.cdr.detectChanges();
+
+    try {
+      await this.ensurePdfJsLoaded();
+
+      if (typeof pdfjsLib !== 'undefined') {
+        if (!pdfjsLib.GlobalWorkerOptions?.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        const arrayBuffer = doc.output('arraybuffer');
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        const pages: string[] = [];
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          // Scale 1.75 for crisp retina text & numbers on mobile screens
+          const viewport = page.getViewport({ scale: 1.75 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          if (context) {
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: context, viewport }).promise;
+            pages.push(canvas.toDataURL('image/png'));
+          }
+        }
+
+        this.pdfPages = pages;
+      }
+    } catch (err) {
+      console.warn('PDF.js in-app render notice:', err);
+    } finally {
+      this.isRenderingPdfPages = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private ensurePdfJsLoaded(): Promise<void> {
+    if (typeof pdfjsLib !== 'undefined') {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const existingScript = document.getElementById('pdfjs-script');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve());
+        existingScript.addEventListener('error', () => resolve());
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.id = 'pdfjs-script';
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.head.appendChild(script);
+    });
+  }
+
   closePreviewModal() {
     this.isPreviewModalOpen = false;
+    this.pdfPages = [];
+    if (this.pdfBlobUrl) {
+      URL.revokeObjectURL(this.pdfBlobUrl);
+      this.pdfBlobUrl = null;
+    }
+    this.pdfPreviewSafeUrl = null;
   }
 
   // --- DOWNLOAD OR SHARE FROM PREVIEW / DIRECT ---
