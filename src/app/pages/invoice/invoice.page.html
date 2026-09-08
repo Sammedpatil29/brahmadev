@@ -351,16 +351,47 @@
         </ion-header>
 
         <div class="preview-modal-body">
-          @if (pdfPreviewSafeUrl) {
+          @if (isRenderingPdfPages) {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+              <ion-spinner name="crescent" color="primary"></ion-spinner>
+              <p class="mt-2 text-muted fw-semibold small">Rendering Tax Invoice Preview...</p>
+            </div>
+          } @else if (pdfPages.length > 0) {
+            <div class="pdf-pages-scroll-viewer">
+              @for (pageImg of pdfPages; track $index) {
+                <div class="pdf-page-container">
+                  <div class="pdf-page-header-tag">Page {{ $index + 1 }} of {{ pdfPages.length }}</div>
+                  <img [src]="pageImg" class="pdf-rendered-page-img" alt="Tax Invoice Page {{ $index + 1 }}" />
+                </div>
+              }
+            </div>
+          } @else if (pdfPreviewSafeUrl && !isNativeApp) {
             <iframe 
               [src]="pdfPreviewSafeUrl" 
               class="pdf-iframe-element" 
               title="Tax Invoice PDF Preview">
             </iframe>
           } @else {
-            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
-              <ion-spinner name="crescent"></ion-spinner>
-              <p class="mt-2 text-muted">Rendering Tax Invoice Preview...</p>
+            <div class="mobile-pdf-preview-container">
+              <div class="mobile-pdf-card">
+                <div class="pdf-icon-badge">
+                  <ion-icon name="document-text-outline"></ion-icon>
+                  <span class="pdf-type-tag">PDF</span>
+                </div>
+                
+                <h3 class="mobile-pdf-title">{{ previewTitle }}</h3>
+                
+                <div class="mobile-pdf-meta">
+                  <span class="file-name">{{ currentFileName }}</span>
+                </div>
+
+                <div class="mobile-pdf-actions">
+                  <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" (click)="downloadCurrentPDF()">
+                    <ion-icon name="download-outline"></ion-icon>
+                    <span>Download / Share PDF</span>
+                  </button>
+                </div>
+              </div>
             </div>
           }
         </div>

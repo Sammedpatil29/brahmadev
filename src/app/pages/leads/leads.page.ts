@@ -29,6 +29,7 @@ export class LeadsPage implements OnInit, OnDestroy {
 
   private batchSize = 20;
   private socketSubscription?: Subscription;
+  private leadUpdateSubscription?: Subscription;
 
   constructor(
     private navCtrl: NavController, 
@@ -59,11 +60,39 @@ export class LeadsPage implements OnInit, OnDestroy {
         });
       }
     });
+
+    // Listen to real-time lead updates (status changes, comments, etc.)
+    this.leadUpdateSubscription = this.socketService.onLeadUpdate().subscribe((updateData: any) => {
+      if (updateData && Array.isArray(this.leads)) {
+        this.ngZone.run(() => {
+          const leadId = updateData.leadId || updateData.lead?.id;
+          const target = this.leads.find((l: any) => String(l.id) === String(leadId) || String(l._id) === String(leadId));
+          if (target) {
+            if (updateData.response || updateData.lead?.response) {
+              target.response = updateData.response || updateData.lead.response;
+            }
+            if (updateData.lead?.comment || updateData.comment) {
+              target.comment = updateData.lead?.comment || updateData.comment;
+            }
+            if (updateData.lead?.visit_schedule !== undefined) {
+              target.visit_schedule = updateData.lead.visit_schedule;
+            }
+            if (updateData.lead?.access !== undefined) {
+              target.access = updateData.lead.access;
+            }
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    });
   }
 
   ngOnDestroy() {
     if (this.socketSubscription) {
       this.socketSubscription.unsubscribe();
+    }
+    if (this.leadUpdateSubscription) {
+      this.leadUpdateSubscription.unsubscribe();
     }
   }
 

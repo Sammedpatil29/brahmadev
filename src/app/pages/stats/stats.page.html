@@ -356,19 +356,16 @@
             <div class="campaign-cards-list">
               @for (camp of metaAdSpendData.campaigns; track camp.campaignId) {
                 <div class="campaign-item-card">
-                  <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                    <div>
+                  <div class="campaign-header-row d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div class="campaign-title-col">
                       <div class="campaign-name">{{ camp.campaignName }}</div>
-                      <div class="d-flex align-items-center gap-1 mt-1">
-                        @if (camp.campaignId) {
+                      @if (camp.campaignId) {
+                        <div class="mt-1">
                           <span class="campaign-id-badge" title="Campaign ID">ID: {{ camp.campaignId }}</span>
-                        }
-                        @if (camp.objective) {
-                          <span class="campaign-objective">{{ camp.objective }}</span>
-                        }
-                      </div>
+                        </div>
+                      }
                     </div>
-                    <div class="text-end">
+                    <div class="campaign-spend-col text-end">
                       <div class="campaign-spend-badge">
                         ₹{{ camp.spend | number:'1.2-2' }}
                       </div>
@@ -455,19 +452,26 @@
         </ion-header>
 
         <div class="preview-modal-body">
-          @if (!isMobilePlatform) {
-            @if (pdfPreviewSafeUrl) {
-              <iframe 
-                [src]="pdfPreviewSafeUrl" 
-                class="pdf-iframe-element" 
-                title="PDF Report Preview">
-              </iframe>
-            } @else {
-              <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
-                <ion-spinner name="crescent"></ion-spinner>
-                <p class="mt-2 text-muted">Preparing PDF Preview...</p>
-              </div>
-            }
+          @if (isRenderingPdfPages) {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+              <ion-spinner name="crescent" color="primary"></ion-spinner>
+              <p class="mt-2 text-muted fw-semibold small">Rendering Report Preview...</p>
+            </div>
+          } @else if (pdfPages.length > 0) {
+            <div class="pdf-pages-scroll-viewer">
+              @for (pageImg of pdfPages; track $index) {
+                <div class="pdf-page-container">
+                  <div class="pdf-page-header-tag">Page {{ $index + 1 }} of {{ pdfPages.length }}</div>
+                  <img [src]="pageImg" class="pdf-rendered-page-img" alt="Report Page {{ $index + 1 }}" />
+                </div>
+              }
+            </div>
+          } @else if (pdfPreviewSafeUrl && !isNativeApp) {
+            <iframe 
+              [src]="pdfPreviewSafeUrl" 
+              class="pdf-iframe-element" 
+              title="PDF Report Preview">
+            </iframe>
           } @else {
             <div class="mobile-pdf-preview-container">
               <div class="mobile-pdf-card">
@@ -491,7 +495,7 @@
                 </div>
 
                 <p class="mobile-pdf-note">
-                  Tap below to view the report directly in your device's PDF viewer (Google Drive Viewer, Adobe Acrobat, etc.) or share it via WhatsApp.
+                  Tap below to view or share the report.
                 </p>
 
                 <ion-button 
@@ -501,7 +505,7 @@
                   [disabled]="isGeneratingPdf">
                   <ion-spinner *ngIf="isGeneratingPdf" name="crescent" slot="start"></ion-spinner>
                   <ion-icon *ngIf="!isGeneratingPdf" slot="start" name="open-outline"></ion-icon>
-                  {{ isGeneratingPdf ? 'Opening Report...' : 'Open / View PDF' }}
+                  {{ isGeneratingPdf ? 'Opening Report...' : 'Open / Share PDF' }}
                 </ion-button>
               </div>
             </div>

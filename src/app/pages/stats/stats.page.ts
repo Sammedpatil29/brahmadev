@@ -54,6 +54,7 @@ import { addIcons } from 'ionicons';
 import { Leads } from 'src/app/services/leads';
 
 declare var google: any;
+declare var pdfjsLib: any;
 
 @Component({
   selector: 'app-stats',
@@ -88,6 +89,13 @@ export class StatsPage implements OnInit {
 
   // Meta Ads Chart
   @ViewChild('adDailyChart', { static: false }) adDailyChartRef!: ElementRef;
+
+  // Chart instances for image extraction in PDF export
+  monthlyChartInstance: any = null;
+  platformChartInstance: any = null;
+  responseChartInstance: any = null;
+  monthlyStatusChartInstance: any = null;
+  adDailyChartInstance: any = null;
 
   // Active Tab
   selectedTab: 'analytics' | 'meta_ads' | 'google_ads' = 'analytics';
@@ -146,7 +154,14 @@ export class StatsPage implements OnInit {
   previewTitle = '';
   currentFileName = '';
   isGeneratingPdf = false;
+  // In-UI PDF page rendering for mobile & desktop
+  pdfPages: string[] = [];
+  isRenderingPdfPages = false;
   isMobile = false;
+
+  get isNativeApp(): boolean {
+    return Capacitor.isNativePlatform();
+  }
 
   get isMobilePlatform(): boolean {
     return this.isMobile || (typeof window !== 'undefined' && window.innerWidth < 768);
@@ -485,8 +500,8 @@ export class StatsPage implements OnInit {
       fontName: 'inherit'
     };
 
-    const chart = new google.visualization.ColumnChart(this.monthlyChartRef.nativeElement);
-    chart.draw(data, options);
+    this.monthlyChartInstance = new google.visualization.ColumnChart(this.monthlyChartRef.nativeElement);
+    this.monthlyChartInstance.draw(data, options);
   }
 
   drawPlatformChart() {
@@ -507,8 +522,8 @@ export class StatsPage implements OnInit {
       fontName: 'inherit'
     };
 
-    const chart = new google.visualization.PieChart(this.platformChartRef.nativeElement);
-    chart.draw(data, options);
+    this.platformChartInstance = new google.visualization.PieChart(this.platformChartRef.nativeElement);
+    this.platformChartInstance.draw(data, options);
   }
 
   drawResponseChart() {
@@ -544,8 +559,8 @@ export class StatsPage implements OnInit {
       fontName: 'inherit'
     };
 
-    const chart = new google.visualization.LineChart(this.responseChartRef.nativeElement);
-    chart.draw(data, options);
+    this.responseChartInstance = new google.visualization.LineChart(this.responseChartRef.nativeElement);
+    this.responseChartInstance.draw(data, options);
   }
 
   getPipelineGroup(response: string): string {
@@ -636,8 +651,8 @@ export class StatsPage implements OnInit {
       fontName: 'inherit'
     };
 
-    const chart = new google.visualization.ColumnChart(this.monthlyStatusChartRef.nativeElement);
-    chart.draw(data, options);
+    this.monthlyStatusChartInstance = new google.visualization.ColumnChart(this.monthlyStatusChartRef.nativeElement);
+    this.monthlyStatusChartInstance.draw(data, options);
   }
 
   /* ---------------------------------------------------- */
@@ -839,8 +854,8 @@ export class StatsPage implements OnInit {
         fontName: 'inherit'
       };
 
-      const chart = new google.visualization.ComboChart(this.adDailyChartRef.nativeElement);
-      chart.draw(data, options);
+      this.adDailyChartInstance = new google.visualization.ComboChart(this.adDailyChartRef.nativeElement);
+      this.adDailyChartInstance.draw(data, options);
     } catch (e) {
       console.warn('Error drawing ad spend chart, retrying...', e);
       if (retryCount < 4) {
@@ -894,6 +909,10 @@ export class StatsPage implements OnInit {
         await toast.present();
         return;
       }
+      if (!this.monthlyChartInstance && this.monthlyChartRef?.nativeElement) {
+        this.drawCharts();
+        await new Promise(r => setTimeout(r, 200));
+      }
       await this.generateLeadAnalyticsPDF();
     } else if (this.selectedTab === 'meta_ads') {
       if (this.isAdsLoading) {
@@ -916,6 +935,10 @@ export class StatsPage implements OnInit {
         await toast.present();
         return;
       }
+      if (!this.adDailyChartInstance && this.adDailyChartRef?.nativeElement) {
+        this.drawAdSpendChart();
+        await new Promise(r => setTimeout(r, 200));
+      }
       await this.generateMetaAdsPDF();
     } else {
       const toast = await this.toastCtrl.create({
@@ -925,6 +948,125 @@ export class StatsPage implements OnInit {
         color: 'medium'
       });
       await toast.present();
+    }
+  }
+
+  // --- CHART IMAGE EXTRACTION HELPERS FOR PDF EXPORT ---
+  async getChartImage(chartInstance: any, elementRef?: ElementRef): Promise<string | null> {
+    try {
+      if (chartInstance && typeof chartInstance.getImageURI === 'function') {
+        const uri = chartInstance.getImageURI();
+        if (uri && typeof uri === 'string' && uri.startsWith('data:image')) {
+          return uri;
+        }
+      }
+    } catch (e) {
+      console.warn('chartInstance.getImageURI() notice:', e);
+    }
+
+    // Fallback: extract SVG directly from DOM element and render to PNG canvas
+    try {
+      const el = elementRef?.nativeElement;
+      const svg = el?.querySelector('svg');
+      if (svg) {
+        return await this.svgToPngDataUrl(svg);
+      }
+    } catch (e) {
+      console.warn('SVG extraction fallback notice:', e);
+    }
+
+    return null;
+  }
+
+  private svgToPngDataUrl(svgElement: SVGElement): Promise<string | null> {
+    return new Promise((resolve) => {
+      try {
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svgElement);
+
+        if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+          svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        if (!svgString.match(/^<svg[^>]+xmlns\:xlink="http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
+          svgString = svgString.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+        }
+
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const scale = 2; // high resolution for crisp PDF
+            const width = (svgElement.clientWidth || 650) * scale;
+            const height = (svgElement.clientHeight || 320) * scale;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
+              URL.revokeObjectURL(url);
+              resolve(canvas.toDataURL('image/png'));
+              return;
+            }
+          } catch (err) {
+            console.warn('Canvas draw SVG error:', err);
+          }
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+
+        img.src = url;
+      } catch (err) {
+        console.warn('svgToPngDataUrl error:', err);
+        resolve(null);
+      }
+    });
+  }
+
+  drawChartPdfCard(doc: jsPDF, title: string, imgData: string, x: number, y: number, w: number, h: number) {
+    const brandNavy: [number, number, number] = [20, 33, 61];
+    const brandGold: [number, number, number] = [184, 146, 74];
+
+    // Card Outer Box (White background, subtle light border)
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(220, 226, 235);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+
+    // Card Header Bar
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(x, y, w, 7, 2, 2, 'F');
+    doc.rect(x, y + 4, w, 3, 'F'); // Square bottom corners of header
+
+    // Small Gold Accent dot/bar
+    doc.setFillColor(brandGold[0], brandGold[1], brandGold[2]);
+    doc.rect(x + 3, y + 2.2, 2, 2.6, 'F');
+
+    // Title Text
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.8);
+    doc.setTextColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+    doc.text(title, x + 7, y + 4.8);
+
+    // Separator line
+    doc.setDrawColor(230, 235, 242);
+    doc.setLineWidth(0.3);
+    doc.line(x, y + 7, x + w, y + 7);
+
+    // Render Chart Image
+    try {
+      doc.addImage(imgData, 'PNG', x + 2, y + 8, w - 4, h - 9.5);
+    } catch (e) {
+      console.warn('Error embedding chart image into PDF:', e);
     }
   }
 
@@ -1158,6 +1300,85 @@ export class StatsPage implements OnInit {
             2: { halign: 'right' }
           }
         });
+      }
+
+      currentY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : currentY + 10;
+
+      // 9. Visual Analytics & Charts Section (Appended below existing tables)
+      const monthlyImg = await this.getChartImage(this.monthlyChartInstance, this.monthlyChartRef);
+      const statusImg = await this.getChartImage(this.monthlyStatusChartInstance, this.monthlyStatusChartRef);
+      const platformImg = await this.getChartImage(this.platformChartInstance, this.platformChartRef);
+      const responseImg = await this.getChartImage(this.responseChartInstance, this.responseChartRef);
+
+      const hasAnyChart = monthlyImg || statusImg || platformImg || responseImg;
+      if (hasAnyChart) {
+        if (currentY + 75 > pageHeight - 20) {
+          doc.addPage();
+          currentY = 16;
+        }
+
+        // Section Banner
+        doc.setFillColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+        doc.roundedRect(margin, currentY, contentWidth, 10, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text('VISUAL ANALYTICS & CHARTS', margin + 6, currentY + 6.5);
+        doc.setFontSize(7.5);
+        doc.setTextColor(brandGold[0], brandGold[1], brandGold[2]);
+        doc.text('Performance Trends & Graphical Breakdowns', rightEdge - 6, currentY + 6.5, { align: 'right' });
+        currentY += 14;
+
+        // Chart 1: Leads by Month
+        if (monthlyImg) {
+          const chartBoxHeight = 62;
+          if (currentY + chartBoxHeight + 10 > pageHeight - 20) {
+            doc.addPage();
+            currentY = 16;
+          }
+          this.drawChartPdfCard(doc, 'Leads by Month (Acquisition Trend)', monthlyImg, margin, currentY, contentWidth, chartBoxHeight);
+          currentY += chartBoxHeight + 8;
+        }
+
+        // Chart 2: Monthly Leads by Pipeline Stage
+        if (statusImg) {
+          const chartBoxHeight = 62;
+          if (currentY + chartBoxHeight + 10 > pageHeight - 20) {
+            doc.addPage();
+            currentY = 16;
+          }
+          this.drawChartPdfCard(doc, 'Monthly Leads by Pipeline Stage', statusImg, margin, currentY, contentWidth, chartBoxHeight);
+          currentY += chartBoxHeight + 8;
+        }
+
+        // Charts 3 & 4: Platform Share & Response Status
+        if (platformImg && responseImg) {
+          const chartBoxHeight = 60;
+          if (currentY + chartBoxHeight + 10 > pageHeight - 20) {
+            doc.addPage();
+            currentY = 16;
+          }
+          const halfWidth = (contentWidth - 4) / 2;
+          this.drawChartPdfCard(doc, 'Leads by Platform Source', platformImg, margin, currentY, halfWidth, chartBoxHeight);
+          this.drawChartPdfCard(doc, 'Leads by Response Status', responseImg, margin + halfWidth + 4, currentY, halfWidth, chartBoxHeight);
+          currentY += chartBoxHeight + 8;
+        } else if (platformImg) {
+          const chartBoxHeight = 62;
+          if (currentY + chartBoxHeight + 10 > pageHeight - 20) {
+            doc.addPage();
+            currentY = 16;
+          }
+          this.drawChartPdfCard(doc, 'Leads by Platform Source', platformImg, margin, currentY, contentWidth, chartBoxHeight);
+          currentY += chartBoxHeight + 8;
+        } else if (responseImg) {
+          const chartBoxHeight = 62;
+          if (currentY + chartBoxHeight + 10 > pageHeight - 20) {
+            doc.addPage();
+            currentY = 16;
+          }
+          this.drawChartPdfCard(doc, 'Leads by Response Status', responseImg, margin, currentY, contentWidth, chartBoxHeight);
+          currentY += chartBoxHeight + 8;
+        }
       }
 
       // Add Footers with date and time & brand color line
@@ -1494,6 +1715,41 @@ export class StatsPage implements OnInit {
         });
       }
 
+      currentY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : currentY + 10;
+
+      // 8. Visual Trend Graphs & Charts Section (Appended below existing tables)
+      const adDailyImg = await this.getChartImage(this.adDailyChartInstance, this.adDailyChartRef);
+      if (adDailyImg) {
+        const chartBoxHeight = 72;
+        if (currentY + chartBoxHeight + 18 > pageHeight - 20) {
+          doc.addPage();
+          currentY = 16;
+        }
+
+        // Section Banner
+        doc.setFillColor(brandNavy[0], brandNavy[1], brandNavy[2]);
+        doc.roundedRect(margin, currentY, contentWidth, 10, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text('VISUAL PERFORMANCE TRENDS', margin + 6, currentY + 6.5);
+        doc.setFontSize(7.5);
+        doc.setTextColor(brandGold[0], brandGold[1], brandGold[2]);
+        doc.text('Daily Ad Spend vs Leads Acquisition Breakdown', rightEdge - 6, currentY + 6.5, { align: 'right' });
+        currentY += 14;
+
+        this.drawChartPdfCard(
+          doc,
+          'Daily Ad Spend (Rs.) & Leads Acquired Breakdown',
+          adDailyImg,
+          margin,
+          currentY,
+          contentWidth,
+          chartBoxHeight
+        );
+        currentY += chartBoxHeight + 8;
+      }
+
       // Add Footers with date and time
       this.addPdfFooters(doc, `Meta Ads Report (${presetName})`);
 
@@ -1543,7 +1799,7 @@ export class StatsPage implements OnInit {
   }
 
   // --- COMMON HELPER: OPEN PDF PREVIEW MODAL ---
-  openPdfPreview(doc: jsPDF, title: string, fileName: string) {
+  async openPdfPreview(doc: jsPDF, title: string, fileName: string) {
     if (this.pdfBlobUrl) {
       URL.revokeObjectURL(this.pdfBlobUrl);
     }
@@ -1553,12 +1809,82 @@ export class StatsPage implements OnInit {
     this.currentGeneratedDoc = doc;
     this.previewTitle = title;
     this.currentFileName = fileName;
+    this.pdfPages = [];
     this.isPreviewModalOpen = true;
     this.isGeneratingPdf = false;
+
+    // Render crisp in-UI page preview for mobile screens & desktop
+    await this.renderPdfPages(doc);
+  }
+
+  async renderPdfPages(doc: jsPDF): Promise<void> {
+    this.isRenderingPdfPages = true;
+    this.pdfPages = [];
+    this.cdr.detectChanges();
+
+    try {
+      await this.ensurePdfJsLoaded();
+
+      if (typeof pdfjsLib !== 'undefined') {
+        if (!pdfjsLib.GlobalWorkerOptions?.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        const arrayBuffer = doc.output('arraybuffer');
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        const pages: string[] = [];
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          // Scale 1.75 for sharp, retina text & numbers on mobile screens
+          const viewport = page.getViewport({ scale: 1.75 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          if (context) {
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: context, viewport }).promise;
+            pages.push(canvas.toDataURL('image/png'));
+          }
+        }
+
+        this.pdfPages = pages;
+      }
+    } catch (err) {
+      console.warn('PDF.js in-app render notice:', err);
+    } finally {
+      this.isRenderingPdfPages = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private ensurePdfJsLoaded(): Promise<void> {
+    if (typeof pdfjsLib !== 'undefined') {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const existingScript = document.getElementById('pdfjs-script');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve());
+        existingScript.addEventListener('error', () => resolve());
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.id = 'pdfjs-script';
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.head.appendChild(script);
+    });
   }
 
   closePreviewModal() {
     this.isPreviewModalOpen = false;
+    this.pdfPages = [];
   }
 
   // --- DOWNLOAD OR SHARE FROM PREVIEW MODAL ---

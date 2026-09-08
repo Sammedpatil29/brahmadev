@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonBackButton, IonButton, IonList, IonItem, IonLabel, IonInput, IonIcon, IonFooter, IonSelectOption, IonTextarea, IonModal, IonSpinner } from '@ionic/angular/standalone';
@@ -9,6 +9,8 @@ import { Leads } from 'src/app/services/leads';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { jwtDecode } from 'jwt-decode';
+import { SocketService } from 'src/app/services/socket';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-lead-details',
@@ -17,7 +19,7 @@ import { jwtDecode } from 'jwt-decode';
   standalone: true,
   imports: [IonSpinner, IonModal, IonTextarea, IonFooter, IonIcon, IonInput, IonLabel, IonItem, IonList, IonButton, IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, IonSelectOption]
 })
-export class LeadDetailsPage implements OnInit {
+export class LeadDetailsPage implements OnInit, OnDestroy {
 
   newComment: any;
   isSending: boolean = false;
@@ -56,6 +58,8 @@ export class LeadDetailsPage implements OnInit {
   // Status search & filtering
   statusSearchQuery = '';
 
+  private socketSub?: Subscription;
+
   get filteredStatusList(): string[] {
     if (!this.statusSearchQuery || !this.statusSearchQuery.trim()) {
       return this.statusList;
@@ -86,7 +90,9 @@ export class LeadDetailsPage implements OnInit {
     private service: Leads, 
     private route: ActivatedRoute, 
     private toastController: ToastController, 
-    private router: Router
+    private router: Router,
+    private socketService: SocketService,
+    private ngZone: NgZone
   ) {
     addIcons({
       arrowBackOutline, callOutline, copyOutline, locationOutline, documentTextOutline, 
@@ -110,6 +116,65 @@ export class LeadDetailsPage implements OnInit {
         this.getLeadDetails();
       }
     });
+
+    // Listen for real-time lead updates (status changes, chat messages/progress notes, access, visit schedule)
+    this.socketSub = this.socketService.onLeadUpdate().subscribe((data: any) => {
+      if (!data) return;
+      const updateLeadId = data.leadId || data.lead?.id;
+      if (updateLeadId && (String(updateLeadId) === String(this.id) || String(updateLeadId) === String(this.lead?.id))) {
+        this.ngZone.run(() => {
+          this.handleIncomingLeadUpdate(data);
+        });
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+  }
+
+  handleIncomingLeadUpdate(data: any) {
+    if (!data) return;
+
+    let hasNewComments = false;
+
+    // 1. Update comments / messages
+    const incomingComments = data.lead?.comment || data.comment;
+    if (Array.isArray(incomingComments)) {
+      const currentCount = Array.isArray(this.lead?.comment) ? this.lead.comment.length : 0;
+      this.lead.comment = incomingComments;
+      if (incomingComments.length > currentCount) {
+        hasNewComments = true;
+      }
+    }
+
+    // 2. Update status response
+    const incomingResponse = data.response || data.lead?.response;
+    if (incomingResponse && this.lead) {
+      this.lead.response = incomingResponse;
+    }
+
+    // 3. Update visit schedule if present
+    if (data.lead?.visit_schedule !== undefined && this.lead) {
+      this.lead.visit_schedule = data.lead.visit_schedule;
+    }
+
+    // 4. Update access if present
+    if (data.lead?.access !== undefined && this.lead) {
+      this.lead.access = data.lead.access;
+    }
+
+    // 5. Update userList if provided
+    if (data.lead?.userList && this.lead) {
+      this.lead.userList = data.lead.userList;
+    }
+
+    // Scroll chat to bottom if new comments/messages arrived
+    if (hasNewComments) {
+      this.scrollToBottom();
+    }
   }
 
   back() {

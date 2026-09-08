@@ -611,31 +611,37 @@
   border-radius: 10px;
   padding: 12px;
 
+  .campaign-title-col {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .campaign-spend-col {
+    flex-shrink: 0;
+  }
+
   .campaign-name {
     font-size: 0.92rem;
     font-weight: 700;
     color: #0f172a;
+    line-height: 1.35;
+    word-break: break-word;
   }
 
   .campaign-id-badge {
     font-size: 0.64rem;
-    font-weight: 700;
+    font-weight: 600;
     font-family: monospace;
     background: #f1f5f9;
     color: #475569;
-    padding: 1px 5px;
-    border-radius: 4px;
-    border: 1px solid #e2e8f0;
-  }
-
-  .campaign-objective {
-    font-size: 0.66rem;
-    font-weight: 700;
-    background: #e2e8f0;
-    color: #475569;
     padding: 1px 6px;
     border-radius: 4px;
+    border: 1px solid #e2e8f0;
     display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.2px;
   }
 
   .campaign-spend-badge {
@@ -647,6 +653,7 @@
     border-radius: 6px;
     border: 1px solid #bfdbfe;
     white-space: nowrap;
+    display: inline-block;
   }
 
   .camp-gst-hint {
@@ -666,15 +673,47 @@
   .campaign-stats-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    align-items: center;
+    gap: 8px 14px;
     border-top: 1px solid #edf2f7;
     padding-top: 8px;
     margin-top: 6px;
 
     .camp-stat {
       font-size: 0.76rem;
+      white-space: nowrap;
       .stat-lbl { color: #64748b; margin-right: 4px; }
       .stat-val { font-weight: 600; color: #1e293b; }
+    }
+  }
+
+  // Mobile specific optimizations
+  @media (max-width: 575.98px) {
+    padding: 10px 12px;
+
+    .campaign-name {
+      font-size: 0.88rem;
+    }
+
+    .campaign-spend-badge {
+      font-size: 0.84rem;
+      padding: 2px 7px;
+    }
+
+    .camp-gst-hint {
+      font-size: 0.62rem;
+    }
+
+    .campaign-stats-row {
+      gap: 6px 12px;
+
+      .camp-stat {
+        font-size: 0.73rem;
+      }
+
+      .camp-cpl-tax {
+        font-size: 0.64rem;
+      }
     }
   }
 }
@@ -914,6 +953,63 @@
       background: #f8fafc;
       position: relative;
       overflow-y: auto;
+    }
+
+    // In-UI PDF Pages Scroll Viewer
+    .pdf-pages-scroll-viewer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 12px;
+      background: #334155;
+      min-height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+
+      .pdf-page-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 780px;
+
+        .pdf-page-header-tag {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #94a3b8;
+          margin-bottom: 6px;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+
+        .pdf-rendered-page-img {
+          width: 100%;
+          height: auto;
+          display: block;
+          background: #ffffff;
+          border-radius: 4px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+          user-select: none;
+        }
+      }
+
+      @media (max-width: 575.98px) {
+        padding: 10px 8px;
+        gap: 12px;
+
+        .pdf-page-container {
+          .pdf-page-header-tag {
+            font-size: 0.65rem;
+            margin-bottom: 4px;
+          }
+
+          .pdf-rendered-page-img {
+            border-radius: 3px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+          }
+        }
+      }
     }
 
     .pdf-iframe-element {

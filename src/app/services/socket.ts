@@ -10,6 +10,7 @@ export class SocketService {
   private socket: Socket;
   private readonly serverUrl: string = environment.apiUrl;
   private newLeadSubject = new Subject<any>();
+  private leadUpdateSubject = new Subject<any>();
   private isConnectedSubject = new BehaviorSubject<boolean>(false);
   public isConnected$ = this.isConnectedSubject.asObservable();
 
@@ -42,6 +43,12 @@ export class SocketService {
       console.log('⚡ Received real-time new-lead via Socket.IO:', leadData);
       this.newLeadSubject.next(leadData);
     });
+
+    // Listen for lead-updated events (status changes, progress notes/messages)
+    this.socket.on('lead-updated', (updateData: any) => {
+      console.log('⚡ Received real-time lead-updated via Socket.IO:', updateData);
+      this.leadUpdateSubject.next(updateData);
+    });
   }
 
   /**
@@ -49,6 +56,13 @@ export class SocketService {
    */
   onNewLead(): Observable<any> {
     return this.newLeadSubject.asObservable();
+  }
+
+  /**
+   * Observable stream that emits whenever a lead is updated (status, messages, etc.)
+   */
+  onLeadUpdate(): Observable<any> {
+    return this.leadUpdateSubject.asObservable();
   }
 
   /**

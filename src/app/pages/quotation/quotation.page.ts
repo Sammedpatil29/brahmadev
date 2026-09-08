@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+
+declare var pdfjsLib: any;
 import {
   IonHeader,
   IonLabel,
@@ -115,14 +118,29 @@ export class QuotationPage implements OnInit {
   currentFileName = '';
   currentQuoteId = '';
   isGeneratingPdf = false;
+  // In-UI PDF page rendering for mobile & desktop
+  pdfPages: string[] = [];
+  isRenderingPdfPages = false;
+  isMobile = false;
+
+  get isNativeApp(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+
+  get isMobilePlatform(): boolean {
+    return this.isMobile || (typeof window !== 'undefined' && window.innerWidth < 768);
+  }
 
   constructor(
     private navCtrl: NavController,
     private toastCtrl: ToastController,
     private sanitizer: DomSanitizer,
     private router: Router,
-    private leads: Leads
+    private leads: Leads,
+    private cdr: ChangeDetectorRef
   ) {
+    this.isMobile = Capacitor.isNativePlatform() || (typeof window !== 'undefined' && window.innerWidth < 768);
+
     addIcons({
       arrowBackOutline,
       logoWhatsapp,
@@ -670,9 +688,13 @@ export class QuotationPage implements OnInit {
       const blob = doc.output('blob');
       this.pdfBlobUrl = URL.createObjectURL(blob);
       this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
+      this.pdfPages = [];
 
       this.isPreviewModalOpen = true;
       this.isGeneratingPdf = false;
+
+      // Render crisp in-UI page preview for mobile screens & desktop
+      await this.renderPdfPages(doc);
     } catch (err) {
       console.error('Quotation preview error', err);
       this.isGeneratingPdf = false;
@@ -686,8 +708,74 @@ export class QuotationPage implements OnInit {
     }
   }
 
+  async renderPdfPages(doc: jsPDF): Promise<void> {
+    this.isRenderingPdfPages = true;
+    this.pdfPages = [];
+    this.cdr.detectChanges();
+
+    try {
+      await this.ensurePdfJsLoaded();
+
+      if (typeof pdfjsLib !== 'undefined') {
+        if (!pdfjsLib.GlobalWorkerOptions?.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        const arrayBuffer = doc.output('arraybuffer');
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        const pages: string[] = [];
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          // Scale 1.75 for crisp retina text & numbers on mobile screens
+          const viewport = page.getViewport({ scale: 1.75 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          if (context) {
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: context, viewport }).promise;
+            pages.push(canvas.toDataURL('image/png'));
+          }
+        }
+
+        this.pdfPages = pages;
+      }
+    } catch (err) {
+      console.warn('PDF.js in-app render notice:', err);
+    } finally {
+      this.isRenderingPdfPages = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private ensurePdfJsLoaded(): Promise<void> {
+    if (typeof pdfjsLib !== 'undefined') {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const existingScript = document.getElementById('pdfjs-script');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve());
+        existingScript.addEventListener('error', () => resolve());
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.id = 'pdfjs-script';
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.head.appendChild(script);
+    });
+  }
+
   closePreviewModal() {
     this.isPreviewModalOpen = false;
+    this.pdfPages = [];
     if (this.pdfBlobUrl) {
       URL.revokeObjectURL(this.pdfBlobUrl);
       this.pdfBlobUrl = null;
