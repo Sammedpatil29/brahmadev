@@ -1,24 +1,24 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
 
-  @if (showRelaunchPrompt) {
-    <div class="ota-relaunch-overlay">
-      <div class="ota-relaunch-card">
+  @if (showUpdatedAlert) {
+    <div class="ota-relaunch-overlay" (click)="dismissUpdatedAlert()">
+      <div class="ota-relaunch-card" (click)="$event.stopPropagation()">
         <div class="ota-content">
           <div class="ota-icon-badge">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
           </div>
           <div class="ota-details">
-            <div class="ota-title">Update Ready{{ newVersion ? ' (v' + newVersion + ')' : '' }}</div>
-            <div class="ota-desc">Restart the app to apply the latest update.</div>
+            <div class="ota-title">App Updated{{ updatedVersion ? ' (v' + updatedVersion + ')' : '' }}</div>
+            <div class="ota-desc">The app has been updated to the latest version.</div>
           </div>
         </div>
         <div class="ota-actions">
-          <button type="button" class="ota-btn ota-btn-later" (click)="dismissPrompt()">Later</button>
-          <button type="button" class="ota-btn ota-btn-restart" (click)="relaunchApp()" [disabled]="isRelaunching">
-            {{ isRelaunching ? 'Restarting...' : 'Restart Now' }}
+          <button type="button" class="ota-btn ota-btn-restart" (click)="dismissUpdatedAlert()">
+            Got It
           </button>
         </div>
       </div>

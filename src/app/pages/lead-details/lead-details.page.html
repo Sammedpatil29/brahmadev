@@ -38,14 +38,14 @@
       <div class="header-status-row">
         <div class="d-flex gap-2">
           
-          <span id="open-custom-dialog" class="status-badge">{{ lead?.response }}
-            <span>
-              @if (isUpdatingResponse) {
-                <div class="spinner-border spinner-border-sm" style="font-size: 1px; width: 10px; height: 10px;" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-              }
-            </span>
+          <span id="open-custom-dialog" class="status-badge clickable-status" title="Click to update status">
+            <span>{{ lead?.response | titlecase }}</span>
+            <ion-icon name="chevron-down-outline" class="status-chevron"></ion-icon>
+            @if (isUpdatingResponse) {
+              <div class="spinner-border spinner-border-sm ms-1" style="font-size: 1px; width: 10px; height: 10px;" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            }
           </span>
 
           <div class="platform-date" [hidden]="lead.response == 'new' || lead.response == 'Not Interested' || lead.response == 'Closed' || lead.response == 'Wrong Number'" (click)="dateTimePicker.showPicker()" style="cursor: pointer;">
@@ -144,52 +144,103 @@
       </div>
 
       <div class="chat-input-bar">
-        <ion-textarea
-          [(ngModel)]="newComment"
-          style="border: none"
-          placeholder="Type progress note..."
-          rows="1"
-          class="message-input">
-        </ion-textarea>
-        
-        @if (!isSending) {
-          <ion-button 
-            fill="clear" 
+        <div class="input-capsule">
+          <ion-textarea
+            [(ngModel)]="newComment"
+            (keydown)="onKeyDown($event)"
+            [autoGrow]="true"
+            rows="1"
+            maxlength="1000"
+            enterkeyhint="send"
+            placeholder="Type progress note..."
+            class="message-input">
+          </ion-textarea>
+          
+          <button 
+            type="button"
+            class="btn-send-note" 
             (click)="saveChanges()" 
-            [disabled]="isSending || !newComment">
-            <ion-icon name="send" slot="icon-only" color="primary"></ion-icon>
-          </ion-button>
-        } @else {
-          <div class="mb-2 text-primary" style="font-size: 10px;">
-            <div class="spinner-border spinner-border-sm" role="">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        }
+            [disabled]="isSending || !newComment || !newComment.trim()"
+            title="Send note (Enter)">
+            @if (!isSending) {
+              <ion-icon name="send" class="send-icon"></ion-icon>
+            } @else {
+              <div class="spinner-border spinner-border-sm text-white" role="status">
+                <span class="visually-hidden">Sending...</span>
+              </div>
+            }
+          </button>
+        </div>
+        <div class="input-hint d-none d-md-block">
+          Press <strong>Enter ↵</strong> to send • <strong>Shift + Enter</strong> for new line
+        </div>
       </div>
     </div>
     </div>
 
   </ion-content>
 
-  <ion-modal id="example-modal" #modal trigger="open-custom-dialog" style="--height: auto; --width: 90%; --max-height: 80%; --border-radius: 16px; --overflow: auto;">
+  <ion-modal id="status-modal" #statusModal trigger="open-custom-dialog" (didDismiss)="statusSearchQuery = ''" class="status-selection-modal">
     <ng-template>
-      <div class="ion-padding">
-        <div class="ion-text-center ion-margin-bottom ion-margin-top">
-          <h5 class="m-0 fw-bold text-dark">Update Status</h5>
+      <div class="status-modal-content">
+        <!-- Modal Header -->
+        <div class="status-modal-header">
+          <div class="header-titles">
+            <h5 class="modal-title">Update Lead Status</h5>
+            <div class="modal-subtitle">
+              Current: <span class="current-badge">{{ lead?.response | titlecase }}</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="statusModal.dismiss()" aria-label="Close">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
         </div>
-        <ion-list lines="none">
-          @for (name of statusList; track name) {
-            <ion-item button="true" (click)="updateStatus(name); modal.dismiss()"
-              style="--background: #f8f9fa; margin-bottom: 8px; border-radius: 12px; --border-radius: 12px;">
-              <ion-label [style.font-weight]="lead?.response === name ? '600' : '400'"
-                         [color]="lead?.response === name ? 'dark' : 'medium'">{{ name | titlecase }}</ion-label>
-              @if (lead?.response === name) {
-                <ion-icon name="checkmark-circle" slot="end" color="success" style="font-size: 22px;"></ion-icon>
-              }
-            </ion-item>
+
+        <!-- Search Bar -->
+        <div class="status-search-wrap">
+          <div class="search-input-box">
+            <ion-icon name="search-outline" class="search-icon"></ion-icon>
+            <input 
+              type="text" 
+              [(ngModel)]="statusSearchQuery" 
+              placeholder="Search status (e.g. Interested, Busy)..."
+              class="search-field"
+              autocomplete="off" />
+            @if (statusSearchQuery) {
+              <button type="button" class="btn-clear-search" (click)="statusSearchQuery = ''" title="Clear search">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Status Options List -->
+        <div class="status-options-list">
+          @if (filteredStatusList.length > 0) {
+            @for (name of filteredStatusList; track name) {
+              <button 
+                type="button"
+                class="status-option-item" 
+                [class.active]="lead?.response?.toLowerCase() === name.toLowerCase()"
+                (click)="updateStatus(name); statusModal.dismiss()">
+                <div class="status-option-left">
+                  <span class="status-dot" [style.background-color]="getStatusColor(name).dot"></span>
+                  <span class="status-label" [style.color]="lead?.response?.toLowerCase() === name.toLowerCase() ? getStatusColor(name).text : '#1e293b'">
+                    {{ name | titlecase }}
+                  </span>
+                </div>
+                @if (lead?.response?.toLowerCase() === name.toLowerCase()) {
+                  <ion-icon name="checkmark-circle" class="status-check-icon" [style.color]="getStatusColor(name).dot"></ion-icon>
+                }
+              </button>
+            }
+          } @else {
+            <div class="no-status-found">
+              <ion-icon name="search-outline"></ion-icon>
+              <p>No status matching "<strong>{{ statusSearchQuery }}</strong>"</p>
+            </div>
           }
-        </ion-list>
+        </div>
       </div>
     </ng-template>
   </ion-modal>

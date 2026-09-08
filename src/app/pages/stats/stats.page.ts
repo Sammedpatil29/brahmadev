@@ -44,7 +44,11 @@ import {
   closeOutline,
   documentTextOutline,
   arrowForwardOutline,
-  walletOutline
+  walletOutline,
+  openOutline,
+  shareSocialOutline,
+  checkmarkOutline,
+  closeCircleOutline
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Leads } from 'src/app/services/leads';
@@ -109,6 +113,31 @@ export class StatsPage implements OnInit {
     { id: 'maximum', label: 'All Time' }
   ];
 
+  // Custom Date Range for Meta Ads
+  isCustomDateModalOpen = false;
+  customStartDate = '';
+  customEndDate = '';
+  tempCustomStartDate = '';
+  tempCustomEndDate = '';
+  todayDateStr = new Date().toISOString().slice(0, 10);
+
+  get isCustomDateActive(): boolean {
+    return this.selectedDatePreset === 'custom' && Boolean(this.customStartDate && this.customEndDate);
+  }
+
+  get customDateRangeLabel(): string {
+    if (!this.customStartDate || !this.customEndDate) return 'Custom Range';
+    try {
+      const d1 = new Date(this.customStartDate);
+      const d2 = new Date(this.customEndDate);
+      const s1 = d1.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+      const s2 = d2.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+      return `${s1} - ${s2}`;
+    } catch {
+      return `${this.customStartDate} to ${this.customEndDate}`;
+    }
+  }
+
   // PDF Preview & Export State
   isPreviewModalOpen = false;
   pdfPreviewSafeUrl: SafeResourceUrl | null = null;
@@ -117,6 +146,11 @@ export class StatsPage implements OnInit {
   previewTitle = '';
   currentFileName = '';
   isGeneratingPdf = false;
+  isMobile = false;
+
+  get isMobilePlatform(): boolean {
+    return this.isMobile || (typeof window !== 'undefined' && window.innerWidth < 768);
+  }
 
   // Google Charts Loading Guard
   private googleChartsLoaded = false;
@@ -130,6 +164,8 @@ export class StatsPage implements OnInit {
     private platform: Platform,
     private cdr: ChangeDetectorRef
   ) {
+    this.isMobile = this.platform.is('android') || this.platform.is('ios') || this.platform.is('mobile') || Capacitor.isNativePlatform();
+
     addIcons({
       arrowBackOutline,
       refreshOutline,
@@ -151,7 +187,11 @@ export class StatsPage implements OnInit {
       closeOutline,
       documentTextOutline,
       arrowForwardOutline,
-      walletOutline
+      walletOutline,
+      openOutline,
+      shareSocialOutline,
+      checkmarkOutline,
+      closeCircleOutline
     });
   }
 
@@ -605,8 +645,81 @@ export class StatsPage implements OnInit {
   /* ---------------------------------------------------- */
 
   selectDatePreset(presetId: string) {
+    if (presetId === 'custom') {
+      this.openCustomDateModal();
+      return;
+    }
     this.selectedDatePreset = presetId;
+    this.customStartDate = '';
+    this.customEndDate = '';
     this.loadMetaAdSpend();
+  }
+
+  openCustomDateModal() {
+    this.tempCustomStartDate = this.customStartDate || this.getOneMonthAgoStr();
+    this.tempCustomEndDate = this.customEndDate || this.todayDateStr;
+    this.isCustomDateModalOpen = true;
+  }
+
+  closeCustomDateModal() {
+    this.isCustomDateModalOpen = false;
+  }
+
+  applyCustomDateFilter() {
+    if (!this.tempCustomStartDate || !this.tempCustomEndDate) {
+      this.toastCtrl.create({
+        message: 'Please select both From and To dates.',
+        duration: 2500,
+        color: 'warning',
+        position: 'bottom'
+      }).then(t => t.present());
+      return;
+    }
+
+    if (this.tempCustomStartDate > this.tempCustomEndDate) {
+      this.toastCtrl.create({
+        message: 'From Date cannot be after To Date.',
+        duration: 2500,
+        color: 'warning',
+        position: 'bottom'
+      }).then(t => t.present());
+      return;
+    }
+
+    this.customStartDate = this.tempCustomStartDate;
+    this.customEndDate = this.tempCustomEndDate;
+    this.selectedDatePreset = 'custom';
+    this.isCustomDateModalOpen = false;
+    this.loadMetaAdSpend();
+  }
+
+  clearCustomDateFilter() {
+    this.customStartDate = '';
+    this.customEndDate = '';
+    this.tempCustomStartDate = '';
+    this.tempCustomEndDate = '';
+    this.selectedDatePreset = 'this_month';
+    this.isCustomDateModalOpen = false;
+    this.loadMetaAdSpend();
+  }
+
+  setQuickDateRange(range: number | string) {
+    const today = new Date();
+    this.tempCustomEndDate = today.toISOString().slice(0, 10);
+    if (typeof range === 'number') {
+      const from = new Date();
+      from.setDate(today.getDate() - range);
+      this.tempCustomStartDate = from.toISOString().slice(0, 10);
+    } else if (range === 'this_month_range') {
+      const from = new Date(today.getFullYear(), today.getMonth(), 1);
+      this.tempCustomStartDate = from.toISOString().slice(0, 10);
+    }
+  }
+
+  private getOneMonthAgoStr(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
   }
 
   loadAdAccountStatus() {
@@ -625,7 +738,12 @@ export class StatsPage implements OnInit {
   loadMetaAdSpend() {
     this.isAdsLoading = true;
     this.cdr.detectChanges();
-    this.service.getMetaAdSpend(this.selectedDatePreset).subscribe({
+
+    const fetchObservable = (this.selectedDatePreset === 'custom' && this.customStartDate && this.customEndDate)
+      ? this.service.getMetaAdSpend(undefined, this.customStartDate, this.customEndDate)
+      : this.service.getMetaAdSpend(this.selectedDatePreset);
+
+    fetchObservable.subscribe({
       next: async (res: any) => {
         this.metaAdSpendData = res;
         this.isAdsLoading = false;
@@ -1068,7 +1186,9 @@ export class StatsPage implements OnInit {
       const dailyTrends = this.metaAdSpendData?.dailyTrends || [];
 
       const presetObj = this.adDatePresets.find(p => p.id === this.selectedDatePreset);
-      const presetName = presetObj ? presetObj.label : this.selectedDatePreset;
+      const presetName = (this.selectedDatePreset === 'custom' && this.customStartDate && this.customEndDate)
+        ? `${this.customStartDate} to ${this.customEndDate}`
+        : (presetObj ? presetObj.label : this.selectedDatePreset);
 
       // Brand Colors (Matching Fixed Cost Estimate & Brahmadev Logo)
       const brandNavy: [number, number, number] = [20, 33, 61];     // #14213d Deep Navy
@@ -1377,7 +1497,10 @@ export class StatsPage implements OnInit {
       // Add Footers with date and time
       this.addPdfFooters(doc, `Meta Ads Report (${presetName})`);
 
-      this.openPdfPreview(doc, `Meta Ads Report (${presetName})`, `Brahmadev_Meta_Ads_${this.selectedDatePreset}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      const fileDateTag = (this.selectedDatePreset === 'custom' && this.customStartDate && this.customEndDate)
+        ? `${this.customStartDate}_to_${this.customEndDate}`
+        : this.selectedDatePreset;
+      this.openPdfPreview(doc, `Meta Ads Report (${presetName})`, `Brahmadev_Meta_Ads_${fileDateTag}_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (error) {
       console.error('Error generating Meta Ads PDF:', error);
       this.isGeneratingPdf = false;
@@ -1466,15 +1589,19 @@ export class StatsPage implements OnInit {
 
       this.isGeneratingPdf = false;
       const toast = await this.toastCtrl.create({
-        message: 'Report PDF downloaded successfully!',
+        message: Capacitor.isNativePlatform() ? 'Report ready to view and share!' : 'Report PDF downloaded successfully!',
         duration: 2500,
         position: 'bottom',
         color: 'success'
       });
       await toast.present();
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
+    } catch (error: any) {
       this.isGeneratingPdf = false;
+      // If user simply closed/cancelled the native share sheet, ignore silently
+      if (error && (error.message?.includes('cancel') || error.message?.includes('dismiss') || error === 'Share canceled')) {
+        return;
+      }
+      console.error('Error downloading/sharing PDF:', error);
       const toast = await this.toastCtrl.create({
         message: 'Failed to download PDF.',
         duration: 2500,

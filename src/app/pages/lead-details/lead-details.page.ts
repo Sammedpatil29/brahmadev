@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonBackButton, IonButton, IonList, IonItem, IonLabel, IonInput, IonIcon, IonFooter, IonSelectOption, IonTextarea, IonModal, IonSpinner } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline, call, callOutline, globeOutline, image, locationOutline, logoFacebook, logoInstagram, navigateCircle, navigateCircleOutline, timeOutline, send, journalOutline, sendSharp, chatboxEllipsesOutline, cloudOfflineOutline, checkmarkCircleOutline, calendarOutline, documentTextOutline, trophyOutline, closeCircleOutline, personCircle, copyOutline, personAddOutline, personCircleOutline } from 'ionicons/icons';
+import { arrowBackOutline, call, callOutline, globeOutline, image, locationOutline, logoFacebook, logoInstagram, navigateCircle, navigateCircleOutline, timeOutline, send, journalOutline, sendSharp, chatboxEllipsesOutline, cloudOfflineOutline, checkmarkCircleOutline, checkmarkCircle, calendarOutline, documentTextOutline, trophyOutline, closeCircleOutline, personCircle, copyOutline, personAddOutline, personCircleOutline, searchOutline, closeOutline, chevronDownOutline } from 'ionicons/icons';
 import { Leads } from 'src/app/services/leads';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
@@ -35,6 +35,7 @@ export class LeadDetailsPage implements OnInit {
     'Yet To Think', 
     'Call back Requested', 
     'Busy', 
+    'Long Distance',
     'Visit Confirmed', 
     'Visiting Soon', 
     'Wrong Number',
@@ -52,6 +53,34 @@ export class LeadDetailsPage implements OnInit {
   // Access specific loader
   isUpdatingAccess = false;
 
+  // Status search & filtering
+  statusSearchQuery = '';
+
+  get filteredStatusList(): string[] {
+    if (!this.statusSearchQuery || !this.statusSearchQuery.trim()) {
+      return this.statusList;
+    }
+    const q = this.statusSearchQuery.toLowerCase().trim();
+    return this.statusList.filter(s => s.toLowerCase().includes(q));
+  }
+
+  getStatusColor(status: string): { bg: string, text: string, dot: string } {
+    const s = (status || '').toLowerCase().trim();
+    if (['interested', 'visit confirmed', 'visiting soon', 'quotation sent'].includes(s)) {
+      return { bg: '#ecfdf5', text: '#065f46', dot: '#10b981' };
+    }
+    if (['yet to think', 'call back requested', 'busy'].includes(s)) {
+      return { bg: '#fffbeb', text: '#92400e', dot: '#f59e0b' };
+    }
+    if (['not interested', 'wrong number', 'closed'].includes(s)) {
+      return { bg: '#fef2f2', text: '#991b1b', dot: '#ef4444' };
+    }
+    if (['long distance'].includes(s)) {
+      return { bg: '#f5f3ff', text: '#5b21b6', dot: '#8b5cf6' };
+    }
+    return { bg: '#eff6ff', text: '#1e40af', dot: '#3b82f6' };
+  }
+
   constructor(
     private navCtrl: NavController, 
     private service: Leads, 
@@ -61,10 +90,11 @@ export class LeadDetailsPage implements OnInit {
   ) {
     addIcons({
       arrowBackOutline, callOutline, copyOutline, locationOutline, documentTextOutline, 
-      chatboxEllipsesOutline, send, personCircle, checkmarkCircleOutline, calendarOutline, 
-      trophyOutline, closeCircleOutline, cloudOfflineOutline, journalOutline, sendSharp, 
-      logoFacebook, logoInstagram, globeOutline, timeOutline, call, navigateCircleOutline, 
-      image, navigateCircle, personAddOutline, personCircleOutline
+      chatboxEllipsesOutline, send, personCircle, checkmarkCircleOutline, checkmarkCircle, 
+      calendarOutline, trophyOutline, closeCircleOutline, cloudOfflineOutline, journalOutline, 
+      sendSharp, logoFacebook, logoInstagram, globeOutline, timeOutline, call, 
+      navigateCircleOutline, image, navigateCircle, personAddOutline, personCircleOutline,
+      searchOutline, closeOutline, chevronDownOutline
     });
   }
 
@@ -94,47 +124,93 @@ export class LeadDetailsPage implements OnInit {
     }
   }
 
-  saveChanges() {
-    const user = localStorage.getItem('userName');
-    
-    if(this.lead.response == 'new'){
-      let params = {
-        "newComment": this.newComment,
-        "response": "Conversion Started",
-        "city": "",
-        "user": user
-      }
-      this.service.updateLeads(params, this.lead.id).subscribe((res: any) => {
-        this.lead = res;
-      });
-    } else {
-      let params = {
-        "newComment": this.newComment,
-        "response": "",
-        "city": "",
-        "user": user
-      }
-      this.isSending = true;
-      this.service.updateLeads(params, this.lead.id).subscribe((res: any) => {
-        this.lead = res;
-        this.newComment = '';
-        this.isSending = false;
-      }, error => {
-        this.isSending = false;
-      });
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.saveChanges();
     }
   }
 
+  saveChanges() {
+    const text = this.newComment ? this.newComment.trim() : '';
+    if (!text || this.isSending) return;
+
+    const user = localStorage.getItem('userName') || 'User';
+    
+    // Instantly empty the input box for immediate feedback
+    this.newComment = '';
+    this.isSending = true;
+
+    const isNew = this.lead?.response === 'new';
+    const params = {
+      "newComment": text,
+      "response": isNew ? "Conversion Started" : "",
+      "city": "",
+      "user": user
+    };
+
+    this.service.updateLeads(params, this.lead.id).subscribe({
+      next: (res: any) => {
+        this.lead = res;
+        this.isSending = false;
+        this.scrollToBottom();
+      },
+      error: async (err: any) => {
+        console.error('Error saving progress note:', err);
+        // Restore comment text if the request fails so user does not lose it
+        this.newComment = text;
+        this.isSending = false;
+        const toast = await this.toastController.create({
+          message: 'Failed to save progress note. Please try again.',
+          duration: 3000,
+          color: 'danger',
+          position: 'bottom'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      const container = document.querySelector('.chat-content');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 120);
+  }
+
   updateStatus(arg0: string) {
+    if (this.isUpdatingResponse) return;
     this.isUpdatingResponse = true;
+    const prev = this.lead?.response;
+    if (this.lead) {
+      this.lead.response = arg0;
+    }
+
     let params = {
       "response": arg0
     };
-    this.service.updateLeads(params, this.lead.id).subscribe((res: any) => {
-      this.lead = res;
-      this.isUpdatingResponse = false;
-    }, error => {
-      this.isUpdatingResponse = false;
+    this.service.updateLeads(params, this.lead.id).subscribe({
+      next: (res: any) => {
+        this.lead = res;
+        this.isUpdatingResponse = false;
+        this.statusSearchQuery = '';
+      },
+      error: async (err: any) => {
+        console.error('Error updating status:', err);
+        if (this.lead) {
+          this.lead.response = prev;
+        }
+        this.isUpdatingResponse = false;
+        const toast = await this.toastController.create({
+          message: 'Failed to update status.',
+          duration: 2500,
+          color: 'danger',
+          position: 'bottom'
+        });
+        await toast.present();
+      }
     });
   }
 
@@ -209,6 +285,7 @@ export class LeadDetailsPage implements OnInit {
         }
       }
       this.isLoading = false;
+      this.scrollToBottom();
     }, error => {
       this.isLoading = false;
     });

@@ -23,17 +23,17 @@ export class LoginPage implements OnInit {
   showLogin: boolean = false
   isLoading: boolean = false
   constructor(private navCtrl: NavController, private loginService: Login) {
-    addIcons({ 
-      'call-outline': callOutline, 
-      'lock-closed-outline': lockClosedOutline 
-    });
-    }
+    addIcons({ callOutline, lockClosedOutline });
+  }
 
   ngOnInit() {
     this.verifyToken()
   }
 
   login(){
+    if (!this.phoneNumber || this.phoneNumber.length !== 10 || !this.password || this.password.length === 0 || this.isLoading) {
+      return;
+    }
     let params = {
       "phone": this.phoneNumber,
       "password": this.password

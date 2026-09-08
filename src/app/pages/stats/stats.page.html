@@ -162,12 +162,30 @@
         <div class="date-presets-scroll">
           @for (preset of adDatePresets; track preset.id) {
             <button 
+              type="button"
               class="date-preset-chip" 
               [class.active]="selectedDatePreset === preset.id"
               (click)="selectDatePreset(preset.id)">
               {{ preset.label }}
             </button>
           }
+          <button 
+            type="button" 
+            class="date-preset-chip custom-range-chip" 
+            [class.active]="selectedDatePreset === 'custom'"
+            (click)="openCustomDateModal()"
+            title="Filter by custom date range">
+            <ion-icon name="calendar-outline" class="me-1"></ion-icon>
+            <span>{{ isCustomDateActive ? customDateRangeLabel : 'Custom Range' }}</span>
+            @if (isCustomDateActive) {
+              <ion-icon 
+                name="close-circle-outline" 
+                class="ms-1 chip-clear-icon" 
+                (click)="$event.stopPropagation(); clearCustomDateFilter()"
+                title="Clear custom date filter">
+              </ion-icon>
+            }
+          </button>
         </div>
 
         <!-- Account & Campaign Filter Badges -->
@@ -429,16 +447,7 @@
               {{ previewTitle }}
             </ion-title>
             <ion-buttons slot="end">
-              <ion-button 
-                class="btn-download-header"
-                (click)="downloadCurrentPDF()"
-                [disabled]="isGeneratingPdf"
-                title="Download PDF">
-                <ion-icon slot="icon-only" class="d-sm-none" name="download-outline"></ion-icon>
-                <ion-icon slot="start" class="d-none d-sm-inline-block" name="download-outline"></ion-icon>
-                <span class="btn-text d-none d-sm-inline">Download PDF</span>
-              </ion-button>
-              <ion-button (click)="closePreviewModal()" title="Close">
+              <ion-button (click)="closePreviewModal()" title="Close" class="btn-close-header">
                 <ion-icon slot="icon-only" name="close-outline"></ion-icon>
               </ion-button>
             </ion-buttons>
@@ -446,16 +455,55 @@
         </ion-header>
 
         <div class="preview-modal-body">
-          @if (pdfPreviewSafeUrl) {
-            <iframe 
-              [src]="pdfPreviewSafeUrl" 
-              class="pdf-iframe-element" 
-              title="PDF Report Preview">
-            </iframe>
+          @if (!isMobilePlatform) {
+            @if (pdfPreviewSafeUrl) {
+              <iframe 
+                [src]="pdfPreviewSafeUrl" 
+                class="pdf-iframe-element" 
+                title="PDF Report Preview">
+              </iframe>
+            } @else {
+              <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+                <ion-spinner name="crescent"></ion-spinner>
+                <p class="mt-2 text-muted">Preparing PDF Preview...</p>
+              </div>
+            }
           } @else {
-            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
-              <ion-spinner name="crescent"></ion-spinner>
-              <p class="mt-2 text-muted">Preparing PDF Preview...</p>
+            <div class="mobile-pdf-preview-container">
+              <div class="mobile-pdf-card">
+                <div class="pdf-icon-badge">
+                  <ion-icon name="document-text-outline"></ion-icon>
+                  <span class="pdf-type-tag">PDF</span>
+                </div>
+                
+                <h3 class="mobile-pdf-title">{{ previewTitle }}</h3>
+                
+                <div class="mobile-pdf-meta">
+                  <div class="meta-item">
+                    <ion-icon name="information-circle-outline"></ion-icon>
+                    <span>{{ currentFileName }}</span>
+                  </div>
+                </div>
+
+                <div class="mobile-pdf-status-badge">
+                  <ion-icon name="checkmark-circle-outline"></ion-icon>
+                  <span>Ready for viewing &amp; sharing</span>
+                </div>
+
+                <p class="mobile-pdf-note">
+                  Tap below to view the report directly in your device's PDF viewer (Google Drive Viewer, Adobe Acrobat, etc.) or share it via WhatsApp.
+                </p>
+
+                <ion-button 
+                  expand="block" 
+                  class="btn-open-mobile-pdf"
+                  (click)="downloadCurrentPDF()"
+                  [disabled]="isGeneratingPdf">
+                  <ion-spinner *ngIf="isGeneratingPdf" name="crescent" slot="start"></ion-spinner>
+                  <ion-icon *ngIf="!isGeneratingPdf" slot="start" name="open-outline"></ion-icon>
+                  {{ isGeneratingPdf ? 'Opening Report...' : 'Open / View PDF' }}
+                </ion-button>
+              </div>
             </div>
           }
         </div>
@@ -472,8 +520,125 @@
               class="btn btn-primary btn-sm px-4 fw-bold d-flex align-items-center gap-1" 
               (click)="downloadCurrentPDF()"
               [disabled]="isGeneratingPdf">
-              <ion-icon name="download-outline"></ion-icon>
-              <span>Download PDF</span>
+              <ion-spinner *ngIf="isGeneratingPdf" name="crescent" class="spinner-sm me-1"></ion-spinner>
+              <ion-icon *ngIf="!isGeneratingPdf" [name]="isMobilePlatform ? 'share-social-outline' : 'download-outline'"></ion-icon>
+              <span>{{ isGeneratingPdf ? 'Saving...' : (isMobilePlatform ? 'Open / Share PDF' : 'Download PDF') }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Custom Date Range Picker Modal for Meta Ads -->
+  <ion-modal [isOpen]="isCustomDateModalOpen" (didDismiss)="closeCustomDateModal()" class="meta-date-modal">
+    <ng-template>
+      <div class="meta-modal-container">
+        <div class="meta-modal-header d-flex align-items-center justify-content-between p-3 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <div class="modal-icon-badge">
+              <ion-icon name="calendar-outline"></ion-icon>
+            </div>
+            <div>
+              <h5 class="m-0 fw-bold fs-6">Custom Date Range</h5>
+              <p class="m-0 text-muted small">Filter Meta Ads spend &amp; metrics</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closeCustomDateModal()" title="Close">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="meta-modal-body p-3">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-bold text-secondary mb-1">
+                From Date <span class="text-danger">*</span>
+              </label>
+              <div class="input-date-wrap">
+                <input 
+                  type="date" 
+                  class="form-control date-input-control" 
+                  [(ngModel)]="tempCustomStartDate"
+                  [max]="todayDateStr"
+                />
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-bold text-secondary mb-1">
+                To Date <span class="text-danger">*</span>
+              </label>
+              <div class="input-date-wrap">
+                <input 
+                  type="date" 
+                  class="form-control date-input-control" 
+                  [(ngModel)]="tempCustomEndDate"
+                  [max]="todayDateStr"
+                />
+              </div>
+            </div>
+          </div>
+
+          @if (tempCustomStartDate && tempCustomEndDate && tempCustomStartDate > tempCustomEndDate) {
+            <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small d-flex align-items-center gap-2">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+              <span>From Date cannot be later than To Date.</span>
+            </div>
+          }
+
+          <div class="quick-ranges mt-3 pt-2 border-top">
+            <span class="small text-muted fw-semibold me-2">Quick presets:</span>
+            <div class="d-flex gap-1 flex-wrap mt-1">
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-secondary quick-btn"
+                (click)="setQuickDateRange(7)">
+                Last 7 Days
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-secondary quick-btn"
+                (click)="setQuickDateRange(14)">
+                Last 14 Days
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-secondary quick-btn"
+                (click)="setQuickDateRange(30)">
+                Last 30 Days
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-secondary quick-btn"
+                (click)="setQuickDateRange('this_month_range')">
+                Month to Date
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-modal-footer p-3 bg-light border-top d-flex justify-content-between align-items-center">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary btn-sm px-3"
+            (click)="clearCustomDateFilter()">
+            Reset
+          </button>
+          <div class="d-flex gap-2">
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-sm px-3" 
+              (click)="closeCustomDateModal()">
+              Cancel
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-primary btn-sm px-4 fw-bold d-flex align-items-center gap-1"
+              (click)="applyCustomDateFilter()"
+              [disabled]="!tempCustomStartDate || !tempCustomEndDate || (tempCustomStartDate > tempCustomEndDate)">
+              <ion-icon name="checkmark-outline"></ion-icon>
+              <span>Apply Filter</span>
             </button>
           </div>
         </div>

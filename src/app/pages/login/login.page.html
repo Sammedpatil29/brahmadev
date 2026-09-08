@@ -11,27 +11,39 @@
           <p class="subtitle">Enter your credentials to continue</p>
         </div>
 
-        <div class="form-section">
+        <form class="form-section" (ngSubmit)="login()">
           <div class="input-wrapper">
             <ion-icon name="call-outline"></ion-icon>
-            <input type="tel" placeholder="Mobile Number" [(ngModel)]="phoneNumber" maxlength="10">
+            <input 
+              type="tel" 
+              name="phoneNumber"
+              placeholder="Mobile Number" 
+              [(ngModel)]="phoneNumber" 
+              maxlength="10"
+              (keyup.enter)="login()">
           </div>
 
           <div class="input-wrapper">
             <ion-icon name="lock-closed-outline"></ion-icon>
-            <input type="password" placeholder="Password" [(ngModel)]="password">
+            <input 
+              type="password" 
+              name="password"
+              placeholder="Password" 
+              [(ngModel)]="password"
+              (keyup.enter)="login()">
           </div>
 
-          <button class="login-button" (click)="login()" [disabled]="phoneNumber.length !== 10 || password.length === 0 || isLoading">
+          <button 
+            type="submit" 
+            class="login-button" 
+            [disabled]="phoneNumber.length !== 10 || password.length === 0 || isLoading">
             @if (!isLoading) {
               <span>Sign In</span>
             } @else {
               <ion-spinner name="crescent" color="light" class="small-spinner"></ion-spinner>
             }
           </button>
-          
-          <!-- <p class="forgot-password">Forgot Password?</p> -->
-        </div>
+        </form>
       </div>
     } @else {
       <div class="loading-state w-100">

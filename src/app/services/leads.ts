@@ -88,7 +88,7 @@ getLeadDetails(id: number){
   getMetaAdSpend(datePreset: string = 'this_month', since?: string, until?: string) {
     let params: any = { date_preset: datePreset };
     if (since && until) {
-      params = { since, until };
+      params = { since, until, from: since, to: until };
     }
     return this.http.get(`${this.url}/meta/ad-spend`, { params });
   }
