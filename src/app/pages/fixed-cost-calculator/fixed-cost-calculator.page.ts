@@ -1801,6 +1801,8 @@ export class FixedCostCalculatorPage implements OnInit {
         URL.revokeObjectURL(this.pdfBlobUrl);
       }
       const blob = doc.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
       this.pdfBlobUrl = URL.createObjectURL(blob);
       this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
       this.pdfPages = [];

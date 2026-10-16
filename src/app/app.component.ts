@@ -8,6 +8,7 @@ import { Platform } from '@ionic/angular';
 import { OtaKit } from '@otakit/capacitor-updater';
 import { Subscription } from 'rxjs';
 import { SocketService } from './services/socket';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -29,7 +30,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private fcmService: FcmService,
     private platform: Platform,
     private ngZone: NgZone,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {

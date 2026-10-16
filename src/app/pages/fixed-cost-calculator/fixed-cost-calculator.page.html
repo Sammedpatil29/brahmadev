@@ -870,6 +870,7 @@
         </ion-header>
 
         <div class="preview-modal-body">
+          @if (pdfPreviewSafeUrl) {
           @if (isRenderingPdfPages) {
             <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
               <ion-spinner name="crescent" color="primary"></ion-spinner>
@@ -891,6 +892,9 @@
               title="PDF Quotation Preview">
             </iframe>
           } @else {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center">
+              <ion-spinner name="crescent"></ion-spinner>
+              <p class="mt-2 text-muted">Rendering PDF Preview...</p>
             <div class="mobile-pdf-preview-container">
               <div class="mobile-pdf-card">
                 <div class="pdf-icon-badge">
