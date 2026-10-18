@@ -3,15 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonToggle, IonBadge, IonIcon, IonCard, IonCardContent } from '@ionic/angular/standalone';
 // import { SocketService } from 'src/app/services/socket';
-import { NavController, Platform, ActionSheetController } from '@ionic/angular';
+import { NavController, Platform } from '@ionic/angular';
 import { Leads } from 'src/app/services/leads';
 import { UserService } from 'src/app/services/user';
 import { register } from 'swiper/element/bundle';
 import { Capacitor } from '@capacitor/core';
 import { LeadCardComponent } from "src/app/components/lead-card/lead-card.component";
 import { jwtDecode } from 'jwt-decode';
-import { Subscription } from 'rxjs';
-import { ThemeService, ThemeMode } from 'src/app/services/theme.service';
 register();
 
 @Component({
@@ -34,10 +32,6 @@ export class HomePage implements OnInit, OnDestroy {
   isAndroid: boolean = false;
   isAdmin: boolean = false;
 
-  currentThemeMode: ThemeMode = 'system';
-  isDarkMode: boolean = false;
-  private themeSub?: Subscription;
-
   lead: any;
   today = new Date()
 
@@ -45,9 +39,7 @@ export class HomePage implements OnInit, OnDestroy {
     private navCtrl: NavController,
     private service: Leads,
     private userService: UserService,
-    private platform: Platform,
-    private actionSheetCtrl: ActionSheetController,
-    private themeService: ThemeService
+    private platform: Platform
   ) {
     this.isAndroid = this.platform.is('android') || Capacitor.getPlatform() === 'android';
   }
@@ -58,29 +50,24 @@ export class HomePage implements OnInit, OnDestroy {
     this.getUserName();
     this.newLeadsCount();
     this.checkAdminStatus();
-    
-    this.currentThemeMode = this.themeService.currentMode;
-    this.isDarkMode = this.themeService.isDark;
-    this.themeSub = this.themeService.currentMode$.subscribe(mode => {
-      this.currentThemeMode = mode;
-      this.isDarkMode = this.themeService.isDark;
-    });
   }
 
   ngOnDestroy() {
-    this.themeSub?.unsubscribe();
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   }
 
   scroll(direction: 'left' | 'right') {
-  const container = document.querySelector('.swipe-container');
-  if (container) {
-    const scrollAmount = container.clientWidth * 0.9; // Match your card width
-    container.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth'
-    });
+    const container = document.querySelector('.swipe-container');
+    if (container) {
+      const scrollAmount = container.clientWidth * 0.9;
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
   }
-}
 
   ionViewDidEnter() {
     this.getUserName();
@@ -119,12 +106,6 @@ export class HomePage implements OnInit, OnDestroy {
           }
         });
       }
-    }
-  }
-
-   ngOnDestroy() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
     }
   }
 
@@ -172,42 +153,6 @@ newLeadsCount(){
     this.isLoading = false;
   })
 }
-
-  async openThemeSelector() {
-    const actionSheet = await this.actionSheetCtrl.create({
-      header: 'Appearance / Theme',
-      subHeader: `Current: ${this.currentThemeMode.toUpperCase()}${this.currentThemeMode === 'system' ? ' (Follows Device)' : ''}`,
-      buttons: [
-        {
-          text: 'System Default' + (this.currentThemeMode === 'system' ? ' ✓' : ''),
-          icon: 'phone-portrait-outline',
-          handler: () => {
-            this.themeService.setTheme('system');
-          }
-        },
-        {
-          text: 'Dark Mode' + (this.currentThemeMode === 'dark' ? ' ✓' : ''),
-          icon: 'moon-outline',
-          handler: () => {
-            this.themeService.setTheme('dark');
-          }
-        },
-        {
-          text: 'Light Mode' + (this.currentThemeMode === 'light' ? ' ✓' : ''),
-          icon: 'sunny-outline',
-          handler: () => {
-            this.themeService.setTheme('light');
-          }
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          icon: 'close-outline'
-        }
-      ]
-    });
-    await actionSheet.present();
-  }
 
 }
 

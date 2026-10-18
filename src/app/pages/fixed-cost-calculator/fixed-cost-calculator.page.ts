@@ -780,7 +780,18 @@ export class FixedCostCalculatorPage implements OnInit {
     this.todayDateFormatted = `${day} ${month} ${year}`;
   }
 
-  back() { this.navCtrl.back(); }
+  back() {
+    if (window.history.length > 1) {
+      this.navCtrl.back();
+    } else {
+      const token = localStorage.getItem('userToken');
+      if (token) {
+        this.navCtrl.navigateRoot('/layout/home');
+      } else {
+        this.navCtrl.navigateRoot('/login');
+      }
+    }
+  }
 
   onDimensionChange() {
     const l = Number(this.plotLength);
@@ -1801,8 +1812,6 @@ export class FixedCostCalculatorPage implements OnInit {
         URL.revokeObjectURL(this.pdfBlobUrl);
       }
       const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
       this.pdfBlobUrl = URL.createObjectURL(blob);
       this.pdfPreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
       this.pdfPages = [];

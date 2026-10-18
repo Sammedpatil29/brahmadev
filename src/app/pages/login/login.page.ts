@@ -6,7 +6,7 @@ import { NavController } from '@ionic/angular';
 import { Login } from 'src/app/services/login';
 import { HttpClient } from '@angular/common/http';
 import { addIcons } from 'ionicons'; // Required for registering icons
-import { callOutline, lockClosedOutline } from 'ionicons/icons';
+import { callOutline, lockClosedOutline, calculatorOutline, chevronForwardOutline } from 'ionicons/icons';
 import { jwtDecode } from 'jwt-decode';
 
 @Component({
@@ -23,7 +23,11 @@ export class LoginPage implements OnInit {
   showLogin: boolean = false
   isLoading: boolean = false
   constructor(private navCtrl: NavController, private loginService: Login) {
-    addIcons({ callOutline, lockClosedOutline });
+    addIcons({ callOutline, lockClosedOutline, calculatorOutline, chevronForwardOutline });
+  }
+
+  openCalculator() {
+    this.navCtrl.navigateForward('/fixed-cost-calculator');
   }
 
   ngOnInit() {

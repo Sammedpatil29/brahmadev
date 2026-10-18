@@ -7,6 +7,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage)
   },
   {
+    path: 'fixed-cost-calculator',
+    loadComponent: () => import('./pages/fixed-cost-calculator/fixed-cost-calculator.page').then( m => m.FixedCostCalculatorPage)
+  },
+  {
+    path: 'calculator',
+    loadComponent: () => import('./pages/fixed-cost-calculator/fixed-cost-calculator.page').then( m => m.FixedCostCalculatorPage)
+  },
+  {
     path: 'layout',
     loadComponent: () => import('./pages/layout/layout.page').then( m => m.LayoutPage),
     canActivate: [authGuard],
